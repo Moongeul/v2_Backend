@@ -1,0 +1,37 @@
+package com.moongeul.backend.common.exception;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class BaseException extends RuntimeException {
+
+    HttpStatus statusCode;
+    String responseMessage;
+    Object data;
+
+    public BaseException(HttpStatus statusCode) {
+        super();
+        this.statusCode = statusCode;
+    }
+
+    public BaseException(HttpStatus statusCode, String responseMessage) {
+        super(responseMessage);
+        this.statusCode = statusCode;
+        this.responseMessage = responseMessage;
+    }
+
+    public BaseException(HttpStatus statusCode, String responseMessage, Object data) {
+        super(responseMessage);
+        this.statusCode = statusCode;
+        this.responseMessage = responseMessage;
+        this.data = data;
+    }
+
+    public int getStatusCode() {
+        return this.statusCode.value();
+    }
+}
