@@ -23,7 +23,6 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -51,13 +50,14 @@ public class MemeberService {
 
         // 2. 사용자 정보 추출
         String socialId = (String) userInfo.get("sub");
+        String email = (String) userInfo.get("email");
         String name = (String) userInfo.get("name");
         String picture = (String) userInfo.get("picture");
 
         // 3. DB 처리 (회원가입 또는 로그인)
         Member member = memberRepository.findBySocialId(socialId)
                 .map(entity -> entity.update(name, picture)) // 이미 있으면 정보 업데이트
-                .orElseGet(() -> signUp(socialId, name, picture)); // 없으면 신규 회원가입
+                .orElseGet(() -> signUp(socialId, email, name, picture)); // 없으면 신규 회원가입
 
         // 4. 자체 JWT 토큰 생성 및 반환
         JwtTokenDTO jwtToken = jwtTokenProvider.generateToken(member);
@@ -71,15 +71,15 @@ public class MemeberService {
     }
 
     // 신규 회원가입 처리 로직 (DB 저장)
-    private Member signUp(String socialId, String name, String picture) {
+    private Member signUp(String socialId, String email, String name, String picture) {
         Member newUser = Member.builder()
-                .email(UUID.randomUUID() + "@socialUser.com")
+                .email(email)
                 .name(name)
                 .profileImage(picture)
                 .password("OAuth Password") // 임시 패스워드
                 .socialId(socialId) // 예시 사용자명 생성
                 .socialType("google")
-                .role(Role.USER)
+                .role(Role.GUEST) // 이후 필요 정보 모두 입력 시 USER 로 승격
                 .build();
         return memberRepository.save(newUser);
     }
