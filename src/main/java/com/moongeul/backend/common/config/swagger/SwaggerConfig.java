@@ -37,7 +37,7 @@ public class SwaggerConfig {
 
         // 여러 서버 URL 설정
         Server productionServer = new Server();
-        productionServer.setUrl("https://api.moongeul.kro.kr");
+        productionServer.setUrl("https://api.moongeul.n-e.kr");
         productionServer.setDescription("운영 서버");
 
         Server localServer = new Server();
