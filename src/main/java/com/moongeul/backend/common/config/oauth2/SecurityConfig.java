@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -29,6 +30,7 @@ public class SecurityConfig {
         // 기존 보안 설정... (예: CSRF 비활성화, 인가 설정)
         http
                 .csrf(csrf -> csrf.disable()) // 예시
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 무상태 설정
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) //h2-console 화면 깨짐 방지(iframe 렌더링 오류)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/api/v2/member/login", "/h2-console/**").permitAll()
