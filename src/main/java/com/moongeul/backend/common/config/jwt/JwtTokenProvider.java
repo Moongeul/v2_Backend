@@ -15,7 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class JwtTokenProvider {
-    private final Key key;
+    private final SecretKey key;
 
     // application.yml에서 secret 값 가져와서 key에 저장
     // 1. 비밀 열쇠 보관 (생성자) : 토큰(신분증)을 만들고 검사할 때 쓰는 비밀 열쇠
@@ -57,16 +57,16 @@ public class JwtTokenProvider {
         // Access Token 생성
         Date accessTokenExpiresIn = new Date(now + accessTokenExpirationPeriod);
         String accessToken = Jwts.builder()
-                .setSubject(subject) // 이메일
+                .subject(subject) // 이메일
                 .claim("auth", authorities) // 권한
-                .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .expiration(accessTokenExpiresIn)
+                .signWith(key)
                 .compact();
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + refreshTokenExpirationPeriod))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .expiration(new Date(now + refreshTokenExpirationPeriod))
+                .signWith(key)
                 .compact();
 
         return JwtTokenDTO.builder()
@@ -81,9 +81,9 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .setSigningKey(key)
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token", e);
@@ -123,10 +123,10 @@ public class JwtTokenProvider {
     private Claims parseClaims(String accessToken) {
         try {
             return Jwts.parser()
-                    .setSigningKey(key)
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(accessToken)
-                    .getBody();
+                    .parseSignedClaims(accessToken)
+                    .getPayload();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }

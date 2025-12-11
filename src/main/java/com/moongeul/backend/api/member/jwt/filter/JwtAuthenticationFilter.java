@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-        chain.doFilter(request, response);
+        chain.doFilter(request, response); // 필터 체인(Filter Chain) 내의 다음 단계로 요청을 넘기는 것
     }
 
     // Request Header에서 토큰 정보 추출

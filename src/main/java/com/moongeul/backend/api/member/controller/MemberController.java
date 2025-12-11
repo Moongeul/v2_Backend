@@ -3,15 +3,13 @@ package com.moongeul.backend.api.member.controller;
 import com.moongeul.backend.api.member.dto.LoginResponseDTO;
 import com.moongeul.backend.api.member.dto.LoginRequestDTO;
 import com.moongeul.backend.api.member.dto.UserInfoDTO;
-import com.moongeul.backend.api.member.entity.Member;
-import com.moongeul.backend.api.member.service.MemeberService;
-import com.moongeul.backend.common.exception.BadRequestException;
+import com.moongeul.backend.api.member.service.MemberService;
 import com.moongeul.backend.common.response.ApiResponse;
-import com.moongeul.backend.common.response.ErrorStatus;
 import com.moongeul.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v2/member")
 public class MemberController {
 
-    private final MemeberService memberService;
+    private final MemberService memberService;
 
     @Operation(
             summary = "로그인 API",
@@ -36,11 +34,7 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 엑세스토큰 입니다.")
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithGoogle(@RequestBody LoginRequestDTO loginRequestDTO) {
-        // 엑세스토큰이 입력되지 않았을 경우 예외 처리
-        if (loginRequestDTO == null || loginRequestDTO.getCode() == null || loginRequestDTO.getCode().isEmpty()) {
-            throw new BadRequestException(ErrorStatus.MISSING_GOOGLE_ACCESSTOKEN.getMessage());
-        }
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithGoogle(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
         LoginResponseDTO response = memberService.loginWithGoogle(loginRequestDTO.getCode());
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
@@ -56,8 +50,7 @@ public class MemberController {
     })
     @GetMapping("/user-info")
     public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(@AuthenticationPrincipal UserDetails userDetails){
-        Member member = memberService.getMemberByEmail(userDetails.getUsername());
-        UserInfoDTO response = memberService.getUserInfo(member);
+        UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_USERINFO_SUCCESS, response);
     }
     
