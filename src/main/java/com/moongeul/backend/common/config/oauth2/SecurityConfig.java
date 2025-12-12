@@ -21,8 +21,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
-    //private final PrincipalOauth2UserService principalOauth2UserService;
-    //private final AuthenticationSuccessHandler OAuth2LoginSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -33,7 +31,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 무상태 설정
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) //h2-console 화면 깨짐 방지(iframe 렌더링 오류)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/v2/member/login", "/h2-console/**").permitAll()
+                        .requestMatchers("/", "/api/v2/member/google/login", "/api/v2/member/kakao/login", "/h2-console/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/api-doc/**", "/swagger-ui/**").permitAll()
                         .anyRequest().authenticated()
                 );
@@ -44,14 +42,6 @@ public class SecurityConfig {
                 new JwtAuthenticationFilter(jwtTokenProvider), // JwtTokenProvider 주입
                 UsernamePasswordAuthenticationFilter.class // UsernamePasswordAuthenticationFilter 이전에 실행
         );
-
-//        // OAuth2 로그인 설정
-//        http
-//                .oauth2Login((oauth2) -> oauth2
-//                        .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint
-//                                .userService(principalOauth2UserService)) // 후처리 로직 연결
-//                        .successHandler(OAuth2LoginSuccessHandler)
-//                );
 
         return http.build();
     }

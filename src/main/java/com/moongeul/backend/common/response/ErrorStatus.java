@@ -15,13 +15,14 @@ public enum ErrorStatus {
     VALIDATION_REQUEST_MISSING_EXCEPTION(HttpStatus.BAD_REQUEST, "요청 값이 입력되지 않았습니다."),
     USER_ALREADY_EXISTS_EXCEPTION(HttpStatus.BAD_REQUEST,"이미 존재하는 사용자입니다."),
     MISSING_GOOGLE_ACCESSTOKEN(HttpStatus.BAD_REQUEST, "구글 엑세스토큰이 입력되지 않았습니다."),
+    MISSING_KAKAO_ACCESSTOKEN(HttpStatus.BAD_REQUEST, "카카오 엑세스토큰이 입력되지 않았습니다."),
     INVALID_TOKEN_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 토큰 요청입니다."),
     INVALID_INFO_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 로그인 인증 요청입니다."),
 
     /**
      * 401 UNAUTHORIZED
      */
-    GOOGLE_AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "구글 인증에 실패했습니다.(토큰 문제)"),
+    AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "유효하지 않은 인가코드 입니다."),
 
     /**
      * 404 NOT_FOUND

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class GoogleTokenResponseDTO {
+public class AccessTokenResponseDTO {
 
     // JSON의 access_token 필드를 이 변수에 매핑
     @JsonProperty("access_token")
