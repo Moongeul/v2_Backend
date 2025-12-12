@@ -25,18 +25,36 @@ public class MemberController {
     private final MemberService memberService;
 
     @Operation(
-            summary = "로그인 API",
-            description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN)"
+            summary = "구글 로그인 API",
+            description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : ROLE_GUEST, 일반사용자 : ROLE_USER, 관리자 : ROLE_ADMIN)"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "구글 엑세스토큰이 입력되지 않았습니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 엑세스토큰 입니다.")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인가코드가 입력되지 않았습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 인가코드 입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "로그인 서버 오류 발생")
     })
-    @PostMapping("/login")
+    @PostMapping("/google/login")
     public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithGoogle(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
         LoginResponseDTO response = memberService.loginWithGoogle(loginRequestDTO.getCode());
+        return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "카카오 로그인 API",
+            description = "카카오 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : ROLE_GUEST, 일반사용자 : ROLE_USER, 관리자 : ROLE_ADMIN)"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인가코드가 입력되지 않았습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 인가코드 입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "로그인 서버 오류 발생")
+    })
+    @PostMapping("/kakao/login")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithKakao(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+
+        LoginResponseDTO response = memberService.loginWithKakao(loginRequestDTO.getCode());
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
     }
 
