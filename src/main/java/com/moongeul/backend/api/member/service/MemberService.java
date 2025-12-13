@@ -7,6 +7,7 @@ import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.NotFoundException;
+import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -116,5 +117,28 @@ public class MemberService {
     private Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    @Transactional
+    public JwtTokenDTO reissueToken(String refreshToken){
+
+        // 1. Refresh Token 유효성 검증
+        if(!jwtTokenProvider.validateToken(refreshToken)){
+            throw new UnauthorizedException(ErrorStatus.TOKEN_UNAUTHORIZED.getMessage());
+        }
+
+        // 2. DB에서 해당 Refresh Token을 가진 회원 찾기
+        Member member = memberRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 3. 토큰 재발급 (Access/Refresh)
+        JwtTokenDTO jwtToken = jwtTokenProvider.generateToken(member);
+
+        // 4. DB에 새로 발급한 Refresh Token 저장
+        member.updateRefreshToken(jwtToken.getRefreshToken());
+        memberRepository.save(member);
+
+        // 5. 재발급 토큰 반환
+        return jwtToken;
     }
 }

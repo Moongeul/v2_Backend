@@ -3,6 +3,7 @@ package com.moongeul.backend.api.member.controller;
 import com.moongeul.backend.api.member.dto.LoginResponseDTO;
 import com.moongeul.backend.api.member.dto.LoginRequestDTO;
 import com.moongeul.backend.api.member.dto.UserInfoDTO;
+import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.MemberService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -70,6 +71,20 @@ public class MemberController {
     public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(@AuthenticationPrincipal UserDetails userDetails){
         UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_USERINFO_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "토큰 재발급 API",
+            description = "엑세스 토큰 만료 시, 유효한 리프레시 토큰을 통해 엑세스 토큰을 재발급 받습니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/reissue-token")
+    public ResponseEntity<ApiResponse<JwtTokenDTO>> reissueAccessToken(@RequestHeader(value = "Authorization-Refresh") String refreshToken){
+        JwtTokenDTO response = memberService.reissueToken(refreshToken);
+        return ApiResponse.success(SuccessStatus.REISSUE_TOKEN_SUCCESS, response);
     }
     
 }

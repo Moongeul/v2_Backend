@@ -31,8 +31,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 무상태 설정
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) //h2-console 화면 깨짐 방지(iframe 렌더링 오류)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/v2/member/google/login", "/api/v2/member/kakao/login", "/h2-console/**").permitAll()
+                        .requestMatchers("/", "/h2-console/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/api-doc/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/v2/member/google/login", "/api/v2/member/kakao/login", "api/v2/member/reissue-token").permitAll()
                         .anyRequest().authenticated()
                 );
 
