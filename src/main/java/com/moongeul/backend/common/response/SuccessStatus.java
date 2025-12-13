@@ -14,7 +14,8 @@ public enum SuccessStatus {
 	 */
 	SEND_HEALTH_CHECK_SUCCESS(HttpStatus.OK,"서버 상태 체크 성공"),
 	SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
-	GET_USERINFO_SUCCESS(HttpStatus.OK, "사용자 정보 조회 성공")
+	GET_USERINFO_SUCCESS(HttpStatus.OK, "사용자 정보 조회 성공"),
+	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "토큰 재발급 성공")
 
 	/**
 	 * 201

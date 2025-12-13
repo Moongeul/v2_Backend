@@ -77,21 +77,25 @@ public class JwtTokenProvider {
     }
 
     // 토큰 정보를 검증하는 메서드
-    // 3. 신분증 검사 : 제출하는 액세스 토큰이 진짜인지 확인
+    // 3. 신분증 검사 : 제출하는 토큰이 진짜인지 확인
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(key)
+                    .verifyWith(key)            // 서명(signature) 검증 : Header + Payload를 key로 다시 서명하여 생성한 값과 토큰의 Signature를 비교
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(token);  // 만료 시간 확인 : Payload의 exp (expiration) claim과 현재 시간 비교
             return true;
         } catch (SecurityException | MalformedJwtException e) {
+            // 서명이 잘못되었거나 JWT 형식이 올바르지 않음
             log.info("Invalid JWT Token", e);
         } catch (ExpiredJwtException e) {
+            // 토큰이 만료됨 (exp < 현재시간)
             log.info("Expired JWT Token", e);
         } catch (UnsupportedJwtException e) {
+            // 지원하지 않는 서명 알고리즘 또는 JWT 타입
             log.info("Unsupported JWT Token", e);
         } catch (IllegalArgumentException e) {
+            // 토큰이 null이거나 빈 문자열
             log.info("JWT claims string is empty.", e);
         }
         return false;

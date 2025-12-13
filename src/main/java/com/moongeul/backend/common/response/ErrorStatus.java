@@ -23,6 +23,7 @@ public enum ErrorStatus {
      * 401 UNAUTHORIZED
      */
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "유효하지 않은 인가코드 입니다."),
+    TOKEN_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었거나 유효하지 않은 토큰입니다."),
 
     /**
      * 404 NOT_FOUND
