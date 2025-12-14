@@ -1,4 +1,4 @@
-package com.moongeul.backend.common.config.oauth2;
+package com.moongeul.backend.common.config.security;
 
 import com.moongeul.backend.api.member.jwt.filter.JwtAuthenticationFilter;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
