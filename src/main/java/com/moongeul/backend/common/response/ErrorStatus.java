@@ -29,12 +29,19 @@ public enum ErrorStatus {
      * 404 NOT_FOUND
      */
     USER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND,"해당 사용자를 찾을 수 없습니다."),
+    BOOK_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 도서를 찾을 수 없습니다."),
+    
+    /**
+     * 400 BAD_REQUEST (추가)
+     */
+    BOOK_ALREADY_ADDED_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 읽고 싶은 책으로 등록된 도서입니다."),
 
     /**
      * 500 SERVER_ERROR
      */
     INTERNAL_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR,"서버 내부 오류 발생"),
-    SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "로그인 서버 오류 발생")
+    SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "로그인 서버 오류 발생"),
+    NAVER_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 서버 오류 발생"),
 
     ;
 

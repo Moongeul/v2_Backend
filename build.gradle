@@ -50,9 +50,12 @@ dependencies {
     //implementation 'com.mysql:mysql-connector-j:9.1.0'
 
     // H2
-    runtimeOnly 'com.h2database:h2'
+    //runtimeOnly 'com.h2database:h2'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// MariaDB
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
