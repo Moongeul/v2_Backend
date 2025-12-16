@@ -19,6 +19,7 @@ public enum SuccessStatus {
 	ADD_WISH_READ_BOOK_SUCCESS(HttpStatus.OK, "읽고 싶은 책 등록 성공"),
 	REMOVE_WISH_READ_BOOK_SUCCESS(HttpStatus.OK, "읽고 싶은 책 삭제 성공"),
 	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
+	CREATE_POST_SUCCESS(HttpStatus.OK, "글쓰기 성공"),
 
 	/**
 	 * 201
