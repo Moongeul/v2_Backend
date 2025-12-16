@@ -7,5 +7,5 @@ import lombok.Getter;
 @Builder
 public class PostCreateResponseDTO {
 
-    private Long post_id; // 생성된 Post id
+    private Long postId; // 생성된 Post id
 }

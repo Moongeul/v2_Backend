@@ -36,7 +36,7 @@ public class PostService {
         Post savedPost = postRepository.save(newPost);
 
         return PostCreateResponseDTO.builder()
-                .post_id(savedPost.getId())
+                .postId(savedPost.getId())
                 .build();
     }
 }
