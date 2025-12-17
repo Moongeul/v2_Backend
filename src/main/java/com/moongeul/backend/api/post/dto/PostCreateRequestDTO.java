@@ -2,11 +2,15 @@ package com.moongeul.backend.api.post.dto;
 
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.post.entity.Post;
+import com.moongeul.backend.api.post.entity.PostVisibility;
 import com.moongeul.backend.api.post.entity.Quote;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,9 +18,16 @@ import java.util.List;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PostCreateRequestDTO {
 
     /* 드롭다운 - 필수 입력*/
+    @NotNull(message = "공개여부는 필수입니다")
+    private PostVisibility postVisibility; // 공개 여부
+
+    @NotNull(message = "카테고리는 필수입니다.")
+    private Long categoryId; // 카테고리 번호
 
     /* 필수 입력 */
     @NotBlank(message = "ISBN은 필수입니다")
@@ -45,13 +56,15 @@ public class PostCreateRequestDTO {
         private Integer pageNumber; // 페이지 번호
     }
 
-    public Post toEntity(Member member, Book book) {
+    public Post toEntity(Category category, Member member, Book book) {
         
         // rating과 page가 null로 들어오면 기본값으로 대체
         Double finalRating = (this.rating != null) ? this.rating : 5.0;
         Integer finalPage = (this.page != null) ? this.page : 300;
         
         Post post = Post.builder()
+                .postVisibility(this.postVisibility)
+                .category(category)
                 .readDate(this.readDate)
                 .rating(finalRating)
                 .page(finalPage)

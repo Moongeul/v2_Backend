@@ -27,7 +27,7 @@ public class MemberController {
 
     @Operation(
             summary = "구글 로그인 API",
-            description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : ROLE_GUEST, 일반사용자 : ROLE_USER, 관리자 : ROLE_ADMIN)"
+            description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN)"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
@@ -44,7 +44,7 @@ public class MemberController {
 
     @Operation(
             summary = "카카오 로그인 API",
-            description = "카카오 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : ROLE_GUEST, 일반사용자 : ROLE_USER, 관리자 : ROLE_ADMIN)"
+            description = "카카오 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN)"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),

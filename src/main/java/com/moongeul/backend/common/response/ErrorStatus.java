@@ -30,7 +30,8 @@ public enum ErrorStatus {
      */
     USER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND,"해당 사용자를 찾을 수 없습니다."),
     BOOK_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 도서를 찾을 수 없습니다."),
-    
+    CATEGORY_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
+
     /**
      * 400 BAD_REQUEST (추가)
      */

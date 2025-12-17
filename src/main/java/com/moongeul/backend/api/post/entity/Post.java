@@ -1,13 +1,11 @@
 package com.moongeul.backend.api.post.entity;
 
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,7 +18,6 @@ import java.util.List;
 @AllArgsConstructor // 모든 필드를 포함한 생성자
 @Table(name = "POST") // 데이터베이스 테이블 이름 지정
 public class Post extends BaseTimeEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 게시글 id
@@ -30,6 +27,17 @@ public class Post extends BaseTimeEntity {
     private Integer page; // 페이지 수
     private String content; // 감상평
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Quote> quotes = new ArrayList<>(); // 인상깊은구절
+
+    @Enumerated(EnumType.STRING)
+    private PostVisibility postVisibility; // 공개여부
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
@@ -37,14 +45,6 @@ public class Post extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_isbn", nullable = false)
     private Book book;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "category_id", nullable = false)
-//    private Category category;
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Quote> quotes = new ArrayList<>(); // 인상깊은구절
 
     public void addQuote(Quote quote) {
         quotes.add(quote);

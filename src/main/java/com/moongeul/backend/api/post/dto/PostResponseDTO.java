@@ -1,13 +1,17 @@
 package com.moongeul.backend.api.post.dto;
 
 import com.moongeul.backend.api.book.dto.BookDTO;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PostResponseDTO {
 
     // 필수

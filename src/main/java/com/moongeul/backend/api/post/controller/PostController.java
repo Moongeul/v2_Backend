@@ -13,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Post", description = "Post(게시글) 관련 API 입니다.")
 @RestController
@@ -30,7 +27,8 @@ public class PostController {
             summary = "글쓰기 API",
             description = "기록(게시글)을 작성하는 글쓰기 API 입니다." +
                     "<br>필수: isbn, readDate / 선택: rating(default = 5.0), page(default = 300), content, quotes" +
-                    "<br>선택 요소의 경우 입력되지 않았을 때 'null'로 전달 바랍니다."
+                    "<br>선택 요소의 경우 입력되지 않았을 때 'null'로 전달 바랍니다." +
+                    "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "글쓰기 성공"),
@@ -39,7 +37,7 @@ public class PostController {
     })
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<PostCreateResponseDTO>> createPost(@AuthenticationPrincipal UserDetails userDetails,
-                                                        @Valid @RequestBody PostCreateRequestDTO postCreateRequestDTO) {
+                                                                         @Valid @RequestBody PostCreateRequestDTO postCreateRequestDTO) {
 
         PostCreateResponseDTO response = postService.createPost(postCreateRequestDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_POST_SUCCESS, response);
