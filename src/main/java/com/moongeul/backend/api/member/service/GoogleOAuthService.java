@@ -2,10 +2,7 @@ package com.moongeul.backend.api.member.service;
 
 import com.moongeul.backend.api.member.dto.GoogleInfoResponseDTO;
 import com.moongeul.backend.api.member.dto.AccessTokenResponseDTO;
-import com.moongeul.backend.common.exception.BadRequestException;
-import com.moongeul.backend.common.exception.InternalServerException;
-import com.moongeul.backend.common.exception.UnauthorizedException;
-import com.moongeul.backend.common.response.ErrorStatus;
+import com.moongeul.backend.common.config.webclient.WebClientErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +25,7 @@ public class GoogleOAuthService {
 
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+
     private final WebClient webClient;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
@@ -64,15 +62,7 @@ public class GoogleOAuthService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(params))
                 .retrieve()
-                .onStatus(status -> status.value() == 401, response -> {
-                    throw new UnauthorizedException(ErrorStatus.AUTH_UNAUTHORIZED.getMessage());
-                })
-                .onStatus(HttpStatusCode::is4xxClientError, response -> {
-                    throw new BadRequestException(ErrorStatus.INVALID_TOKEN_REQUEST.getMessage());
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, response -> {
-                    throw new InternalServerException(ErrorStatus.SERVER_ERROR.getMessage());
-                })
+                .onStatus(HttpStatusCode::isError, res -> WebClientErrorHandler.handleApiError(res, "getGoogleToken"))
                 .bodyToMono(AccessTokenResponseDTO.class)
                 .block();
     }
@@ -85,15 +75,7 @@ public class GoogleOAuthService {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(status -> status.value() == 401, response -> {
-                    throw new UnauthorizedException(ErrorStatus.AUTH_UNAUTHORIZED.getMessage());
-                })
-                .onStatus(HttpStatusCode::is4xxClientError, response -> {
-                    throw new BadRequestException(ErrorStatus.INVALID_INFO_REQUEST.getMessage());
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, response -> {
-                    throw new InternalServerException(ErrorStatus.SERVER_ERROR.getMessage());
-                })
+                .onStatus(HttpStatusCode::isError, res -> WebClientErrorHandler.handleApiError(res, "getGoogleUserInfo"))
                 .bodyToMono(GoogleInfoResponseDTO.class)
                 .block(); // 동기 방식으로 결과 대기
     }

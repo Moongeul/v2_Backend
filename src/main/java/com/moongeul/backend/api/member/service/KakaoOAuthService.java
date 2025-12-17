@@ -2,10 +2,7 @@ package com.moongeul.backend.api.member.service;
 
 import com.moongeul.backend.api.member.dto.AccessTokenResponseDTO;
 import com.moongeul.backend.api.member.dto.KakaoInfoResponseDTO;
-import com.moongeul.backend.common.exception.BadRequestException;
-import com.moongeul.backend.common.exception.InternalServerException;
-import com.moongeul.backend.common.exception.UnauthorizedException;
-import com.moongeul.backend.common.response.ErrorStatus;
+import com.moongeul.backend.common.config.webclient.WebClientErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,15 +48,7 @@ public class KakaoOAuthService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(params))
                 .retrieve()
-                .onStatus(status -> status.value() == 401, response -> {
-                    throw new UnauthorizedException(ErrorStatus.AUTH_UNAUTHORIZED.getMessage());
-                })
-                .onStatus(HttpStatusCode::is4xxClientError, response -> {
-                    throw new BadRequestException(ErrorStatus.INVALID_TOKEN_REQUEST.getMessage());
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, response -> {
-                    throw new InternalServerException(ErrorStatus.SERVER_ERROR.getMessage());
-                })
+                .onStatus(HttpStatusCode::isError, res -> WebClientErrorHandler.handleApiError(res, "getKakaoToken"))
                 .bodyToMono(AccessTokenResponseDTO.class)
                 .block();
     }
@@ -72,15 +61,7 @@ public class KakaoOAuthService {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + kakaoAccessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(status -> status.value() == 401, response -> {
-                    throw new UnauthorizedException(ErrorStatus.AUTH_UNAUTHORIZED.getMessage());
-                })
-                .onStatus(HttpStatusCode::is4xxClientError, response -> {
-                    throw new BadRequestException(ErrorStatus.INVALID_INFO_REQUEST.getMessage());
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, response -> {
-                    throw new InternalServerException(ErrorStatus.SERVER_ERROR.getMessage());
-                })
+                .onStatus(HttpStatusCode::isError, res -> WebClientErrorHandler.handleApiError(res, "getKakaoUserInfo"))
                 .bodyToMono(KakaoInfoResponseDTO.class)
                 .block(); // 동기 방식으로 결과 대기
     }
