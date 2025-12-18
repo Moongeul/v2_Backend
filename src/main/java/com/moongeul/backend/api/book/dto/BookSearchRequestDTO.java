@@ -22,3 +22,4 @@ public class BookSearchRequestDTO {
     private Integer size = 10; // 한 페이지당 개수 (기본값 10, 최대 100)
 }
 
+

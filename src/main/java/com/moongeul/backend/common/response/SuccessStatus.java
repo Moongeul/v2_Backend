@@ -21,6 +21,7 @@ public enum SuccessStatus {
 
 	/* BOOK */
 	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),
+	GET_BOOK_DETAIL_SUCCESS(HttpStatus.OK, "도서 상세 조회 성공"),
 	
 	/* BOOKSHELF */
 	ADD_WISH_READ_BOOK_SUCCESS(HttpStatus.OK, "읽고 싶은 책 등록 성공"),
