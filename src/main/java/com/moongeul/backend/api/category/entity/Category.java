@@ -1,4 +1,4 @@
-package com.moongeul.backend.api.post.entity;
+package com.moongeul.backend.api.category.entity;
 
 import com.moongeul.backend.api.member.entity.Member;
 import jakarta.persistence.*;
@@ -19,7 +19,7 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 카테고리 id
 
-    private String title; // 카테고리 제목
+    private String title; // 카테고리명
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
