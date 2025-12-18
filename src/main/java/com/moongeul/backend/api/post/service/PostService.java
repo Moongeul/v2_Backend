@@ -2,6 +2,9 @@ package com.moongeul.backend.api.post.service;
 
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
+import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
+import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
+import com.moongeul.backend.api.bookshelf.util.BookshelfCalculator;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.post.dto.PostCreateRequestDTO;
@@ -26,6 +29,8 @@ public class PostService {
     private final BookRepository bookRepository;
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
+    private final DoneReadBookshelfRepository doneReadBookshelfRepository;
+    private final BookshelfCalculator bookshelfCalculator;
 
     /* 글쓰기 */
     @Transactional
@@ -42,6 +47,19 @@ public class PostService {
 
         Post newPost = postCreateRequestDTO.toEntity(category, member, book);
         Post savedPost = postRepository.save(newPost);
+
+        // 읽은 책 책장에 등록
+        Float weight = bookshelfCalculator.calculateWeight(savedPost.getPage());
+        Float height = bookshelfCalculator.calculateHeight(savedPost.getRating());
+
+        DoneReadBookshelf doneReadBookshelf = DoneReadBookshelf.builder()
+                .weight(weight)
+                .height(height)
+                .article(savedPost)
+                .member(member)
+                .build();
+
+        doneReadBookshelfRepository.save(doneReadBookshelf);
 
         return PostCreateResponseDTO.builder()
                 .postId(savedPost.getId())
