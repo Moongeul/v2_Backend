@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostCreateResponseDTO {
+public class PostIdResponseDTO {
 
     private Long postId; // 생성된 Post id
 }
