@@ -1,7 +1,8 @@
 package com.moongeul.backend.api.post.controller;
 
-import com.moongeul.backend.api.post.dto.PostCreateRequestDTO;
-import com.moongeul.backend.api.post.dto.PostCreateResponseDTO;
+import com.moongeul.backend.api.post.dto.PostRequestDTO;
+import com.moongeul.backend.api.post.dto.PostIdResponseDTO;
+import com.moongeul.backend.api.post.dto.PostResponseDTO;
 import com.moongeul.backend.api.post.service.PostService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -36,10 +37,59 @@ public class PostController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 도서를 찾을 수 없습니다.")
     })
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<PostCreateResponseDTO>> createPost(@AuthenticationPrincipal UserDetails userDetails,
-                                                                         @Valid @RequestBody PostCreateRequestDTO postCreateRequestDTO) {
+    public ResponseEntity<ApiResponse<PostIdResponseDTO>> createPost(@AuthenticationPrincipal UserDetails userDetails,
+                                                                     @Valid @RequestBody PostRequestDTO postRequestDTO) {
 
-        PostCreateResponseDTO response = postService.createPost(postCreateRequestDTO, userDetails.getUsername());
+        PostIdResponseDTO response = postService.createPost(postRequestDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_POST_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "기록(게시글) 상세 조회 API",
+            description = "기록(게시글)의 상세 조회 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 기록(게시글)을 찾을 수 없습니다.")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostResponseDTO>> getPost(@PathVariable Long id) {
+
+        PostResponseDTO response = postService.getPostDetail(id);
+        return ApiResponse.success(SuccessStatus.GET_POST_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "기록(게시글) 수정 API",
+            description = "기록(게시글)을 수정하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "수정하려는 회원의 게시글이 아닙니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 기록(게시글)을 찾을 수 없습니다.")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostIdResponseDTO>> updatePost(@AuthenticationPrincipal UserDetails userDetails,
+                                                                   @PathVariable Long id,
+                                                                   @Valid @RequestBody PostRequestDTO postRequestDTO) {
+
+        PostIdResponseDTO response = postService.updatePost(id, userDetails.getUsername(), postRequestDTO);
+        return ApiResponse.success(SuccessStatus.UPDATE_POST_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "기록(게시글) 삭제 API",
+            description = "기록(게시글)을 삭제하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 기록(게시글)을 찾을 수 없습니다.")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(@AuthenticationPrincipal UserDetails userDetails,
+                                                                   @PathVariable Long id) {
+
+        postService.deletePost(id, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.DELETE_POST_SUCCESS);
     }
 }

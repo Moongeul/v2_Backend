@@ -5,7 +5,6 @@ import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.PostVisibility;
-import com.moongeul.backend.api.post.entity.Quote;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,14 +12,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostCreateRequestDTO {
+public class PostRequestDTO {
 
     /* 드롭다운 - 필수 입력*/
     @NotNull(message = "공개여부는 필수입니다")
@@ -51,8 +49,9 @@ public class PostCreateRequestDTO {
     private List<QuoteRequestDTO> quotes; // 인상깊은구절
 
     @Getter
+    @Builder
     public static class QuoteRequestDTO {
-        private String quote; // 인용문 내용
+        private String quoteContent; // 인용문 내용
         private Integer pageNumber; // 페이지 번호
     }
 
@@ -62,7 +61,7 @@ public class PostCreateRequestDTO {
         Double finalRating = (this.rating != null) ? this.rating : 5.0;
         Integer finalPage = (this.page != null) ? this.page : 300;
         
-        Post post = Post.builder()
+        return Post.builder()
                 .postVisibility(this.postVisibility)
                 .category(category)
                 .readDate(this.readDate)
@@ -72,22 +71,6 @@ public class PostCreateRequestDTO {
                 .member(member)
                 .book(book)
                 .build();
-
-        // Quote 처리
-        if (this.quotes != null && !this.quotes.isEmpty()) {
-            List<Quote> quoteList = new ArrayList<>();
-            for (QuoteRequestDTO quoteDTO : this.quotes) {
-                Quote quote = Quote.builder()
-                        .quoteContent(quoteDTO.getQuote())
-                        .pageNumber(quoteDTO.getPageNumber())
-                        .post(post)
-                        .build();
-                quoteList.add(quote);
-
-                post.addQuotes(quoteList);
-            }
-        }
-        return post;
     }
 
 }
