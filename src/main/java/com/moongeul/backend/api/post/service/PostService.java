@@ -41,7 +41,11 @@ public class PostService {
 
         Member member = getMemberByEmail(email);
         Book book = getBook(postRequestDTO.getIsbn());
-        Category category = getCategory(postRequestDTO.getCategoryId());
+
+        Category category = null;
+        if(postRequestDTO.getCategoryId() != 0){
+            category = getCategory(postRequestDTO.getCategoryId());
+        }
         
         Post newPost = postRequestDTO.toEntity(category, member, book);
         Post savedPost = postRepository.save(newPost);

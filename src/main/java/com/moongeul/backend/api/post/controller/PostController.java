@@ -27,8 +27,8 @@ public class PostController {
     @Operation(
             summary = "글쓰기 API",
             description = "기록(게시글)을 작성하는 글쓰기 API 입니다." +
-                    "<br>필수: isbn, readDate / 선택: rating(default = 5.0), page(default = 300), content, quotes" +
-                    "<br>선택 요소의 경우 입력되지 않았을 때 'null'로 전달 바랍니다." +
+                    "<br><br>드롭박스 - 선택: postVisibility(default = PUBLIC), categoryId(default = 0(전체보기)) -> 입력되지 않았을 경우, 각각의 기본값(postVisibility: PUBLIC, categoryId: 0)으로 전달 바랍니다." +
+                    "<br>필수: isbn, readDate / 선택: rating(default = 5.0), page(default = 300), content, quotes -> 입력되지 않았을 경우, 'null'로 전달 바랍니다." +
                     "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE"
     )
     @ApiResponses({
