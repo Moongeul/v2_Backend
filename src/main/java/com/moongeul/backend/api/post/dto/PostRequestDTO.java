@@ -20,11 +20,8 @@ import java.util.List;
 @AllArgsConstructor
 public class PostRequestDTO {
 
-    /* 드롭다운 - 필수 입력*/
-    @NotNull(message = "공개여부는 필수입니다")
+    /* 드롭다운 - 선택 입력*/
     private PostVisibility postVisibility; // 공개 여부
-
-    @NotNull(message = "카테고리는 필수입니다.")
     private Long categoryId; // 카테고리 번호
 
     /* 필수 입력 */

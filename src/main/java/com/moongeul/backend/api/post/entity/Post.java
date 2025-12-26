@@ -29,7 +29,7 @@ public class Post extends BaseTimeEntity {
     private PostVisibility postVisibility; // 공개여부
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = true)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
