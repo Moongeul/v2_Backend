@@ -8,8 +8,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -27,15 +25,11 @@ public class Post extends BaseTimeEntity {
     private Integer page; // 페이지 수
     private String content; // 감상평
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Quote> quotes = new ArrayList<>(); // 인상깊은구절
-
     @Enumerated(EnumType.STRING)
     private PostVisibility postVisibility; // 공개여부
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = true)
     private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,11 +40,20 @@ public class Post extends BaseTimeEntity {
     @JoinColumn(name = "book_isbn", nullable = false)
     private Book book;
 
-    public void addQuote(Quote quote) {
-        quotes.add(quote);
-    }
-
-    public void addQuotes(List<Quote> quoteList) {
-        quoteList.forEach(this::addQuote);
+    // 게시글 수정
+    public void update(LocalDate readDate,
+                       Double rating,
+                       Integer page,
+                       String content,
+                       PostVisibility postVisibility,
+                       Category category,
+                       Book book) {
+        this.readDate = readDate;
+        this.rating = rating;
+        this.page = page;
+        this.content = content;
+        this.postVisibility = postVisibility;
+        this.category = category;
+        this.book = book;
     }
 }
