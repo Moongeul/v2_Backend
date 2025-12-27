@@ -18,6 +18,7 @@ public enum SuccessStatus {
 	SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
 	GET_USERINFO_SUCCESS(HttpStatus.OK, "사용자 정보 조회 성공"),
 	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
+	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),
 
 	/* BOOK */
 	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),

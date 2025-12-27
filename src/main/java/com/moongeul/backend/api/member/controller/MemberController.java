@@ -27,7 +27,8 @@ public class MemberController {
 
     @Operation(
             summary = "구글 로그인 API",
-            description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN)"
+            description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. " +
+                    "<br><br>[enum]ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
@@ -61,7 +62,16 @@ public class MemberController {
 
     @Operation(
             summary = "사용자 정보 조회 API",
-            description = "토큰을 통해 인증된 사용자의 정보를 반환합니다."
+            description = "토큰을 통해 인증된 사용자의 정보를 반환합니다." +
+                    "<br><br>[enum]독서 취향 유형 ->" +
+                    "<br>- EMOTIONAL_REFLECTOR: 감성 사색 정리러" +
+                    "<br>- CHATTY_READER: 수다쟁이 책러" +
+                    "<br>- TREND_HUNTER: 신상 헌터" +
+                    "<br>- SYSTEMATIC_READER: 정리왕 서평러" +
+                    "<br>- IMMERSIVE_READER: 넷플릭스급 몰입러" +
+                    "<br>- SECRET_DIARIST: 비밀 일기장 주인" +
+                    "<br>- GENRE_SPECIALIST: 장르 고인물" +
+                    "<br>- RANDOM_PICKER: 랜덤 피커"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "사용자 정보 조회 성공"),
