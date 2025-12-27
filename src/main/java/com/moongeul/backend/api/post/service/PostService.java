@@ -2,6 +2,9 @@ package com.moongeul.backend.api.post.service;
 
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
+import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
+import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
+import com.moongeul.backend.api.bookshelf.util.BookshelfCalculator;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.post.dto.PostRequestDTO;
@@ -34,6 +37,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final CategoryRepository categoryRepository;
     private final QuoteRepository quoteRepository;
+    private final DoneReadBookshelfRepository doneReadBookshelfRepository;
+    private final BookshelfCalculator bookshelfCalculator;
 
     /* 글쓰기 */
     @Transactional
@@ -49,9 +54,32 @@ public class PostService {
         
         Post newPost = postRequestDTO.toEntity(category, member, book);
         Post savedPost = postRepository.save(newPost);
-
+      
         // Quote 저장
         saveQuotes(postRequestDTO, savedPost);
+
+        // 읽은 책 책장에 등록 또는 업데이트
+        Float weight = bookshelfCalculator.calculateWeight(savedPost.getPage());
+        Float height = bookshelfCalculator.calculateHeight(savedPost.getRating());
+
+        // 기존 읽은 책이 있는지 확인
+        DoneReadBookshelf doneReadBookshelf = doneReadBookshelfRepository.findByMemberAndBook(member, book)
+                .orElse(null);
+
+        if (doneReadBookshelf != null) {
+            // 기존 책장이 있으면 업데이트 (가장 최근 게시글로 변경, 게시글 개수 증가)
+            doneReadBookshelf.updateWithNewPost(savedPost, weight, height);
+        } else {
+            // 기존 책장이 없으면 새로 생성
+            doneReadBookshelf = DoneReadBookshelf.builder()
+                    .weight(weight)
+                    .height(height)
+                    .postCount(1)
+                    .article(savedPost)
+                    .member(member)
+                    .build();
+            doneReadBookshelfRepository.save(doneReadBookshelf);
+        }
 
         return PostIdResponseDTO.builder()
                 .postId(savedPost.getId())

@@ -1,7 +1,9 @@
 package com.moongeul.backend.api.bookshelf.service;
 
+import com.moongeul.backend.api.book.dto.BookDTO;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
+import com.moongeul.backend.api.bookshelf.dto.WishReadBookshelfResponseDTO;
 import com.moongeul.backend.api.bookshelf.entity.WishReadBookshelf;
 import com.moongeul.backend.api.bookshelf.repository.WishReadBookshelfRepository;
 import com.moongeul.backend.api.member.entity.Member;
@@ -11,8 +13,13 @@ import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -23,6 +30,7 @@ public class WishReadBookshelfService {
     private final MemberRepository memberRepository;
     private final BookRepository bookRepository;
 
+    // 읽고 싶은 책장 등록
     @Transactional
     public void addWishReadBook(String email, String isbn) {
 
@@ -61,6 +69,47 @@ public class WishReadBookshelfService {
 
         // 읽고 싶은 책 삭제
         wishReadBookshelfRepository.deleteByMemberAndBook(member, book);
+    }
+
+    // 읽고 싶은 책장 전체 조회
+    @Transactional(readOnly = true)
+    public WishReadBookshelfResponseDTO getWishReadBooks(String email, Integer page, Integer size) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 페이지네이션 설정
+        Pageable pageable = PageRequest.of(page - 1, size);
+        
+        // 읽고 싶은 책 목록 조회
+        Page<WishReadBookshelf> wishReadBookshelfPage = wishReadBookshelfRepository.findByMemberOrderByCreatedAtDesc(member, pageable);
+
+        List<BookDTO> books = wishReadBookshelfPage.getContent().stream()
+                .map(wishReadBookshelf -> convertToBookDTO(wishReadBookshelf.getBook()))
+                .toList();
+
+        // 페이지네이션 정보 계산
+        int total = (int) wishReadBookshelfPage.getTotalElements();
+        int totalPages = wishReadBookshelfPage.getTotalPages();
+        boolean isLast = wishReadBookshelfPage.isLast();
+
+        return WishReadBookshelfResponseDTO.builder()
+                .total(total)
+                .page(page)
+                .size(size)
+                .totalPages(totalPages)
+                .isLast(isLast)
+                .books(books)
+                .build();
+    }
+
+    private BookDTO convertToBookDTO(Book book) {
+        return BookDTO.builder()
+                .isbn(book.getIsbn())
+                .title(book.getTitle())
+                .ratingAverage(book.getRatingAverage())
+                .ratingCount(book.getRatingCount())
+                .build();
     }
 }
 

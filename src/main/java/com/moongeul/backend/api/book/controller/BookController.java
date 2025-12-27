@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.book.controller;
 
+import com.moongeul.backend.api.book.dto.BookDTO;
 import com.moongeul.backend.api.book.dto.BookSearchRequestDTO;
 import com.moongeul.backend.api.book.dto.BookSearchResponseDTO;
 import com.moongeul.backend.api.book.service.BookService;
@@ -47,6 +48,22 @@ public class BookController {
         
         BookSearchResponseDTO bookSearchResponseDTO = bookService.searchBooks(bookSearchRequestDTO);
         return ApiResponse.success(SuccessStatus.SEARCH_BOOK_SUCCESS, bookSearchResponseDTO);
+    }
+
+    @Operation(
+            summary = "도서 상세 조회 API",
+            description = "ISBN을 받아서 DB에 등록된 도서의 상세 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "도서 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 도서를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{isbn}")
+    public ResponseEntity<ApiResponse<BookDTO>> getBookDetail(
+            @PathVariable @NotBlank(message = "ISBN은 필수입니다.") String isbn) {
+        
+        BookDTO bookDTO = bookService.getBookDetail(isbn);
+        return ApiResponse.success(SuccessStatus.GET_BOOK_DETAIL_SUCCESS, bookDTO);
     }
 }
 

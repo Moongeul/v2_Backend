@@ -4,6 +4,7 @@ import com.moongeul.backend.api.book.dto.*;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
 import com.moongeul.backend.common.exception.InternalServerException;
+import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class BookService {
     @Value("${naver.book.client-secret}")
     private String clientSecret;
 
+    // 도서 검색 메서드 (with 네이버 도서)
     @Transactional
     public BookSearchResponseDTO searchBooks(BookSearchRequestDTO bookSearchRequestDTO) {
         // 네이버 API 호출
@@ -254,6 +256,15 @@ public class BookService {
             return text;
         }
         return text.substring(0, maxLength);
+    }
+
+    // 책 상세 정보 조회
+    @Transactional(readOnly = true)
+    public BookDTO getBookDetail(String isbn) {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
+        
+        return convertToDTO(book);
     }
 }
 

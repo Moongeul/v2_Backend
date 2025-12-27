@@ -21,7 +21,8 @@ public class WishReadBookshelf extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "wish_bookshelf_id")
+    private Long wishBookshelfId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
