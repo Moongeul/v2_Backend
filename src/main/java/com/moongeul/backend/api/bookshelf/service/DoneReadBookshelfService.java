@@ -65,15 +65,11 @@ public class DoneReadBookshelfService {
                 .articleId(doneReadBookshelf.getArticle().getId())
                 .isbn(book.getIsbn())
                 .title(book.getTitle())
-                .author(book.getAuthor())
-                .bookImage(book.getBookImage())
-                .publisher(book.getPublisher())
-                .description(book.getDescription())
-                .pubdate(book.getPubdate())
                 .ratingAverage(book.getRatingAverage())
                 .ratingCount(book.getRatingCount())
                 .weight(doneReadBookshelf.getWeight())
                 .height(doneReadBookshelf.getHeight())
+                .postCount(doneReadBookshelf.getPostCount())
                 .build();
     }
 }

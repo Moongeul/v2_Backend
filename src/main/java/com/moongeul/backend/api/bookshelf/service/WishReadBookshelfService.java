@@ -107,11 +107,6 @@ public class WishReadBookshelfService {
         return BookDTO.builder()
                 .isbn(book.getIsbn())
                 .title(book.getTitle())
-                .author(book.getAuthor())
-                .bookImage(book.getBookImage())
-                .publisher(book.getPublisher())
-                .description(book.getDescription())
-                .pubdate(book.getPubdate())
                 .ratingAverage(book.getRatingAverage())
                 .ratingCount(book.getRatingCount())
                 .build();

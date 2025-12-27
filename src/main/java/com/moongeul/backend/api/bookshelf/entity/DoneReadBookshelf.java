@@ -28,12 +28,24 @@ public class DoneReadBookshelf extends BaseTimeEntity {
     @Column(name = "height")
     private Float height; // 별점 기반 높낮이
 
+    @Column(name = "post_count", nullable = false)
+    @Builder.Default
+    private Integer postCount = 1; // 해당 책에 대한 게시글 개수
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "article_id", nullable = false)
-    private Post article; // 게시글
+    private Post article; // 가장 최근 게시글
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member; // 회원
+
+    // 읽은책장 업데이트 (가장 최근 게시글로 변경, 게시글 개수 증가)
+    public void updateWithNewPost(Post newPost, Float weight, Float height) {
+        this.article = newPost;
+        this.weight = weight;
+        this.height = height;
+        this.postCount = this.postCount + 1;
+    }
 }
 

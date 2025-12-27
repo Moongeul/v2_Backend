@@ -48,18 +48,28 @@ public class PostService {
         Post newPost = postCreateRequestDTO.toEntity(category, member, book);
         Post savedPost = postRepository.save(newPost);
 
-        // 읽은 책 책장에 등록
+        // 읽은 책 책장에 등록 또는 업데이트
         Float weight = bookshelfCalculator.calculateWeight(savedPost.getPage());
         Float height = bookshelfCalculator.calculateHeight(savedPost.getRating());
 
-        DoneReadBookshelf doneReadBookshelf = DoneReadBookshelf.builder()
-                .weight(weight)
-                .height(height)
-                .article(savedPost)
-                .member(member)
-                .build();
+        // 기존 읽은 책이 있는지 확인
+        DoneReadBookshelf doneReadBookshelf = doneReadBookshelfRepository.findByMemberAndBook(member, book)
+                .orElse(null);
 
-        doneReadBookshelfRepository.save(doneReadBookshelf);
+        if (doneReadBookshelf != null) {
+            // 기존 책장이 있으면 업데이트 (가장 최근 게시글로 변경, 게시글 개수 증가)
+            doneReadBookshelf.updateWithNewPost(savedPost, weight, height);
+        } else {
+            // 기존 책장이 없으면 새로 생성
+            doneReadBookshelf = DoneReadBookshelf.builder()
+                    .weight(weight)
+                    .height(height)
+                    .postCount(1)
+                    .article(savedPost)
+                    .member(member)
+                    .build();
+            doneReadBookshelfRepository.save(doneReadBookshelf);
+        }
 
         return PostCreateResponseDTO.builder()
                 .postId(savedPost.getId())
