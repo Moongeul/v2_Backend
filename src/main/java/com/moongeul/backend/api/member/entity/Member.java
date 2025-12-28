@@ -27,6 +27,9 @@ public class Member extends BaseTimeEntity {
     private String nickname; //닉네임 (초기랜덤생성)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    private ReadingTasteType readingTasteType; // 독서 취향 유형
+
     @Column(unique = true)
     private String socialId; // 소셜 로그인 ID (고유값)
     
@@ -53,7 +56,17 @@ public class Member extends BaseTimeEntity {
         return this;
     }
 
+    /**
+     * 리프레시 토큰 업데이트
+     */
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    /**
+     * 독서 취향 유형 업데이트
+     */
+    public void updateReadingTasteType(ReadingTasteType readingTasteType) {
+        this.readingTasteType = readingTasteType;
     }
 }

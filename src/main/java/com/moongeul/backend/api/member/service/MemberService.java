@@ -111,6 +111,7 @@ public class MemberService {
                 .name(member.getName())
                 .profileImage(member.getProfileImage())
                 .nickname(member.getNickname())
+                .readingTasteType(member.getReadingTasteType())
                 .build();
     }
 

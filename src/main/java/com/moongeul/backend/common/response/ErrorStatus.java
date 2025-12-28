@@ -19,6 +19,12 @@ public enum ErrorStatus {
     INVALID_TOKEN_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 토큰 요청입니다."),
     INVALID_INFO_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 로그인 인증 요청입니다."),
 
+    EMPTY_TEST_ANSWERS(HttpStatus.BAD_REQUEST, "답변이 비어있습니다."),
+    INCOMPLETE_TEST_ANSWERS(HttpStatus.BAD_REQUEST, "12개 질문에 모두 답변해야 합니다. (현재: %d개)"),
+    INVALID_QUESTION_NUMBER(HttpStatus.BAD_REQUEST, "테스트에 잘못된 questionNo(질문번호)가 입력되었습니다. (질문번호: %d)"),
+    INVALID_ANSWER_VALUE(HttpStatus.BAD_REQUEST, "테스트 답변은 A 또는 B여야 합니다. (질문번호: %d, 현재답변: %s)"),
+    NO_SCORE_RESULT(HttpStatus.BAD_REQUEST, "테스트 점수 계산 결과가 없습니다."),
+
     /**
      * 401 UNAUTHORIZED
      */
