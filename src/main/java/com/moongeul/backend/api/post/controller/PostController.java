@@ -46,7 +46,8 @@ public class PostController {
 
     @Operation(
             summary = "기록(게시글) 전체 조회 API",
-            description = "메인페이지(홈화면)에서 사용되는 기록(게시글)의 전체 조회 API 입니다."
+            description = "메인페이지(홈화면)에서 사용되는 기록(게시글)의 전체 조회 API 입니다." +
+                    "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 전체 조회 성공"),
