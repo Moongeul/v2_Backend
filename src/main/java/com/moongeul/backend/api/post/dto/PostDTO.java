@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostResponseDTO {
+public class PostDTO {
 
     private BookInfo bookInfo; // 책 정보
     private double rating; // 별점
@@ -27,6 +27,7 @@ public class PostResponseDTO {
         private String title; // 책 제목
         private String author; // 저자
         private String publisher; // 출판사
+        private Double ratingAverage; // 별점 평균
     }
 
     @Getter
