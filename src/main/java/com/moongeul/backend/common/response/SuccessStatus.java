@@ -40,6 +40,9 @@ public enum SuccessStatus {
 	CREATE_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 생성 성공"),
 	GET_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 전체 조회 성공"),
 
+	/* QUESTION */
+	CREATE_QUESTION_SUCCESS(HttpStatus.OK, "질문 생성 성공"),
+
 	/**
 	 * 201
 	 */
