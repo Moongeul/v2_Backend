@@ -32,6 +32,7 @@ public enum SuccessStatus {
 
 	/* POST */
 	CREATE_POST_SUCCESS(HttpStatus.OK, "글쓰기 성공"),
+	GET_ALL_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 전체 조회 성공"),
 	GET_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 상세 조회 성공"),
 	UPDATE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 수정 성공"),
 	DELETE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 삭제 성공"),

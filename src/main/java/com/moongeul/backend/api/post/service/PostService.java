@@ -7,12 +7,11 @@ import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository
 import com.moongeul.backend.api.bookshelf.util.BookshelfCalculator;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
-import com.moongeul.backend.api.post.dto.PostRequestDTO;
-import com.moongeul.backend.api.post.dto.PostIdResponseDTO;
+import com.moongeul.backend.api.post.dto.*;
 import com.moongeul.backend.api.category.entity.Category;
-import com.moongeul.backend.api.post.dto.PostResponseDTO;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
+import com.moongeul.backend.api.post.entity.PostVisibility;
 import com.moongeul.backend.api.post.entity.Quote;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
@@ -21,6 +20,9 @@ import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,34 +88,68 @@ public class PostService {
                 .build();
     }
 
+    /* 기록(게시글) 전체 조회 */
+    @Transactional
+    public PostAllResponseDTO getPostAll(PostAllRequestDTO postAllRequestDTO, String email){
+
+        Pageable pageable = PageRequest.of(postAllRequestDTO.getPage() - 1, postAllRequestDTO.getSize());
+
+        // 빈 페이지 객체로 초기화 (null 방지)
+        Page<Post> postPage = Page.empty(pageable);
+
+        if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.PUBLIC)){
+            postPage = postRepository.findAll(pageable);
+        } else if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.FOLLOWERS)){
+            // TODO: 팔로워 게시물 조회 로직 (예: postRepository.findAllByFollowers(email, pageable))
+            postPage = postRepository.findAll(pageable); // 임시
+        }
+
+        List<PostDTO> postDTOList = new ArrayList<>();
+        if (!postPage.isEmpty()) {
+            for(Post post : postPage.getContent()){
+                postDTOList.add(getPostDetail(post.getId()));
+            }
+        }
+
+        return PostAllResponseDTO.builder()
+                .total(postPage.getTotalElements())
+                .page(postPage.getNumber() + 1) // 페이지 1부터 시작(임의 지정)
+                .size(postPage.getSize())
+                .totalPages(postPage.getTotalPages())
+                .isLast(postPage.isLast())
+                .data(postDTOList)
+                .build();
+    }
+
     /* 기록(게시글) 상세 조회 */
     @Transactional
-    public PostResponseDTO getPostDetail(Long postId){
+    public PostDTO getPostDetail(Long postId){
 
         Post post = getPost(postId);
         Book book = getBook(post.getBook().getIsbn());
 
         // 책 정보(필요 정보만) DTO
-        PostResponseDTO.BookInfo bookInfo = PostResponseDTO.BookInfo.builder()
+        PostDTO.BookInfo bookInfo = PostDTO.BookInfo.builder()
                 .isbn(book.getIsbn())
                 .bookImage(book.getBookImage())
                 .title(book.getTitle())
                 .author(book.getAuthor())
                 .publisher(book.getPublisher())
+                .ratingAverage(book.getRatingAverage())
                 .build();
 
         // 인상깊은구절 조회
         List<Quote> quotes = quoteRepository.findByPostId(postId); // 리스트 반환이기에 `orElseThrow()` 사용 x
-        List<PostResponseDTO.QuoteDTO> quoteDTOList = new ArrayList<>();
+        List<PostDTO.QuoteDTO> quoteDTOList = new ArrayList<>();
         for(Quote quote : quotes){
-            PostResponseDTO.QuoteDTO quoteDTO = PostResponseDTO.QuoteDTO.builder()
+            PostDTO.QuoteDTO quoteDTO = PostDTO.QuoteDTO.builder()
                     .quoteContent(quote.getQuoteContent())
                     .pageNumber(quote.getPageNumber())
                     .build();
             quoteDTOList.add(quoteDTO);
         }
 
-        return PostResponseDTO.builder()
+        return PostDTO.builder()
                 .bookInfo(bookInfo)
                 .rating(post.getRating())
                 .content(post.getContent())

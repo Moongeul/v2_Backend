@@ -1,8 +1,7 @@
 package com.moongeul.backend.api.post.controller;
 
-import com.moongeul.backend.api.post.dto.PostRequestDTO;
-import com.moongeul.backend.api.post.dto.PostIdResponseDTO;
-import com.moongeul.backend.api.post.dto.PostResponseDTO;
+import com.moongeul.backend.api.post.dto.*;
+import com.moongeul.backend.api.post.entity.PostVisibility;
 import com.moongeul.backend.api.post.service.PostService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -10,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,6 +45,32 @@ public class PostController {
     }
 
     @Operation(
+            summary = "기록(게시글) 전체 조회 API",
+            description = "메인페이지(홈화면)에서 사용되는 기록(게시글)의 전체 조회 API 입니다." +
+                    "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 전체 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "페이지는 1 이상이어야 합니다.(1부터 시작)")
+    })
+    @GetMapping
+    public ResponseEntity<ApiResponse<PostAllResponseDTO>> getAllPost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false, defaultValue = "PUBLIC") PostVisibility postVisibility,
+            @RequestParam(required = false, defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.(1부터 시작)") Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size
+    ) {
+
+        PostAllRequestDTO postAllRequestDTO = PostAllRequestDTO.builder()
+                .postVisibility(postVisibility)
+                .page(page)
+                .size(size)
+                .build();
+        PostAllResponseDTO response = postService.getPostAll(postAllRequestDTO, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_ALL_POST_SUCCESS, response);
+    }
+
+    @Operation(
             summary = "기록(게시글) 상세 조회 API",
             description = "기록(게시글)의 상세 조회 API 입니다."
     )
@@ -53,9 +79,9 @@ public class PostController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 기록(게시글)을 찾을 수 없습니다.")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PostResponseDTO>> getPost(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PostDTO>> getPost(@PathVariable Long id) {
 
-        PostResponseDTO response = postService.getPostDetail(id);
+        PostDTO response = postService.getPostDetail(id);
         return ApiResponse.success(SuccessStatus.GET_POST_SUCCESS, response);
     }
 
