@@ -46,7 +46,7 @@ public class BookService {
 
         if (naverBookSearchResponseDTO.getItems() == null || naverBookSearchResponseDTO.getItems().isEmpty()) {
             return BookSearchResponseDTO.builder()
-                    .books(new ArrayList<>())
+                    .data(new ArrayList<>())
                     .total(0)
                     .page(bookSearchRequestDTO.getPage())
                     .size(bookSearchRequestDTO.getSize())
@@ -105,7 +105,7 @@ public class BookService {
         boolean isLast = (start + bookSearchRequestDTO.getSize() - 1) >= total;
 
         return BookSearchResponseDTO.builder()
-                .books(bookDTOs)
+                .data(bookDTOs)
                 .total(total)
                 .page(bookSearchRequestDTO.getPage())
                 .size(bookSearchRequestDTO.getSize())

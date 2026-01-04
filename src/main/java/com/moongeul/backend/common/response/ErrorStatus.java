@@ -24,6 +24,7 @@ public enum ErrorStatus {
     INVALID_QUESTION_NUMBER(HttpStatus.BAD_REQUEST, "테스트에 잘못된 questionNo(질문번호)가 입력되었습니다. (질문번호: %d)"),
     INVALID_ANSWER_VALUE(HttpStatus.BAD_REQUEST, "테스트 답변은 A 또는 B여야 합니다. (질문번호: %d, 현재답변: %s)"),
     NO_SCORE_RESULT(HttpStatus.BAD_REQUEST, "테스트 점수 계산 결과가 없습니다."),
+    REVIEW_UNAUTHORIZED(HttpStatus.BAD_REQUEST, "수정하려는 회원의 리뷰가 아닙니다."),
 
     /**
      * 401 UNAUTHORIZED
@@ -40,11 +41,13 @@ public enum ErrorStatus {
     BOOK_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 도서를 찾을 수 없습니다."),
     POST_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 기록(게시글)을 찾을 수 없습니다."),
     CATEGORY_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
+    REVIEW_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
 
     /**
-     * 400 BAD_REQUEST (추가)
+     * 400 BAD_REQUEST
      */
     BOOK_ALREADY_ADDED_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 읽고 싶은 책으로 등록된 도서입니다."),
+    REVIEW_ALREADY_EXISTS_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성한 도서입니다."),
 
     /**
      * 500 SERVER_ERROR

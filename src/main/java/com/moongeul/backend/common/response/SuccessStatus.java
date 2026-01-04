@@ -24,30 +24,44 @@ public enum SuccessStatus {
 	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),
 	GET_BOOK_DETAIL_SUCCESS(HttpStatus.OK, "도서 상세 조회 성공"),
 	
+	/* BOOK REVIEW */
+	GET_BOOK_REVIEWS_SUCCESS(HttpStatus.OK, "책 리뷰 조회 성공"),
+	UPDATE_BOOK_REVIEW_SUCCESS(HttpStatus.OK, "책 리뷰 수정 성공"),
+	DELETE_BOOK_REVIEW_SUCCESS(HttpStatus.OK, "책 리뷰 삭제 성공"),
+	
 	/* BOOKSHELF */
-	ADD_WISH_READ_BOOK_SUCCESS(HttpStatus.OK, "읽고 싶은 책 등록 성공"),
 	REMOVE_WISH_READ_BOOK_SUCCESS(HttpStatus.OK, "읽고 싶은 책 삭제 성공"),
 	GET_WISH_READ_BOOKS_SUCCESS(HttpStatus.OK, "읽고 싶은 책장 조회 성공"),
 	GET_DONE_READ_BOOKS_SUCCESS(HttpStatus.OK, "읽은 책장 조회 성공"),
 
 	/* POST */
-	CREATE_POST_SUCCESS(HttpStatus.OK, "글쓰기 성공"),
 	GET_ALL_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 전체 조회 성공"),
 	GET_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 상세 조회 성공"),
 	UPDATE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 수정 성공"),
 	DELETE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 삭제 성공"),
 
 	/* CATEGORY */
-	CREATE_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 생성 성공"),
 	GET_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 전체 조회 성공"),
 
-	/* QUESTION */
-	CREATE_QUESTION_SUCCESS(HttpStatus.OK, "질문 생성 성공"),
 
 	/**
 	 * 201
 	 */
 
+	/* BOOK REVIEW */
+	CREATE_BOOK_REVIEW_SUCCESS(HttpStatus.CREATED, "책 리뷰 작성 성공"),
+
+	/* BOOKSHELF */
+	ADD_WISH_READ_BOOK_SUCCESS(HttpStatus.CREATED, "읽고 싶은 책 등록 성공"),
+
+	/* POST */
+	CREATE_POST_SUCCESS(HttpStatus.CREATED, "글쓰기 성공"),
+
+	/* CATEGORY */
+	CREATE_CATEGORY_SUCCESS(HttpStatus.CREATED, "카테고리 생성 성공"),
+
+	/* QUESTION */
+	CREATE_QUESTION_SUCCESS(HttpStatus.CREATED, "질문 생성 성공"),
 	;
 
 	private final HttpStatus httpStatus;
