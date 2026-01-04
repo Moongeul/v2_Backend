@@ -12,7 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewResponseDTO {
-    private Double reviewAverageRating; // 전체 리뷰 평균 평점
     private Long total; // 전체 리뷰 개수
     private Integer page; // 현재 페이지
     private Integer size; // 페이지당 개수

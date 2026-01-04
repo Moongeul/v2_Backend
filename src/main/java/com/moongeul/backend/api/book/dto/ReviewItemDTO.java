@@ -10,8 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewItemDTO {
+    private Long postId; // 게시글 ID
     private String nickname; // 사용자 닉네임
-    private Integer rating; // 별점
+    private Double rating; // 별점
     private String content; // 내용
 }
 
