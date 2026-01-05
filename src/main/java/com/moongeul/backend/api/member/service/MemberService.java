@@ -5,6 +5,7 @@ import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.member.util.NicknameGenerator;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
@@ -25,6 +26,7 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
+    private final NicknameGenerator nicknameGenerator;
 
     // 인가코드 받아 JWT로 교환 및 회원가입/로그인 처리
     @Transactional
@@ -88,12 +90,17 @@ public class MemberService {
 
     // 신규 회원가입 처리 로직 (DB 저장)
     private Member signUp(String socialId, String email, String name, String picture, String socialType) {
+
+        // 랜덤 닉네임 생성
+        String nickname = nicknameGenerator.generateUniqueNickname();
+
         Member newUser = Member.builder()
                 .email(email)
                 .name(name)
                 .profileImage(picture)
+                .nickname(nickname)
                 .password("OAuth Password") // 임시 패스워드
-                .socialId(socialId) // 예시 사용자명 생성
+                .socialId(socialId)
                 .socialType(socialType)
                 .role(Role.GUEST) // 이후 필요 정보 모두 입력 시 USER 로 승격
                 .build();
