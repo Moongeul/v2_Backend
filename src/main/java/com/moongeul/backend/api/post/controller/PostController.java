@@ -118,4 +118,28 @@ public class PostController {
         postService.deletePost(id, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.DELETE_POST_SUCCESS);
     }
+
+    @Operation(
+            summary = "공감 토글 API",
+            description = "기록(게시글)에 공감 표시 시 사용하는 공감 토글 API 입니다." +
+                    "<br><br>[enum] 기록(게시글) 공감 유형 ->" +
+                    "<br>- RELATABLE: 공감돼요" +
+                    "<br>- SAME_TASTE: 취향이 같아요" +
+                    "<br>- IMPRESSIVE_EXPRESSION: 표현이 인상적이에요" +
+                    "<br>- WANT_TO_READ: 읽고 싶네요" +
+                    "<br>- HELPFUL: 도움이 됐어요"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 공감 버튼 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "공감 유형은 필수 입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 기록(게시글)을 찾을 수 없습니다.")
+    })
+    @PostMapping("/like/{id}")
+    public ResponseEntity<ApiResponse<Void>> LikePost(@AuthenticationPrincipal UserDetails userDetails,
+                                                      @PathVariable Long id,
+                                                      @Valid @RequestBody LikeDTO likeDTO) {
+
+        postService.likePost(id, userDetails.getUsername(), likeDTO);
+        return ApiResponse.success_only(SuccessStatus.POST_LIKE_SUCCESS);
+    }
 }
