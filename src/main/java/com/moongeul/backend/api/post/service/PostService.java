@@ -9,10 +9,9 @@ import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.post.dto.*;
 import com.moongeul.backend.api.category.entity.Category;
-import com.moongeul.backend.api.post.entity.Post;
+import com.moongeul.backend.api.post.entity.*;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
-import com.moongeul.backend.api.post.entity.PostVisibility;
-import com.moongeul.backend.api.post.entity.Quote;
+import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.common.exception.NotFoundException;
@@ -28,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -37,6 +37,7 @@ public class PostService {
     private final MemberRepository memberRepository;
     private final BookRepository bookRepository;
     private final PostRepository postRepository;
+    private final LikeRepository likeRepository;
     private final CategoryRepository categoryRepository;
     private final QuoteRepository quoteRepository;
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
@@ -238,6 +239,60 @@ public class PostService {
 
                 quoteRepository.save(quote);
             }
+        }
+    }
+
+    /* 공감 토글 */
+    @Transactional
+    public void likePost(Long postId, String email, LikeDTO likeDTO){
+
+        Member member = getMemberByEmail(email);
+        Post post = getPost(postId);
+
+        // 사용자가 해당 게시글에 누른 공감 유형이 있다면
+        Optional<Likes> existingLike = likeRepository.findByPostIdAndMemberId(postId, member.getId());
+
+        if(existingLike.isPresent()){
+            Likes currentLikes = existingLike.get();
+
+            // 사용자가 해당 게시글에 누른 "같은 공감 유형"이 있다면(또 누른 경우) -> 공감 삭제
+            if (currentLikes.getLikeType().equals(likeDTO.getLikeType())) {
+                decrementLikeCount(post, currentLikes.getLikeType());
+                likeRepository.delete(currentLikes);
+                return;
+            }
+
+            // 사용자가 해당 게시글에 누른 "다른 공감 유형"이 있다면 -> 공감 유형 수정
+            decrementLikeCount(post, currentLikes.getLikeType());
+            currentLikes.changeLikeType(likeDTO.getLikeType());
+            incrementLikeCount(post, likeDTO.getLikeType());
+            return;
+        }
+        
+        // 처음 공감을 누르는 경우 -> 새로 저장
+        likeRepository.save(likeDTO.toEntity(member, post));
+        incrementLikeCount(post, likeDTO.getLikeType());
+    }
+
+    // 공감 카운트 증가 메서드
+    private void incrementLikeCount(Post post, LikeType likeType) {
+        switch (likeType) {
+            case RELATABLE: post.incrementRelatableCount(); break;
+            case SAME_TASTE: post.incrementSameTasteCount(); break;
+            case IMPRESSIVE_EXPRESSION: post.incrementImpressiveExpressionCount(); break;
+            case WANT_TO_READ: post.incrementWantToReadCount(); break;
+            case HELPFUL: post.incrementHelpfulCount(); break;
+        }
+    }
+
+    // 공감 카운트 감소 메서드
+    private void decrementLikeCount(Post post, LikeType likeType) {
+        switch (likeType) {
+            case RELATABLE: post.decrementRelatableCount(); break;
+            case SAME_TASTE: post.decrementSameTasteCount(); break;
+            case IMPRESSIVE_EXPRESSION: post.decrementImpressiveExpressionCount(); break;
+            case WANT_TO_READ: post.decrementWantToReadCount(); break;
+            case HELPFUL: post.decrementHelpfulCount(); break;
         }
     }
 

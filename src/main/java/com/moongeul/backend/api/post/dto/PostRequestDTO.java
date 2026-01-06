@@ -65,6 +65,11 @@ public class PostRequestDTO {
                 .rating(finalRating)
                 .page(finalPage)
                 .content(this.content)
+                .relatableCount(0)
+                .sameTasteCount(0)
+                .impressiveExpressionCount(0)
+                .wantToReadCount(0)
+                .helpfulCount(0)
                 .member(member)
                 .book(book)
                 .build();
