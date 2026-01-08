@@ -6,6 +6,7 @@ import com.moongeul.backend.api.member.entity.Follow;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +31,16 @@ public class FollowService {
         Member following_member = getById(following_id);
         Member follower_member = getMemberByEmail(email);
 
-        Optional<Follow> existingfollow = followRepository.findByFollowingIdAndFollowerId(following_member.getId(), follower_member.getId());
+        // 에러처리: 자기자신을 팔로우하는 경우 (불가)
+        if(following_member.equals(follower_member)){
+            throw new BadRequestException(ErrorStatus.SELF_FOLLOW_NOT_ALLOWED.getMessage());
+        }
+
+        Optional<Follow> existingFollow = followRepository.findByFollowingIdAndFollowerId(following_member.getId(), follower_member.getId());
 
         // 이미 팔로우하고 있는 사용자라면 -> 팔로우 취소
-        if(existingfollow.isPresent()){
-            Follow currentFollow = existingfollow.get();
+        if(existingFollow.isPresent()){
+            Follow currentFollow = existingFollow.get();
             followRepository.delete(currentFollow);
         } else{ // 처음 팔로우 -> 팔로우 성공
             Follow new_follow = Follow.builder()
@@ -48,7 +54,7 @@ public class FollowService {
 
     // 팔로잉 사용자 목록 조회
     @Transactional
-    public List<UserInfoDTO> getfollowing(String email){
+    public List<UserInfoDTO> getFollowing(String email){
         Member follower_member = getMemberByEmail(email);
 
         return followRepository.findByFollowings(follower_member.getId())
@@ -68,7 +74,7 @@ public class FollowService {
 
     // 팔로워 사용자 목록 조회
     @Transactional(readOnly = true) // 생성, 수정, 삭제가 없는 메서드
-    public List<UserInfoDTO> getfollower(String email){
+    public List<UserInfoDTO> getFollower(String email){
         Member following_member = getMemberByEmail(email);
 
         return followRepository.findByFollowers(following_member.getId())

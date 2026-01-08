@@ -139,7 +139,7 @@ public class MemberController {
     })
     @GetMapping("/following")
     public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails){
-        List<UserInfoDTO> response = followService.getfollowing(userDetails.getUsername());
+        List<UserInfoDTO> response = followService.getFollowing(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_FOLLOWING_SUCCESS, response);
     }
 
@@ -153,7 +153,7 @@ public class MemberController {
     })
     @GetMapping("/follower")
     public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
-        List<UserInfoDTO> response = followService.getfollower(userDetails.getUsername());
+        List<UserInfoDTO> response = followService.getFollower(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
     }
     
