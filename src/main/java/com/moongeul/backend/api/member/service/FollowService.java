@@ -52,8 +52,8 @@ public class FollowService {
         }
     }
 
-    // 팔로잉 사용자 목록 조회
-    @Transactional
+    // 팔로잉 사용자 목록 조회 // 생성, 수정, 삭제가 없는 메서드
+    @Transactional(readOnly = true)
     public List<UserInfoDTO> getFollowing(String email){
         Member follower_member = getMemberByEmail(email);
 
