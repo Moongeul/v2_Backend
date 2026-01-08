@@ -140,7 +140,7 @@ public class MemberController {
     @GetMapping("/following")
     public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails){
         List<UserInfoDTO> response = followService.getfollowing(userDetails.getUsername());
-        return ApiResponse.success(SuccessStatus.FOLLOW_SUCCESS, response);
+        return ApiResponse.success(SuccessStatus.GET_FOLLOWING_SUCCESS, response);
     }
 
     @Operation(
@@ -154,7 +154,7 @@ public class MemberController {
     @GetMapping("/follower")
     public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
         List<UserInfoDTO> response = followService.getfollower(userDetails.getUsername());
-        return ApiResponse.success(SuccessStatus.FOLLOW_SUCCESS, response);
+        return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
     }
     
 }
