@@ -4,6 +4,7 @@ import com.moongeul.backend.api.member.dto.LoginResponseDTO;
 import com.moongeul.backend.api.member.dto.LoginRequestDTO;
 import com.moongeul.backend.api.member.dto.UserInfoDTO;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
+import com.moongeul.backend.api.member.service.FollowService;
 import com.moongeul.backend.api.member.service.MemberService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -17,6 +18,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "Member", description = "Member(회원) 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
@@ -24,7 +27,13 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final FollowService followService;
 
+    /*
+     *
+     * 로그인 API
+     *
+     * */
     @Operation(
             summary = "구글 로그인 API",
             description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. " +
@@ -96,6 +105,56 @@ public class MemberController {
     public ResponseEntity<ApiResponse<JwtTokenDTO>> reissueAccessToken(@RequestHeader(value = "Authorization-Refresh") String refreshToken){
         JwtTokenDTO response = memberService.reissueToken(refreshToken);
         return ApiResponse.success(SuccessStatus.REISSUE_TOKEN_SUCCESS, response);
+    }
+
+    /*
+    *
+    * 팔로잉/팔로우 API
+    *
+    * */
+    @Operation(
+            summary = "팔로우/언팔로우 API",
+            description = "사용자를 팔로우 또는 언팔로우 합니다." +
+                    "<br>- 팔로우하고 있는 사용자에게 해당 API를 한 번 더 사용 시, 팔로우가 취소됩니다." +
+                    "<br>- 즉, 팔로우/언팔로우 두 버튼에 모두 해당 API를 사용하시면 됩니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로우 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @PostMapping("/follow/{id}")
+    public ResponseEntity<ApiResponse<Void>> follow(@AuthenticationPrincipal UserDetails userDetails,
+                                                           @PathVariable Long id){
+        followService.follow(id, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.FOLLOW_SUCCESS);
+    }
+
+    @Operation(
+            summary = "팔로잉 사용자 목록 조회 API",
+            description = "내가 팔로우한 사용자(팔로잉)의 목록을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로잉 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/following")
+    public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails){
+        List<UserInfoDTO> response = followService.getFollowing(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_FOLLOWING_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "팔로워 사용자 목록 조회 API",
+            description = "나를 팔로잉한 사용자(팔로워)의 목록을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로워 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/follower")
+    public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
+        List<UserInfoDTO> response = followService.getFollower(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
     }
     
 }
