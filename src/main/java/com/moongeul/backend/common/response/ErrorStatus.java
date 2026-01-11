@@ -31,8 +31,8 @@ public enum ErrorStatus {
      */
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "유효하지 않은 인가코드 입니다."),
     TOKEN_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었거나 유효하지 않은 토큰입니다."),
-    POST_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "수정하려는 회원의 게시글이 아닙니다."),
-    CATEGORY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "수정하려는 회원의 카테고리가 아닙니다."),
+    POST_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "회원의 게시글이 아닙니다."),
+    CATEGORY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "회원의 카테고리가 아닙니다."),
 
     /**
      * 404 NOT_FOUND

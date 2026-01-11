@@ -47,7 +47,14 @@ public class PostController {
     @Operation(
             summary = "기록(게시글) 전체 조회 API",
             description = "메인페이지(홈화면)에서 사용되는 기록(게시글)의 전체 조회 API 입니다." +
-                    "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE"
+                    "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE" +
+                    "<br><br>[필드 설명]" +
+                    "<br>likesInfo: 공감 버튼 개수 정보" +
+                    "<br>- relatableCount: '공감돼요' 개수" +
+                    "<br>- sameTasteCount: '취향이 같아요' 개수" +
+                    "<br>- impressiveExpressionCount: '표현이 인상적이에요' 개수" +
+                    "<br>- wantToReadCount: '읽고싶네요' 개수" +
+                    "<br>- helpfulCount: '도움이 됐어요' 개수"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 전체 조회 성공"),
@@ -72,7 +79,14 @@ public class PostController {
 
     @Operation(
             summary = "기록(게시글) 상세 조회 API",
-            description = "기록(게시글)의 상세 조회 API 입니다."
+            description = "기록(게시글)의 상세 조회 API 입니다." +
+                    "<br><br>[필드 설명]" +
+                    "<br>likesInfo: 공감 버튼 개수 정보" +
+                    "<br>- relatableCount: '공감돼요' 개수" +
+                    "<br>- sameTasteCount: '취향이 같아요' 개수" +
+                    "<br>- impressiveExpressionCount: '표현이 인상적이에요' 개수" +
+                    "<br>- wantToReadCount: '읽고싶네요' 개수" +
+                    "<br>- helpfulCount: '도움이 됐어요' 개수"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록(게시글) 상세 조회 성공"),

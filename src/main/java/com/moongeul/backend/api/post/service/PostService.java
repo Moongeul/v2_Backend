@@ -53,6 +53,11 @@ public class PostService {
         Category category = null;
         if(postRequestDTO.getCategoryId() != 0){
             category = getCategory(postRequestDTO.getCategoryId());
+
+            // 예외처리: 작성하는 사람과 카테고리 주인이 같은지 확인 (본인의 카테고리인지)
+            if(!category.getMember().getId().equals(member.getId())){
+                throw new UnauthorizedException(ErrorStatus.CATEGORY_UNAUTHORIZED.getMessage());
+            }
         }
         
         Post newPost = postRequestDTO.toEntity(category, member, book);
@@ -93,6 +98,7 @@ public class PostService {
     @Transactional
     public PostAllResponseDTO getPostAll(PostAllRequestDTO postAllRequestDTO, String email){
 
+        Member member = getMemberByEmail(email);
         Pageable pageable = PageRequest.of(postAllRequestDTO.getPage() - 1, postAllRequestDTO.getSize());
 
         // 빈 페이지 객체로 초기화 (null 방지)
@@ -101,8 +107,7 @@ public class PostService {
         if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.PUBLIC)){
             postPage = postRepository.findAll(pageable);
         } else if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.FOLLOWERS)){
-            // TODO: 팔로워 게시물 조회 로직 (예: postRepository.findAllByFollowers(email, pageable))
-            postPage = postRepository.findAll(pageable); // 임시
+            postPage = postRepository.findAllByFollower(member, pageable);
         }
 
         List<PostDTO> postDTOList = new ArrayList<>();
@@ -129,6 +134,14 @@ public class PostService {
         Post post = getPost(postId);
         Book book = getBook(post.getBook().getIsbn());
 
+        // 멤버 정보(필요 정보만) DTO
+        PostDTO.MemberInfo memberInfo = PostDTO.MemberInfo.builder()
+                .id(post.getMember().getId())
+                .nickname(post.getMember().getNickname())
+                .profileImage(post.getMember().getProfileImage())
+                .readingTasteType(post.getMember().getReadingTasteType())
+                .build();
+
         // 책 정보(필요 정보만) DTO
         PostDTO.BookInfo bookInfo = PostDTO.BookInfo.builder()
                 .isbn(book.getIsbn())
@@ -136,6 +149,7 @@ public class PostService {
                 .title(book.getTitle())
                 .author(book.getAuthor())
                 .publisher(book.getPublisher())
+                .pubdate(book.getPubdate())
                 .ratingAverage(book.getRatingAverage())
                 .build();
 
@@ -150,11 +164,25 @@ public class PostService {
             quoteDTOList.add(quoteDTO);
         }
 
+        // 공감 개수 DTO
+        PostDTO.LikesInfo likesInfo = PostDTO.LikesInfo.builder()
+                .relatableCount(post.getRelatableCount())
+                .sameTasteCount(post.getSameTasteCount())
+                .impressiveExpressionCount(post.getImpressiveExpressionCount())
+                .wantToReadCount(post.getWantToReadCount())
+                .helpfulCount(post.getHelpfulCount())
+                .build();
+
         return PostDTO.builder()
+                .memberInfo(memberInfo)
+                .created(post.getCreatedAt())
                 .bookInfo(bookInfo)
                 .rating(post.getRating())
                 .content(post.getContent())
+                .readDate(post.getReadDate())
+                .quotesCnt(quoteDTOList.size())
                 .quotes(quoteDTOList)
+                .likesInfo(likesInfo)
                 .build();
     }
 
