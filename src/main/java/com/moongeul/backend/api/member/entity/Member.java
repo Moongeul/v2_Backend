@@ -69,4 +69,11 @@ public class Member extends BaseTimeEntity {
     public void updateReadingTasteType(ReadingTasteType readingTasteType) {
         this.readingTasteType = readingTasteType;
     }
+
+    /**
+     * 닉네임 업데이트
+     */
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

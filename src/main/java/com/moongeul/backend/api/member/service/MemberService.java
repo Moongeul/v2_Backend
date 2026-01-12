@@ -7,6 +7,7 @@ import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
+import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -148,5 +149,51 @@ public class MemberService {
 
         // 5. 재발급 토큰 반환
         return jwtToken;
+    }
+
+    // 닉네임 재생성
+    @Transactional
+    public NicknameResponseDTO regenerateNickname(String email) {
+        Member member = getMemberByEmail(email);
+
+        // 랜덤 닉네임 생성
+        String newNickname = nicknameGenerator.generateUniqueNickname();
+
+        // 닉네임 업데이트
+        member.updateNickname(newNickname);
+
+        return NicknameResponseDTO.builder()
+                .nickname(newNickname)
+                .build();
+    }
+
+    // 닉네임 직접 등록
+    @Transactional
+    public NicknameResponseDTO updateNickname(String email, NicknameRequestDTO nicknameRequestDTO) {
+        Member member = getMemberByEmail(email);
+
+        String nickname = nicknameRequestDTO.getNickname();
+
+        // 닉네임 중복 체크
+        if (memberRepository.findByNickname(nickname).isPresent()) {
+            throw new BadRequestException(ErrorStatus.NICKNAME_ALREADY_EXISTS_EXCEPTION.getMessage());
+        }
+
+        // 닉네임 업데이트
+        member.updateNickname(nickname);
+
+        return NicknameResponseDTO.builder()
+                .nickname(nickname)
+                .build();
+    }
+
+    // 닉네임 중복 체크
+    @Transactional(readOnly = true)
+    public NicknameCheckResponseDTO checkNicknameDuplicate(String nickname) {
+        boolean isDuplicate = memberRepository.findByNickname(nickname).isPresent();
+
+        return NicknameCheckResponseDTO.builder()
+                .isDuplicate(isDuplicate)
+                .build();
     }
 }

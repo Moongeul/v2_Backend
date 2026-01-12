@@ -2,6 +2,9 @@ package com.moongeul.backend.api.member.controller;
 
 import com.moongeul.backend.api.member.dto.LoginResponseDTO;
 import com.moongeul.backend.api.member.dto.LoginRequestDTO;
+import com.moongeul.backend.api.member.dto.NicknameCheckResponseDTO;
+import com.moongeul.backend.api.member.dto.NicknameRequestDTO;
+import com.moongeul.backend.api.member.dto.NicknameResponseDTO;
 import com.moongeul.backend.api.member.dto.UserInfoDTO;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.FollowService;
@@ -155,6 +158,54 @@ public class MemberController {
     public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
         List<UserInfoDTO> response = followService.getFollower(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "랜덤 닉네임 재생성 API",
+            description = "랜덤 닉네임을 다시 생성하여 등록하고 바뀐 닉네임을 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 재생성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @PostMapping("/nickname/regenerate")
+    public ResponseEntity<ApiResponse<NicknameResponseDTO>> regenerateNickname(@AuthenticationPrincipal UserDetails userDetails) {
+
+        NicknameResponseDTO nicknameResponseDTO = memberService.regenerateNickname(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.REGENERATE_NICKNAME_SUCCESS, nicknameResponseDTO);
+    }
+
+    @Operation(
+            summary = "닉네임 등록 API",
+            description = "사용자가 직접 입력한 닉네임을 등록합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 사용 중인 닉네임입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @PatchMapping("/nickname")
+    public ResponseEntity<ApiResponse<NicknameResponseDTO>> updateNickname(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody NicknameRequestDTO nicknameRequestDTO) {
+        
+        NicknameResponseDTO nicknameResponseDTO = memberService.updateNickname(userDetails.getUsername(), nicknameRequestDTO);
+        return ApiResponse.success(SuccessStatus.UPDATE_NICKNAME_SUCCESS, nicknameResponseDTO);
+    }
+
+    @Operation(
+            summary = "닉네임 중복 체크 API",
+            description = "전달받은 닉네임이 중복인지 체크합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 중복 체크 성공")
+    })
+    @GetMapping("/nickname/check")
+    public ResponseEntity<ApiResponse<NicknameCheckResponseDTO>> checkNicknameDuplicate(
+            @RequestParam String nickname) {
+        
+        NicknameCheckResponseDTO nicknameCheckResponseDTO = memberService.checkNicknameDuplicate(nickname);
+        return ApiResponse.success(SuccessStatus.CHECK_NICKNAME_DUPLICATE_SUCCESS, nicknameCheckResponseDTO);
     }
     
 }

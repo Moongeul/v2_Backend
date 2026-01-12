@@ -22,6 +22,9 @@ public enum SuccessStatus {
 	FOLLOW_SUCCESS(HttpStatus.OK, "팔로우 성공"),
 	GET_FOLLOWING_SUCCESS(HttpStatus.OK, "팔로잉 목록 조회 성공"),
 	GET_FOLLOWER_SUCCESS(HttpStatus.OK, "팔로워 목록 조회 성공"),
+	REGENERATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 재생성 성공"),
+	UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 등록 성공"),
+	CHECK_NICKNAME_DUPLICATE_SUCCESS(HttpStatus.OK, "닉네임 중복 체크 성공"),
 
 	/* BOOK */
 	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),
