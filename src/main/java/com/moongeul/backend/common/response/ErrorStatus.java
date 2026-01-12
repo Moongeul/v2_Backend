@@ -48,6 +48,7 @@ public enum ErrorStatus {
      */
     BOOK_ALREADY_ADDED_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 읽고 싶은 책으로 등록된 도서입니다."),
     REVIEW_ALREADY_EXISTS_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성한 도서입니다."),
+    NICKNAME_ALREADY_EXISTS_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다."),
     SELF_FOLLOW_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신은 팔로우할 수 없습니다."),
 
     /**
