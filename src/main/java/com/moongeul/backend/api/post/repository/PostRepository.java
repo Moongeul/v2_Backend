@@ -26,12 +26,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "OR p.member = :member")
     Page<Post> findAllByFollower(@Param("member") Member member, Pageable pageable);
 
-    // 같은 취향 사용자들의 기록 중 최근 1주일 내 가장 공감을 많이 받은 기록 조회 (전체 조회 후 정렬)
+    // 같은 취향 사용자들의 기록 중 이번 주 가장 공감을 많이 받은 기록 조회
+    // 모든 공감 유형의 합계(relatableCount + sameTasteCount + impressiveExpressionCount + wantToReadCount + helpfulCount) 기준으로 정렬
     @Query("SELECT p FROM Post p " +
             "WHERE p.member.readingTasteType = :readingTasteType " +
-            "AND p.createdAt >= :oneWeekAgo " +
-            "ORDER BY p.relatableCount DESC, p.createdAt DESC")
+            "AND p.createdAt >= :weekStart " +
+            "ORDER BY (p.relatableCount + p.sameTasteCount + p.impressiveExpressionCount + p.wantToReadCount + p.helpfulCount) DESC, p.createdAt DESC")
     List<Post> findWeeklyRecommendationByReadingTasteType(
             @Param("readingTasteType") ReadingTasteType readingTasteType,
-            @Param("oneWeekAgo") LocalDateTime oneWeekAgo);
+            @Param("weekStart") LocalDateTime weekStart);
 }

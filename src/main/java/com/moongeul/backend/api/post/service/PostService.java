@@ -25,7 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -360,14 +363,16 @@ public class PostService {
             throw new NotFoundException(ErrorStatus.USER_READING_TASTE_NOT_FOUND_EXCEPTION.getMessage());
         }
 
-        // 최근 1주일 전 날짜 계산
-        LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
+        // 이번 주 월요일 00:00:00부터 오늘까지 계산
+        LocalDate today = LocalDate.now();
+        LocalDate thisWeekMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDateTime weekStart = thisWeekMonday.atStartOfDay();
 
-        // 같은 취향 사용자들의 기록 중 최근 1주일 내 가장 공감을 많이 받은 기록 조회
+        // 같은 취향 사용자들의 기록 중 이번 주(월요일~오늘) 가장 공감을 많이 받은 기록 조회
         // 전체 기록을 조회한 후 정렬하여 가장 공감을 많이 받은 기록 선택
         List<Post> recommendedPosts = postRepository.findWeeklyRecommendationByReadingTasteType(
                 member.getReadingTasteType(),
-                oneWeekAgo
+                weekStart
         );
 
         // 추천 기록이 없으면 예외 처리
