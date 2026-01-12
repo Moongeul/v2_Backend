@@ -149,4 +149,20 @@ public class MemberService {
         // 5. 재발급 토큰 반환
         return jwtToken;
     }
+
+    // 닉네임 재생성
+    @Transactional
+    public NicknameResponseDTO regenerateNickname(String email) {
+        Member member = getMemberByEmail(email);
+
+        // 랜덤 닉네임 생성
+        String newNickname = nicknameGenerator.generateUniqueNickname();
+
+        // 닉네임 업데이트
+        member.updateNickname(newNickname);
+
+        return NicknameResponseDTO.builder()
+                .nickname(newNickname)
+                .build();
+    }
 }

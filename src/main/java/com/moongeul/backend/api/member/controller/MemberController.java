@@ -2,6 +2,7 @@ package com.moongeul.backend.api.member.controller;
 
 import com.moongeul.backend.api.member.dto.LoginResponseDTO;
 import com.moongeul.backend.api.member.dto.LoginRequestDTO;
+import com.moongeul.backend.api.member.dto.NicknameResponseDTO;
 import com.moongeul.backend.api.member.dto.UserInfoDTO;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.FollowService;
@@ -155,6 +156,21 @@ public class MemberController {
     public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
         List<UserInfoDTO> response = followService.getFollower(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "닉네임 재생성 API",
+            description = "랜덤 닉네임을 다시 생성하여 등록하고 바뀐 닉네임을 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 재생성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @PostMapping("/nickname/regenerate")
+    public ResponseEntity<ApiResponse<NicknameResponseDTO>> regenerateNickname(@AuthenticationPrincipal UserDetails userDetails) {
+
+        NicknameResponseDTO nicknameResponseDTO = memberService.regenerateNickname(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.REGENERATE_NICKNAME_SUCCESS, nicknameResponseDTO);
     }
     
 }
