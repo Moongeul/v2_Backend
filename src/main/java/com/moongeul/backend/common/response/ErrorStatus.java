@@ -42,6 +42,8 @@ public enum ErrorStatus {
     POST_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 기록(게시글)을 찾을 수 없습니다."),
     CATEGORY_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
     REVIEW_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
+    USER_READING_TASTE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "사용자의 독서 취향 정보를 찾을 수 없습니다."),
+    WEEKLY_RECOMMENDATION_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "주간 추천 기록을 찾을 수 없습니다."),
 
     /**
      * 400 BAD_REQUEST
