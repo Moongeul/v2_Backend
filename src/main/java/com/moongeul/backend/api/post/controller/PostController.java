@@ -156,4 +156,20 @@ public class PostController {
         postService.likePost(id, userDetails.getUsername(), likeDTO);
         return ApiResponse.success_only(SuccessStatus.POST_LIKE_SUCCESS);
     }
+
+    @Operation(
+            summary = "주간 추천 기록 조회 API",
+            description = "같은 취향을 가진 사용자 중에서 최근 1주일 내 가장 공감을 많이 받은 기록을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "주간 추천 기록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주간 추천 기록을 찾을 수 없습니다.")
+    })
+    @GetMapping("/weekly-recommendation")
+    public ResponseEntity<ApiResponse<WeeklyRecommendationResponseDTO>> getWeeklyRecommendation(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        WeeklyRecommendationResponseDTO weeklyRecommendationResponseDTO = postService.getWeeklyRecommendation(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_WEEKLY_RECOMMENDATION_SUCCESS, weeklyRecommendationResponseDTO);
+    }
 }

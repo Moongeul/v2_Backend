@@ -25,6 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -347,5 +351,46 @@ public class PostService {
     private Category getCategory(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    // 주간 추천 기록 조회
+    @Transactional(readOnly = true)
+    public WeeklyRecommendationResponseDTO getWeeklyRecommendation(String email) {
+        Member member = getMemberByEmail(email);
+        
+        // 사용자의 독서 취향이 없으면 예외 처리
+        if (member.getReadingTasteType() == null) {
+            throw new NotFoundException(ErrorStatus.USER_READING_TASTE_NOT_FOUND_EXCEPTION.getMessage());
+        }
+
+        // 이번 주 월요일 00:00:00부터 오늘까지 계산
+        LocalDate today = LocalDate.now();
+        LocalDate thisWeekMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDateTime weekStart = thisWeekMonday.atStartOfDay();
+
+        // 같은 취향 사용자들의 기록 중 이번 주(월요일~오늘) 가장 공감을 많이 받은 기록 조회
+        // 전체 기록을 조회한 후 정렬하여 가장 공감을 많이 받은 기록 선택
+        List<Post> recommendedPosts = postRepository.findWeeklyRecommendationByReadingTasteType(
+                member.getReadingTasteType(),
+                weekStart
+        );
+
+        // 추천 기록이 없으면 예외 처리
+        if (recommendedPosts.isEmpty()) {
+            throw new NotFoundException(ErrorStatus.WEEKLY_RECOMMENDATION_NOT_FOUND_EXCEPTION.getMessage());
+        }
+
+        // 가장 공감을 많이 받은 기록 (첫 번째 요소 - ORDER BY로 정렬된 결과)
+        Post post = recommendedPosts.get(0);
+
+        return WeeklyRecommendationResponseDTO.builder()
+                .postId(post.getId())
+                .bookImage(post.getBook().getBookImage())
+                .authorName(post.getMember().getName())
+                .profileImage(post.getMember().getProfileImage())
+                .rating(post.getRating())
+                .content(post.getContent())
+                .readingTasteType(member.getReadingTasteType())
+                .build();
     }
 }
