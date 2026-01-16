@@ -51,6 +51,9 @@ public enum SuccessStatus {
 	/* CATEGORY */
 	GET_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 전체 조회 성공"),
 
+	/* ALARM */
+	REGISTER_DEVICE_TOKEN(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
+
 
 	/**
 	 * 201

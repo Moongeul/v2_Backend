@@ -60,6 +60,9 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Firebase Admin SDK: 서버 측에서 FCM, 인증 등을 제어할 수 있게 해주는 라이브러리
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
 }
 
 tasks.named('test') {
