@@ -49,7 +49,12 @@ jobs:
 
       - name: Create Firebase serviceAccountKey.json
         run: |
-          echo "${{ secrets.FIREBASE_JSON }}" > src/main/resources/serviceAccountKey.json
+          printf '%s' "${{ secrets.FIREBASE_JSON }}" > src/main/resources/serviceAccountKey.json
+
+      - name: Check Firebase JSON file size
+        run: |
+          ls -l src/main/resources/serviceAccountKey.json
+          wc -c < src/main/resources/serviceAccountKey.json
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
