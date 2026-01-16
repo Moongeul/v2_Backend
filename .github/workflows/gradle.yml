@@ -46,10 +46,10 @@ jobs:
       - name: Create application-book.yml
         run: |
           echo "${{ secrets.APPLICATION_BOOK_YML }}" > src/main/resources/application-book.yml
-
-      - name: Create Firebase serviceAccountKey.json
+          
+      - name: Create Firebase serviceAccountKey.json (base64)
         run: |
-          printf '%s' "${{ secrets.FIREBASE_JSON_KEY }}" > src/main/resources/serviceAccountKey.json
+          echo "${{ secrets.FIREBASE_JSON_KEY }}" | base64 -d > src/main/resources/serviceAccountKey.json
 
       - name: Check Firebase JSON file size
         run: |
