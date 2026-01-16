@@ -20,6 +20,7 @@ public enum SuccessStatus {
 	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
 	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),
 	FOLLOW_SUCCESS(HttpStatus.OK, "팔로우 성공"),
+	UNFOLLOW_SUCCESS(HttpStatus.OK, "언팔로우 성공"),
 	GET_FOLLOWING_SUCCESS(HttpStatus.OK, "팔로잉 목록 조회 성공"),
 	GET_FOLLOWER_SUCCESS(HttpStatus.OK, "팔로워 목록 조회 성공"),
 	REGENERATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 재생성 성공"),

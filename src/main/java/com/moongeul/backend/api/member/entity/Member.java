@@ -30,6 +30,9 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private ReadingTasteType readingTasteType; // 독서 취향 유형
 
+    @Enumerated(EnumType.STRING)
+    private PrivacyLevel privacyLevel = PrivacyLevel.PUBLIC; // 기본값: 전체공개
+
     @Column(unique = true)
     private String socialId; // 소셜 로그인 ID (고유값)
     
@@ -75,5 +78,12 @@ public class Member extends BaseTimeEntity {
      */
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    /**
+     * 공개 범위 변경 메서드
+     */
+    public void updatePrivacy(PrivacyLevel level) {
+        this.privacyLevel = level;
     }
 }

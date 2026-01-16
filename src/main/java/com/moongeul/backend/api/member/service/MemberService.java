@@ -2,6 +2,7 @@ package com.moongeul.backend.api.member.service;
 
 import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.MemberRepository;
@@ -101,6 +102,7 @@ public class MemberService {
                 .profileImage(picture)
                 .nickname(nickname)
                 .password("OAuth Password") // 임시 패스워드
+                .privacyLevel(PrivacyLevel.PUBLIC) // 기본값: 전체공개
                 .socialId(socialId)
                 .socialType(socialType)
                 .role(Role.GUEST) // 이후 필요 정보 모두 입력 시 USER 로 승격

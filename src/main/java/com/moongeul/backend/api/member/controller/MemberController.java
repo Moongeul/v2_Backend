@@ -1,11 +1,6 @@
 package com.moongeul.backend.api.member.controller;
 
-import com.moongeul.backend.api.member.dto.LoginResponseDTO;
-import com.moongeul.backend.api.member.dto.LoginRequestDTO;
-import com.moongeul.backend.api.member.dto.NicknameCheckResponseDTO;
-import com.moongeul.backend.api.member.dto.NicknameRequestDTO;
-import com.moongeul.backend.api.member.dto.NicknameResponseDTO;
-import com.moongeul.backend.api.member.dto.UserInfoDTO;
+import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.FollowService;
 import com.moongeul.backend.api.member.service.MemberService;
@@ -116,10 +111,8 @@ public class MemberController {
     *
     * */
     @Operation(
-            summary = "팔로우/언팔로우 API",
-            description = "사용자를 팔로우 또는 언팔로우 합니다." +
-                    "<br>- 팔로우하고 있는 사용자에게 해당 API를 한 번 더 사용 시, 팔로우가 취소됩니다." +
-                    "<br>- 즉, 팔로우/언팔로우 두 버튼에 모두 해당 API를 사용하시면 됩니다."
+            summary = "팔로우 API",
+            description = "사용자를 팔로우 합니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로우 성공"),
@@ -133,33 +126,63 @@ public class MemberController {
     }
 
     @Operation(
+            summary = "언팔로우(팔로우 취소) API",
+            description = "사용자를 언팔로우 합니다." +
+                    "<br>- '승인 대기중'일 때 해당 API 사용 시, 팔로우 요청 취소 됩니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "언팔로우 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @PostMapping("/unfollow/{id}")
+    public ResponseEntity<ApiResponse<Void>> unfollow(@AuthenticationPrincipal UserDetails userDetails,
+                                                    @PathVariable Long id){
+        followService.unfollow(id, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.UNFOLLOW_SUCCESS);
+    }
+
+    @Operation(
             summary = "팔로잉 사용자 목록 조회 API",
-            description = "내가 팔로우한 사용자(팔로잉)의 목록을 조회합니다."
+            description = "내가 팔로우한 사용자(팔로잉)의 목록을 조회합니다." +
+                    "<br><br>[enum] myFollowStatus: 내가 해당 팔로워를 팔로우했는지 확인하는 필드:" +
+                    "<br>- NONE: 팔로우 아님" +
+                    "<br>- PENDING: 요청 대기중" +
+                    "<br>- ACCEPTED: 팔로우 완료" +
+                    "<br>- *참고: 해당 목록은 모두 ACCEPTED 입니다. (팔로우한 사용자들이기 때문에)"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로잉 목록 조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/following")
-    public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails){
-        List<UserInfoDTO> response = followService.getFollowing(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<List<FollowResponseDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails){
+        List<FollowResponseDTO> response = followService.getFollowing(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_FOLLOWING_SUCCESS, response);
     }
 
     @Operation(
             summary = "팔로워 사용자 목록 조회 API",
-            description = "나를 팔로잉한 사용자(팔로워)의 목록을 조회합니다."
+            description = "나를 팔로잉한 사용자(팔로워)의 목록을 조회합니다." +
+                    "<br><br>[enum] myFollowStatus: 내가 해당 팔로워를 팔로우했는지 확인하는 필드:" +
+                    "<br>- NONE: 팔로우 아님" +
+                    "<br>- PENDING: 요청 대기중" +
+                    "<br>- ACCEPTED: 팔로우 완료"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로워 목록 조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/follower")
-    public ResponseEntity<ApiResponse<List<UserInfoDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
-        List<UserInfoDTO> response = followService.getFollower(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<List<FollowResponseDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
+        List<FollowResponseDTO> response = followService.getFollower(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
     }
 
+    /*
+     *
+     * 닉네임 API
+     *
+     * */
     @Operation(
             summary = "랜덤 닉네임 재생성 API",
             description = "랜덤 닉네임을 다시 생성하여 등록하고 바뀐 닉네임을 반환합니다."
