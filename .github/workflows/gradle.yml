@@ -49,7 +49,7 @@ jobs:
 
       - name: Create Firebase serviceAccountKey.json
         run: |
-          printf '%s' "${{ secrets.FIREBASE_JSON }}" > src/main/resources/serviceAccountKey.json
+          printf '%s' "${{ secrets.FIREBASE_JSON_KEY }}" > src/main/resources/serviceAccountKey.json
 
       - name: Check Firebase JSON file size
         run: |
