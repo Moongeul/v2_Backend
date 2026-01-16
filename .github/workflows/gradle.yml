@@ -47,6 +47,10 @@ jobs:
         run: |
           echo "${{ secrets.APPLICATION_BOOK_YML }}" > src/main/resources/application-book.yml
 
+      - name: Create Firebase serviceAccountKey.json
+        run: |
+          echo "${{ secrets.FIREBASE_JSON }}" > src/main/resources/serviceAccountKey.json
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
