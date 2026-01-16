@@ -56,6 +56,26 @@ jobs:
           ls -l src/main/resources/serviceAccountKey.json
           wc -c < src/main/resources/serviceAccountKey.json
 
+      - name: Validate Firebase JSON (no leak)
+        run: |
+          python - <<'PY'
+          import json
+          p="src/main/resources/serviceAccountKey.json"
+          with open(p,"rb") as f:
+            b=f.read()
+          print("bytes:", len(b))
+          # BOM 제거 시도(있으면 제거)
+          s=b.decode("utf-8-sig")
+          try:
+            json.loads(s)
+            print("JSON parse: OK")
+          except Exception as e:
+            print("JSON parse: FAIL", e)
+            # 어디가 깨졌는지 힌트만(앞 80바이트만)
+            print("head:", repr(s[:80]))
+            raise
+          PY
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
