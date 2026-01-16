@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.post.service;
 
+import com.moongeul.backend.api.notification.event.LikeNotificationEvent;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
 import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
@@ -19,6 +20,7 @@ import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +48,13 @@ public class PostService {
     private final QuoteRepository quoteRepository;
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
     private final BookshelfCalculator bookshelfCalculator;
+    
+    private final ApplicationEventPublisher eventPublisher; // Spring Event 발행 객체
 
+    /*
+     * 기록
+     */
+    
     /* 글쓰기 */
     @Transactional
     public PostIdResponseDTO createPost(PostRequestDTO postRequestDTO, String email){
@@ -274,6 +282,10 @@ public class PostService {
         }
     }
 
+    /*
+     * 공감
+     */
+
     /* 공감 토글 */
     @Transactional
     public void likePost(Long postId, String email, LikeDTO likeDTO){
@@ -298,14 +310,24 @@ public class PostService {
             decrementLikeCount(post, currentLikes.getLikeType());
             currentLikes.changeLikeType(likeDTO.getLikeType());
             incrementLikeCount(post, likeDTO.getLikeType());
+
+            likeNotification(post.getMember(), member, post); // 알림 발생
             return;
         }
         
         // 처음 공감을 누르는 경우 -> 새로 저장
         likeRepository.save(likeDTO.toEntity(member, post));
         incrementLikeCount(post, likeDTO.getLikeType());
+
+        likeNotification(post.getMember(), member, post); // 알림 발생
     }
 
+    private void likeNotification(Member receiver, Member actor, Post post){
+        if (!receiver.getId().equals(actor.getId())) { // 자신의 게시글일 경우 알림 발생 x
+            eventPublisher.publishEvent(new LikeNotificationEvent(receiver, actor, post));
+        }
+    }
+    
     // 공감 카운트 증가 메서드
     private void incrementLikeCount(Post post, LikeType likeType) {
         switch (likeType) {
@@ -328,31 +350,10 @@ public class PostService {
         }
     }
 
-
     /*
-    * 단순 데이터 불러오기용 코드 메서드 - 코드 깔끔하게 하기용
-    */
-
-    private Member getMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-    }
-
-    private Book getBook(String isbn) {
-        return bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
-    }
-
-    private Post getPost(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.POST_NOTFOUND_EXCEPTION.getMessage()));
-    }
-
-    private Category getCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
-    }
-
+     * 추천
+     */
+    
     // 주간 추천 기록 조회
     @Transactional(readOnly = true)
     public WeeklyRecommendationResponseDTO getWeeklyRecommendation(String email) {
@@ -392,5 +393,29 @@ public class PostService {
                 .content(post.getContent())
                 .readingTasteType(member.getReadingTasteType())
                 .build();
+    }
+
+    /*
+     * 단순 데이터 불러오기용 코드 메서드 - 코드 깔끔하게 하기용
+     */
+
+    private Member getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private Book getBook(String isbn) {
+        return bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private Post getPost(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.POST_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private Category getCategory(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
     }
 }
