@@ -1,9 +1,11 @@
 package com.moongeul.backend.api.member.service;
 
 
-import com.moongeul.backend.api.member.dto.UserInfoDTO;
+import com.moongeul.backend.api.member.dto.FollowResponseDTO;
 import com.moongeul.backend.api.member.entity.Follow;
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.common.exception.BadRequestException;
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -25,48 +28,66 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final MemberRepository memberRepository;
 
-    // 팔로우/언팔로우
+    /* 팔로우 API */
     @Transactional
     public void follow(Long following_id, String email){
-        Member following_member = getById(following_id);
-        Member follower_member = getMemberByEmail(email);
+        Member following = getById(following_id); // 팔로우 대상
+        Member follower = getMemberByEmail(email); // 나
 
         // 에러처리: 자기자신을 팔로우하는 경우 (불가)
-        if(following_member.equals(follower_member)){
+        if(following.equals(follower)){
             throw new BadRequestException(ErrorStatus.SELF_FOLLOW_NOT_ALLOWED.getMessage());
         }
 
-        Optional<Follow> existingFollow = followRepository.findByFollowingIdAndFollowerId(following_member.getId(), follower_member.getId());
+        // 에러처리: 이미 팔로우 중이거나 요청 대기 중인 경우
+        followRepository.findByFollowingIdAndFollowerId(following.getId(), follower.getId())
+                .ifPresent(follow -> {
+                    if (follow.getFollowStatus() == FollowStatus.ACCEPTED) {
+                        throw new BadRequestException(ErrorStatus.EXISTS_FOLLOW_ACCEPTED.getMessage());
+                    } else if (follow.getFollowStatus() == FollowStatus.PENDING) {
+                        throw new BadRequestException(ErrorStatus.EXISTS_FOLLOW_PENDING.getMessage());
+                    }
+                });
 
-        // 이미 팔로우하고 있는 사용자라면 -> 팔로우 취소
-        if(existingFollow.isPresent()){
-            Follow currentFollow = existingFollow.get();
-            followRepository.delete(currentFollow);
-        } else{ // 처음 팔로우 -> 팔로우 성공
-            Follow new_follow = Follow.builder()
-                    .following(following_member)
-                    .follower(follower_member)
-                    .build();
+        // 상대방이 공개/일부공개/비공개 계정인지 확인하여 상태 결정
+        FollowStatus status = following.getPrivacyLevel() == PrivacyLevel.PUBLIC ? FollowStatus.ACCEPTED : FollowStatus.PENDING;
 
-            followRepository.save(new_follow);
-        }
+        Follow newFollow = Follow.builder()
+                .follower(follower)
+                .following(following)
+                .followStatus(status)
+                .build();
+
+        followRepository.save(newFollow);
     }
 
-    // 팔로잉 사용자 목록 조회 // 생성, 수정, 삭제가 없는 메서드
-    @Transactional(readOnly = true)
-    public List<UserInfoDTO> getFollowing(String email){
-        Member follower_member = getMemberByEmail(email);
+    /* 언팔로우 API - 이 경우, 승인 대기중 상태도 같이 삭제 */
+    @Transactional
+    public void unfollow(Long followingId, String email) {
+        Member follower = getMemberByEmail(email); // 나
 
-        return followRepository.findByFollowings(follower_member.getId())
+        // 예외처리: 팔로우 관계가 존재하지 않는 경우
+        Follow follow = followRepository.findByFollowingIdAndFollowerId(followingId, follower.getId())
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.NO_FOLLOW_RELATIONSHIP.getMessage()));
+
+        followRepository.delete(follow);
+    }
+
+    // 팔로잉 사용자 목록 조회
+    @Transactional(readOnly = true) // 생성, 수정, 삭제가 없는 메서드
+    public List<FollowResponseDTO> getFollowing(String email){
+        Member me = getMemberByEmail(email);
+
+        return followRepository.findByFollowings(me.getId())
                 .stream()
                 .map(follow -> {
                     Member following = follow.getFollowing();
-                    return UserInfoDTO.builder()
+                    return FollowResponseDTO.builder()
                             .id(following.getId())
-                            .name(following.getName())
                             .profileImage(following.getProfileImage())
                             .nickname(following.getNickname())
                             .readingTasteType(following.getReadingTasteType())
+                            .myFollowStatus(FollowStatus.ACCEPTED)
                             .build();
                 })
                 .toList();
@@ -74,19 +95,34 @@ public class FollowService {
 
     // 팔로워 사용자 목록 조회
     @Transactional(readOnly = true) // 생성, 수정, 삭제가 없는 메서드
-    public List<UserInfoDTO> getFollower(String email){
-        Member following_member = getMemberByEmail(email);
+    public List<FollowResponseDTO> getFollower(String email){
+        Member me = getMemberByEmail(email);
 
-        return followRepository.findByFollowers(following_member.getId())
+        // 나를 팔로우하는 사람들(Follower) 목록 조회 (상태: ACCEPTED만)
+        List<Follow> followers = followRepository.findByFollowers(me.getId());
+
+        // 내가 누구를 팔로우하고 있는지(PENDING, ACCEPTED) 전체 목록을 Map으로 만듦
+        // Map은 서비스 로직 안에서만 '검색용'으로 쓰임
+        Map<Long, FollowStatus> myFollowStatusMap = followRepository.findAllByFollowerId(me.getId())
                 .stream()
+                .collect(Collectors.toMap(
+                        follow -> follow.getFollowing().getId(), // Key: 상대방 ID
+                        follow -> follow.getFollowStatus()       // Value: 나의 팔로우 상태
+                ));
+
+        return followers.stream()
                 .map(follow -> {
-                    Member follower = follow.getFollower();
-                    return UserInfoDTO.builder()
-                            .id(follower.getId())
-                            .name(follower.getName())
-                            .profileImage(follower.getProfileImage())
-                            .nickname(follower.getNickname())
-                            .readingTasteType(follower.getReadingTasteType())
+                    Member target = follow.getFollower(); // 나를 팔로우한 그 사람
+
+                    // Map에서 내가 이 사람을 팔로우 중인지 찾음, 없으면 NONE!
+                    FollowStatus status = myFollowStatusMap.getOrDefault(target.getId(), FollowStatus.NONE);
+
+                    return FollowResponseDTO.builder()
+                            .id(target.getId())
+                            .profileImage(target.getProfileImage())
+                            .nickname(target.getNickname())
+                            .readingTasteType(target.getReadingTasteType())
+                            .myFollowStatus(status) // 결정된 상태값(NONE, PENDING, ACCEPTED) 주입
                             .build();
                 })
                 .toList();

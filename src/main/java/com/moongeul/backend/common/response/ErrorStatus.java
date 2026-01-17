@@ -52,6 +52,9 @@ public enum ErrorStatus {
     REVIEW_ALREADY_EXISTS_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성한 도서입니다."),
     NICKNAME_ALREADY_EXISTS_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다."),
     SELF_FOLLOW_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신은 팔로우할 수 없습니다."),
+    NO_FOLLOW_RELATIONSHIP(HttpStatus.BAD_REQUEST, "팔로우 관계가 존재하지 않습니다."),
+    EXISTS_FOLLOW_ACCEPTED(HttpStatus.BAD_REQUEST, "이미 팔로우하고 있는 사용자입니다."),
+    EXISTS_FOLLOW_PENDING(HttpStatus.BAD_REQUEST, "이미 팔로우 요청을 보냈습니다. 승인을 기다려주세요."),
 
     /**
      * 500 SERVER_ERROR
