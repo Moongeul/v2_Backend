@@ -43,4 +43,10 @@ public class Question extends BaseTimeEntity {
             this.commentCnt--;
         }
     }
+
+    // 질문 수정 (내용과 책)
+    public void modify(String content, Book book) {
+        this.content = content;
+        this.book = book;
+    }
 }

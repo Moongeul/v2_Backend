@@ -4,6 +4,7 @@ import com.moongeul.backend.api.question.dto.QuestionCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.QuestionDTO;
 import com.moongeul.backend.api.question.dto.QuestionIdResponseDTO;
 import com.moongeul.backend.api.question.dto.QuestionListResponseDTO;
+import com.moongeul.backend.api.question.dto.QuestionModifyRequestDTO;
 import com.moongeul.backend.api.question.service.QuestionService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -74,5 +75,25 @@ public class QuestionController {
 
         QuestionDTO questionDTO = questionService.getQuestionDetail(questionId, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_QUESTION_DETAIL_SUCCESS, questionDTO);
+    }
+
+    @Operation(
+            summary = "질문 수정 API",
+            description = "자신이 작성한 질문을 수정하는 API 입니다. 질문 내용과 책(ISBN)을 변경할 수 있습니다. 다른 사용자의 질문은 수정할 수 없습니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "질문 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "질문 내용은 필수입니다 / ISBN은 필수입니다"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "질문 수정 권한이 없습니다"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 질문을 찾을 수 없습니다 / 해당 도서를 찾을 수 없습니다")
+    })
+    @PutMapping("/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionIdResponseDTO>> modifyQuestion(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long questionId,
+            @Valid @RequestBody QuestionModifyRequestDTO questionModifyRequestDTO) {
+
+        QuestionIdResponseDTO questionIdResponseDTO = questionService.modifyQuestion(questionId, questionModifyRequestDTO, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.MODIFY_QUESTION_SUCCESS, questionIdResponseDTO);
     }
 }

@@ -8,10 +8,12 @@ import com.moongeul.backend.api.question.dto.QuestionCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.QuestionDTO;
 import com.moongeul.backend.api.question.dto.QuestionIdResponseDTO;
 import com.moongeul.backend.api.question.dto.QuestionListResponseDTO;
+import com.moongeul.backend.api.question.dto.QuestionModifyRequestDTO;
 import com.moongeul.backend.api.question.entity.Question;
 import com.moongeul.backend.api.question.repository.AnswerRepository;
 import com.moongeul.backend.api.question.repository.QuestionRepository;
 import com.moongeul.backend.common.exception.NotFoundException;
+import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,6 +84,33 @@ public class QuestionService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.QUESTION_NOTFOUND_EXCEPTION.getMessage()));
 
         return convertToQuestionDTO(question, email);
+    }
+
+    // 질문 수정
+    @Transactional
+    public QuestionIdResponseDTO modifyQuestion(Long questionId, QuestionModifyRequestDTO requestDTO, String email) {
+
+        // 질문 조회
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.QUESTION_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 작성자 확인 (자신이 작성한 질문만 수정 가능)
+        if (!question.getMember().getEmail().equals(email)) {
+            throw new UnauthorizedException(ErrorStatus.QUESTION_UNAUTHORIZED.getMessage());
+        }
+
+        // 책 조회
+        Book book = bookRepository.findByIsbn(requestDTO.getIsbn())
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 질문 수정 (내용과 책)
+        question.modify(requestDTO.getContent(), book);
+
+        log.info("질문 수정 완료 - 질문 ID: {}, 작성자: {}, 새 ISBN: {}", questionId, email, requestDTO.getIsbn());
+
+        return QuestionIdResponseDTO.builder()
+                .questionId(question.getId())
+                .build();
     }
 
     // Question 엔티티를 QuestionDTO로 변환
