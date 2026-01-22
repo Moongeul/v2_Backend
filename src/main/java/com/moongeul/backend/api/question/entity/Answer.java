@@ -30,4 +30,9 @@ public class Answer extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member; // 답변 작성자
+
+    // 답변 내용 수정
+    public void modify(String content) {
+        this.content = content;
+    }
 }

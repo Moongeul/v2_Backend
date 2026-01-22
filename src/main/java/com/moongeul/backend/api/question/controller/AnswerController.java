@@ -3,6 +3,7 @@ package com.moongeul.backend.api.question.controller;
 import com.moongeul.backend.api.question.dto.AnswerCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.AnswerIdResponseDTO;
 import com.moongeul.backend.api.question.dto.AnswerListResponseDTO;
+import com.moongeul.backend.api.question.dto.AnswerModifyRequestDTO;
 import com.moongeul.backend.api.question.service.AnswerService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -44,7 +45,7 @@ public class AnswerController {
 
     @Operation(
             summary = "답변 리스트 조회 API",
-            description = "질문에 달린 답변 리스트를 페이징하여 조회하는 API 입니다."
+            description = "특정 질문에 달린 답변 리스트를 페이징하여 조회하는 API 입니다. 답변 작성자의 프로필 이미지, 닉네임, 독서 취향 유형을 포함합니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "답변 리스트 조회 성공"),
@@ -59,5 +60,43 @@ public class AnswerController {
 
         AnswerListResponseDTO answerListResponseDTO = answerService.getAnswerList(questionId, page, size, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_ANSWER_LIST_SUCCESS, answerListResponseDTO);
+    }
+
+    @Operation(
+            summary = "답변 수정 API",
+            description = "자신이 작성한 답변을 수정하는 API 입니다. 다른 사용자의 답변은 수정할 수 없습니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "답변 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "답변 내용은 필수입니다"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "답변 수정 권한이 없습니다"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 답변을 찾을 수 없습니다")
+    })
+    @PutMapping("/{answerId}")
+    public ResponseEntity<ApiResponse<AnswerIdResponseDTO>> modifyAnswer(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long answerId,
+            @Valid @RequestBody AnswerModifyRequestDTO answerModifyRequestDTO) {
+
+        AnswerIdResponseDTO answerIdResponseDTO = answerService.modifyAnswer(answerId, answerModifyRequestDTO, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.MODIFY_ANSWER_SUCCESS, answerIdResponseDTO);
+    }
+
+    @Operation(
+            summary = "답변 삭제 API",
+            description = "자신이 작성한 답변을 삭제하는 API 입니다. 다른 사용자의 답변은 삭제할 수 없습니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "답변 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "답변 삭제 권한이 없습니다"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 답변을 찾을 수 없습니다")
+    })
+    @DeleteMapping("/{answerId}")
+    public ResponseEntity<ApiResponse<Void>> deleteAnswer(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long answerId) {
+
+        answerService.deleteAnswer(answerId, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.DELETE_ANSWER_SUCCESS);
     }
 }

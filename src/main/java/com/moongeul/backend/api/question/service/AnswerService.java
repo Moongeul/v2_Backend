@@ -6,11 +6,13 @@ import com.moongeul.backend.api.question.dto.AnswerCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.AnswerDTO;
 import com.moongeul.backend.api.question.dto.AnswerIdResponseDTO;
 import com.moongeul.backend.api.question.dto.AnswerListResponseDTO;
+import com.moongeul.backend.api.question.dto.AnswerModifyRequestDTO;
 import com.moongeul.backend.api.question.entity.Answer;
 import com.moongeul.backend.api.question.entity.Question;
 import com.moongeul.backend.api.question.repository.AnswerRepository;
 import com.moongeul.backend.api.question.repository.QuestionRepository;
 import com.moongeul.backend.common.exception.NotFoundException;
+import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +83,53 @@ public class AnswerService {
                 .isLast(answerPage.isLast())
                 .data(answerDTOList)
                 .build();
+    }
+
+    // 답변 수정
+    @Transactional
+    public AnswerIdResponseDTO modifyAnswer(Long answerId, AnswerModifyRequestDTO requestDTO, String email) {
+
+        // 답변 조회
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.ANSWER_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 작성자 확인 (자신이 작성한 답변만 수정 가능)
+        if (!answer.getMember().getEmail().equals(email)) {
+            throw new UnauthorizedException(ErrorStatus.ANSWER_UNAUTHORIZED.getMessage());
+        }
+
+        // 답변 내용 수정
+        answer.modify(requestDTO.getContent());
+
+        log.info("답변 수정 완료 - 답변 ID: {}, 작성자: {}", answerId, email);
+
+        return AnswerIdResponseDTO.builder()
+                .answerId(answer.getId())
+                .build();
+    }
+
+    // 답변 삭제
+    @Transactional
+    public void deleteAnswer(Long answerId, String email) {
+
+        // 답변 조회
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.ANSWER_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 작성자 확인 (자신이 작성한 답변만 삭제 가능)
+        if (!answer.getMember().getEmail().equals(email)) {
+            throw new UnauthorizedException(ErrorStatus.ANSWER_UNAUTHORIZED.getMessage());
+        }
+
+        // 질문의 댓글 수 감소
+        Question question = answer.getQuestion();
+        question.decreaseCommentCnt();
+
+        // 답변 삭제 (하드 삭제)
+        answerRepository.delete(answer);
+
+        log.info("답변 삭제 완료 - 답변 ID: {}, 작성자: {}, 질문 ID: {}, 현재 댓글 수: {}",
+                answerId, email, question.getId(), question.getCommentCnt());
     }
 
     // Answer 엔티티를 AnswerDTO로 변환
