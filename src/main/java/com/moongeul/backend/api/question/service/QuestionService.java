@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ public class QuestionService {
     private final AnswerRepository answerRepository;
 
     /* 질문 생성 */
+    @Transactional
     public QuestionIdResponseDTO createQuestion(QuestionCreateRequestDTO questionCreateRequestDTO, String email){
 
         Member member = memberRepository.findByEmail(email)
@@ -70,6 +72,16 @@ public class QuestionService {
                 .isLast(questionPage.isLast())
                 .data(questionDTOList)
                 .build();
+    }
+
+    // 질문 상세 조회
+    public QuestionDTO getQuestionDetail(Long questionId, String email) {
+
+        // 질문 조회
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.QUESTION_NOTFOUND_EXCEPTION.getMessage()));
+
+        return convertToQuestionDTO(question, email);
     }
 
     // Question 엔티티를 QuestionDTO로 변환

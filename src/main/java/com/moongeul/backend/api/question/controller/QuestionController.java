@@ -1,6 +1,7 @@
 package com.moongeul.backend.api.question.controller;
 
 import com.moongeul.backend.api.question.dto.QuestionCreateRequestDTO;
+import com.moongeul.backend.api.question.dto.QuestionDTO;
 import com.moongeul.backend.api.question.dto.QuestionIdResponseDTO;
 import com.moongeul.backend.api.question.dto.QuestionListResponseDTO;
 import com.moongeul.backend.api.question.service.QuestionService;
@@ -56,5 +57,22 @@ public class QuestionController {
 
         QuestionListResponseDTO questionListResponseDTO = questionService.getQuestionList(page, size, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_QUESTION_LIST_SUCCESS, questionListResponseDTO);
+    }
+
+    @Operation(
+            summary = "질문 상세 조회 API",
+            description = "특정 질문의 상세 정보를 조회하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "질문 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 질문을 찾을 수 없습니다.")
+    })
+    @GetMapping("/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionDTO>> getQuestionDetail(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long questionId) {
+
+        QuestionDTO questionDTO = questionService.getQuestionDetail(questionId, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_QUESTION_DETAIL_SUCCESS, questionDTO);
     }
 }
