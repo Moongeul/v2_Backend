@@ -40,8 +40,11 @@ public class AnswerService {
         Answer newAnswer = answerCreateRequestDTO.toEntity(member, question);
         Answer savedAnswer = answerRepository.save(newAnswer);
 
-        log.info("답변 생성 완료 - 답변 ID: {}, 질문 ID: {}, 작성자: {}",
-                savedAnswer.getId(), question.getId(), member.getEmail());
+        // 질문의 댓글 수 증가
+        question.increaseCommentCnt();
+
+        log.info("답변 생성 완료 - 답변 ID: {}, 질문 ID: {}, 작성자: {}, 현재 댓글 수: {}",
+                savedAnswer.getId(), question.getId(), member.getEmail(), question.getCommentCnt());
 
         return AnswerIdResponseDTO.builder()
                 .answerId(savedAnswer.getId())
