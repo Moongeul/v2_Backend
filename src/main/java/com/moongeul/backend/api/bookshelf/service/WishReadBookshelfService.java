@@ -99,7 +99,7 @@ public class WishReadBookshelfService {
                 .size(size)
                 .totalPages(totalPages)
                 .isLast(isLast)
-                .books(books)
+                .data(books)
                 .build();
     }
 
