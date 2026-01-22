@@ -15,4 +15,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     // 특정 질문의 답변 작성자 목록 조회 (중복 제거)
     @Query("SELECT DISTINCT a.member FROM Answer a WHERE a.question.id = :questionId")
     List<Member> findDistinctMembersByQuestionId(@Param("questionId") Long questionId);
+
+    // 특정 질문의 모든 답변 삭제
+    void deleteByQuestionId(Long questionId);
 }

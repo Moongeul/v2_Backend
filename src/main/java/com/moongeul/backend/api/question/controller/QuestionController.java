@@ -96,4 +96,22 @@ public class QuestionController {
         QuestionIdResponseDTO questionIdResponseDTO = questionService.modifyQuestion(questionId, questionModifyRequestDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.MODIFY_QUESTION_SUCCESS, questionIdResponseDTO);
     }
+
+    @Operation(
+            summary = "질문 삭제 API",
+            description = "자신이 작성한 질문을 삭제하는 API 입니다. 질문과 연관된 모든 답변도 함께 삭제됩니다. (하드삭제 - 추후 소프트삭제 고려해야함)"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "질문 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "질문 삭제 권한이 없습니다"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 질문을 찾을 수 없습니다")
+    })
+    @DeleteMapping("/{questionId}")
+    public ResponseEntity<ApiResponse<Void>> deleteQuestion(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long questionId) {
+
+        questionService.deleteQuestion(questionId, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.DELETE_QUESTION_SUCCESS);
+    }
 }

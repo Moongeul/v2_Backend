@@ -113,6 +113,27 @@ public class QuestionService {
                 .build();
     }
 
+    // 질문 삭제
+    @Transactional
+    public void deleteQuestion(Long questionId, String email) {
+
+        // 질문 조회
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.QUESTION_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 작성자 확인 (자신이 작성한 질문만 삭제 가능)
+        if (!question.getMember().getEmail().equals(email)) {
+            throw new UnauthorizedException(ErrorStatus.QUESTION_UNAUTHORIZED.getMessage());
+        }
+
+        // 연관된 모든 답변 삭제 (하드 삭제)
+        answerRepository.deleteByQuestionId(questionId);
+
+        questionRepository.delete(question);
+
+        log.info("질문 삭제 완료 - 질문 ID: {}, 작성자: {}", questionId, email);
+    }
+
     // Question 엔티티를 QuestionDTO로 변환
     private QuestionDTO convertToQuestionDTO(Question question, String email) {
 

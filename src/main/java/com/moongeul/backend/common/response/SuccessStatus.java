@@ -59,6 +59,7 @@ public enum SuccessStatus {
 	GET_QUESTION_LIST_SUCCESS(HttpStatus.OK, "질문 리스트 조회 성공"),
 	GET_QUESTION_DETAIL_SUCCESS(HttpStatus.OK, "질문 상세 조회 성공"),
 	MODIFY_QUESTION_SUCCESS(HttpStatus.OK, "질문 수정 성공"),
+	DELETE_QUESTION_SUCCESS(HttpStatus.OK, "질문 삭제 성공"),
 
 
 	/**
