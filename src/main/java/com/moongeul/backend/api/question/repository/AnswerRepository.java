@@ -2,6 +2,8 @@ package com.moongeul.backend.api.question.repository;
 
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.question.entity.Answer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,4 +20,8 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
 
     // 특정 질문의 모든 답변 삭제
     void deleteByQuestionId(Long questionId);
+
+    // 특정 질문의 답변 리스트 조회 (페이징, 최신순)
+    @Query("SELECT a FROM Answer a WHERE a.question.id = :questionId ORDER BY a.createdAt DESC")
+    Page<Answer> findByQuestionId(@Param("questionId") Long questionId, Pageable pageable);
 }

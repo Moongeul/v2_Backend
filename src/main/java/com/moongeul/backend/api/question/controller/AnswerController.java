@@ -2,6 +2,7 @@ package com.moongeul.backend.api.question.controller;
 
 import com.moongeul.backend.api.question.dto.AnswerCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.AnswerIdResponseDTO;
+import com.moongeul.backend.api.question.dto.AnswerListResponseDTO;
 import com.moongeul.backend.api.question.service.AnswerService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -13,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Answer", description = "Answer(답변) 관련 API 입니다.")
 @RestController
@@ -42,5 +40,24 @@ public class AnswerController {
 
         AnswerIdResponseDTO answerIdResponseDTO = answerService.createAnswer(answerCreateRequestDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_ANSWER_SUCCESS, answerIdResponseDTO);
+    }
+
+    @Operation(
+            summary = "답변 리스트 조회 API",
+            description = "질문에 달린 답변 리스트를 페이징하여 조회하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "답변 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 질문을 찾을 수 없습니다")
+    })
+    @GetMapping("/list/{questionId}")
+    public ResponseEntity<ApiResponse<AnswerListResponseDTO>> getAnswerList(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long questionId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+
+        AnswerListResponseDTO answerListResponseDTO = answerService.getAnswerList(questionId, page, size, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_ANSWER_LIST_SUCCESS, answerListResponseDTO);
     }
 }
