@@ -74,6 +74,9 @@ public enum SuccessStatus {
 
 	/* QUESTION */
 	CREATE_QUESTION_SUCCESS(HttpStatus.CREATED, "질문 생성 성공"),
+
+	/* ANSWER */
+	CREATE_ANSWER_SUCCESS(HttpStatus.CREATED, "답변 생성 성공"),
 	;
 
 	private final HttpStatus httpStatus;
