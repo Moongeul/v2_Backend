@@ -50,10 +50,11 @@ public class QuestionController {
     })
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<QuestionListResponseDTO>> getQuestionList(
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
 
-        QuestionListResponseDTO questionListResponseDTO = questionService.getQuestionList(page, size);
+        QuestionListResponseDTO questionListResponseDTO = questionService.getQuestionList(page, size, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_QUESTION_LIST_SUCCESS, questionListResponseDTO);
     }
 }

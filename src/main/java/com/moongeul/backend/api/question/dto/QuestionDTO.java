@@ -18,7 +18,7 @@ public class QuestionDTO {
     private String content; // 질문 내용
     private Integer commentCnt; // 댓글 수
     private LocalDateTime createdAt; // 작성 시간
-
+    private Boolean myArticle; // 내가 작성한 질문 인지 여부
     private BookInfo bookInfo; // 책 정보
     private Integer participantCount; // 총 참여 인원 수 (중복 제외, 질문 작성자 포함)
     private List<String> participantProfileImages; // 참여자 프로필 이미지 (최대 3명)

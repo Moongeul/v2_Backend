@@ -53,13 +53,13 @@ public class QuestionService {
     }
 
     // 질문 리스트 조회
-    public QuestionListResponseDTO getQuestionList(Integer page, Integer size) {
+    public QuestionListResponseDTO getQuestionList(Integer page, Integer size, String email) {
 
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Question> questionPage = questionRepository.findAllQuestions(pageable);
 
         List<QuestionDTO> questionDTOList = questionPage.getContent().stream()
-                .map(this::convertToQuestionDTO)
+                .map(question -> convertToQuestionDTO(question, email))
                 .collect(Collectors.toList());
 
         return QuestionListResponseDTO.builder()
@@ -73,7 +73,7 @@ public class QuestionService {
     }
 
     // Question 엔티티를 QuestionDTO로 변환
-    private QuestionDTO convertToQuestionDTO(Question question) {
+    private QuestionDTO convertToQuestionDTO(Question question, String email) {
 
         Book book = question.getBook();
 
@@ -91,11 +91,15 @@ public class QuestionService {
                 .map(Member::getProfileImage)
                 .collect(Collectors.toList());
 
+        // 내가 작성한 질문인지 확인
+        boolean isMyArticle = question.getMember().getEmail().equals(email);
+
         return QuestionDTO.builder()
                 .questionId(question.getId())
                 .content(question.getContent())
                 .commentCnt(question.getCommentCnt())
                 .createdAt(question.getCreatedAt())
+                .myArticle(isMyArticle)
                 .bookInfo(QuestionDTO.BookInfo.builder()
                         .isbn(book.getIsbn())
                         .bookImage(book.getBookImage())
