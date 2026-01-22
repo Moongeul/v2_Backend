@@ -5,14 +5,25 @@ import com.moongeul.backend.api.book.repository.BookRepository;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.question.dto.QuestionCreateRequestDTO;
+import com.moongeul.backend.api.question.dto.QuestionDTO;
 import com.moongeul.backend.api.question.dto.QuestionIdResponseDTO;
+import com.moongeul.backend.api.question.dto.QuestionListResponseDTO;
 import com.moongeul.backend.api.question.entity.Question;
+import com.moongeul.backend.api.question.repository.AnswerRepository;
 import com.moongeul.backend.api.question.repository.QuestionRepository;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,6 +33,7 @@ public class QuestionService {
     private final MemberRepository memberRepository;
     private final BookRepository bookRepository;
     private final QuestionRepository questionRepository;
+    private final AnswerRepository answerRepository;
 
     /* 질문 생성 */
     public QuestionIdResponseDTO createQuestion(QuestionCreateRequestDTO questionCreateRequestDTO, String email){
@@ -37,6 +49,64 @@ public class QuestionService {
 
         return QuestionIdResponseDTO.builder()
                 .questionId(savedQuestion.getId())
+                .build();
+    }
+
+    // 질문 리스트 조회
+    public QuestionListResponseDTO getQuestionList(Integer page, Integer size) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Question> questionPage = questionRepository.findAllQuestions(pageable);
+
+        List<QuestionDTO> questionDTOList = questionPage.getContent().stream()
+                .map(this::convertToQuestionDTO)
+                .collect(Collectors.toList());
+
+        return QuestionListResponseDTO.builder()
+                .total(questionPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(questionPage.getTotalPages())
+                .isLast(questionPage.isLast())
+                .data(questionDTOList)
+                .build();
+    }
+
+    // Question 엔티티를 QuestionDTO로 변환
+    private QuestionDTO convertToQuestionDTO(Question question) {
+
+        Book book = question.getBook();
+
+        // 답변 작성자 목록 조회 (중복 제거)
+        List<Member> answerMembers = answerRepository.findDistinctMembersByQuestionId(question.getId());
+
+        // 참여자 목록 = 질문 작성자 + 답변 작성자 (중복 제거)
+        Set<Member> participantSet = new LinkedHashSet<>();
+        participantSet.add(question.getMember()); // 질문 작성자 추가
+        participantSet.addAll(answerMembers); // 답변 작성자들 추가
+
+        // 참여자 프로필 이미지 (최대 3명)
+        List<String> participantProfileImages = participantSet.stream()
+                .limit(3)
+                .map(Member::getProfileImage)
+                .collect(Collectors.toList());
+
+        return QuestionDTO.builder()
+                .questionId(question.getId())
+                .content(question.getContent())
+                .commentCnt(question.getCommentCnt())
+                .createdAt(question.getCreatedAt())
+                .bookInfo(QuestionDTO.BookInfo.builder()
+                        .isbn(book.getIsbn())
+                        .bookImage(book.getBookImage())
+                        .title(book.getTitle())
+                        .author(book.getAuthor())
+                        .publisher(book.getPublisher())
+                        .pubdate(book.getPubdate())
+                        .ratingAverage(book.getRatingAverage())
+                        .build())
+                .participantCount(participantSet.size())
+                .participantProfileImages(participantProfileImages)
                 .build();
     }
 }

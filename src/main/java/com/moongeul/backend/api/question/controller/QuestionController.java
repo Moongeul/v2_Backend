@@ -2,6 +2,7 @@ package com.moongeul.backend.api.question.controller;
 
 import com.moongeul.backend.api.question.dto.QuestionCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.QuestionIdResponseDTO;
+import com.moongeul.backend.api.question.dto.QuestionListResponseDTO;
 import com.moongeul.backend.api.question.service.QuestionService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -13,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Question", description = "Question(질문) 관련 API 입니다.")
 @RestController
@@ -41,5 +39,21 @@ public class QuestionController {
 
         QuestionIdResponseDTO response = questionService.createQuestion(questionCreateRequestDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_QUESTION_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "질문 리스트 조회 API",
+            description = "질문 리스트를 페이징하여 조회하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "질문 리스트 조회 성공")
+    })
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<QuestionListResponseDTO>> getQuestionList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+
+        QuestionListResponseDTO questionListResponseDTO = questionService.getQuestionList(page, size);
+        return ApiResponse.success(SuccessStatus.GET_QUESTION_LIST_SUCCESS, questionListResponseDTO);
     }
 }

@@ -55,6 +55,9 @@ public enum SuccessStatus {
 	/* ALARM */
 	REGISTER_DEVICE_TOKEN(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
 
+	/* QUESTION */
+	GET_QUESTION_LIST_SUCCESS(HttpStatus.OK, "질문 리스트 조회 성공"),
+
 
 	/**
 	 * 201
