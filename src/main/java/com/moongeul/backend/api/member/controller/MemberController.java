@@ -69,7 +69,7 @@ public class MemberController {
 
     @Operation(
             summary = "사용자 정보 조회 API",
-            description = "토큰을 통해 인증된 사용자의 정보를 반환합니다." +
+            description = "토큰을 통해 인증된 사용자의 정보를 반환합니다. userId 쿼리 파라미터가 없으면 본인 정보를 조회하고, 있으면 해당 사용자의 정보를 조회합니다." +
                     "<br><br>[enum]독서 취향 유형 ->" +
                     "<br>- EMOTIONAL_REFLECTOR: 감성 사색 정리러" +
                     "<br>- CHATTY_READER: 수다쟁이 책러" +
@@ -85,8 +85,10 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/user-info")
-    public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(@AuthenticationPrincipal UserDetails userDetails){
-        UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long userId){
+        UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername(), userId);
         return ApiResponse.success(SuccessStatus.GET_USERINFO_SUCCESS, response);
     }
 

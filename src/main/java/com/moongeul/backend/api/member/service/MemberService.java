@@ -5,6 +5,7 @@ import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
+import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final FollowRepository followRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
@@ -112,9 +114,22 @@ public class MemberService {
 
     // 사용자 정보 조회
     @Transactional(readOnly = true)
-    public UserInfoDTO getUserInfo(String email){
+    public UserInfoDTO getUserInfo(String email, Long userId){
 
-        Member member = getMemberByEmail(email);
+        // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
+        Member member;
+        if (userId == null) {
+            member = getMemberByEmail(email);
+        } else {
+            member = memberRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        }
+
+        // 팔로워 수 계산 (나를 팔로우하는 사람들 중 승인된 경우)
+        int followerCount = followRepository.findByFollowers(member.getId()).size();
+
+        // 팔로잉 수 계산 (내가 팔로우한 사람들 중 승인된 경우)
+        int followingCount = followRepository.findByFollowings(member.getId()).size();
 
         return UserInfoDTO.builder()
                 .id(member.getId())
@@ -122,6 +137,8 @@ public class MemberService {
                 .profileImage(member.getProfileImage())
                 .nickname(member.getNickname())
                 .readingTasteType(member.getReadingTasteType())
+                .followerCount(followerCount)
+                .followingCount(followingCount)
                 .build();
     }
 
