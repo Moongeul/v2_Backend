@@ -10,19 +10,34 @@ import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
+import com.moongeul.backend.api.post.dto.CategoryPostDetailDTO;
+import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
+import com.moongeul.backend.api.post.dto.LikeStatsDTO;
+import com.moongeul.backend.api.post.dto.QuoteDTO;
+import com.moongeul.backend.api.post.entity.Likes;
+import com.moongeul.backend.api.post.entity.Post;
+import com.moongeul.backend.api.post.entity.Quote;
+import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
+import com.moongeul.backend.api.post.repository.QuoteRepository;
+import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +50,8 @@ public class MemberService {
     private final FollowRepository followRepository;
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
+    private final QuoteRepository quoteRepository;
+    private final LikeRepository likeRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
@@ -262,6 +279,99 @@ public class MemberService {
 
         return NicknameCheckResponseDTO.builder()
                 .isDuplicate(isDuplicate)
+                .build();
+    }
+
+    // 카테고리별 기록 리스트 조회
+    @Transactional(readOnly = true)
+    public CategoryPostListResponseDTO getCategoryPostList(Long categoryId, String sortBy, Integer page, Integer size) {
+
+        // 카테고리 존재 여부 확인
+        categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        // 정렬 조건에 따라 조회
+        Page<Post> postPage = switch (sortBy.toUpperCase()) {
+            case "LATEST" ->  // 최신순
+                    postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
+            case "OLDEST" ->  // 오래된순
+                    postRepository.findByCategoryIdOrderByCreatedAtAsc(categoryId, pageable);
+            case "RATING_HIGH" ->  // 평점 높은순
+                    postRepository.findByCategoryIdOrderByRatingDesc(categoryId, pageable);
+            case "RATING_LOW" ->  // 평점 낮은순
+                    postRepository.findByCategoryIdOrderByRatingAsc(categoryId, pageable);
+            default ->  // 기본값: 최신순
+                    postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
+        };
+
+        List<CategoryPostDetailDTO> postList = postPage.getContent().stream()
+                .map(this::convertToCategoryPostDetailDTO)
+                .collect(Collectors.toList());
+
+        log.info("카테고리별 기록 리스트 조회 완료 - 카테고리 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
+                categoryId, sortBy, page, postList.size());
+
+        return CategoryPostListResponseDTO.builder()
+                .total(postPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(postPage.getTotalPages())
+                .isLast(postPage.isLast())
+                .data(postList)
+                .build();
+    }
+
+    // Post를 CategoryPostDetailDTO로 변환
+    private CategoryPostDetailDTO convertToCategoryPostDetailDTO(Post post) {
+
+        Member member = post.getMember();
+        Book book = post.getBook();
+
+        // 인상깊은 구절 조회
+        List<Quote> quotes = quoteRepository.findByPostId(post.getId());
+        List<QuoteDTO> quoteDTOs = quotes.stream()
+                .map(quote -> QuoteDTO.builder()
+                        .quoteContent(quote.getQuoteContent())
+                        .pageNumber(quote.getPageNumber())
+                        .build())
+                .collect(Collectors.toList());
+
+        // 공감 통계 계산
+        List<Likes> likes = likeRepository.findByPostId(post.getId());
+
+        Map<String, Integer> likeTypeCount = new HashMap<>();
+        likeTypeCount.put("RELATABLE", 0);
+        likeTypeCount.put("SAME_TASTE", 0);
+        likeTypeCount.put("IMPRESSIVE_EXPRESSION", 0);
+        likeTypeCount.put("WANT_TO_READ", 0);
+        likeTypeCount.put("HELPFUL", 0);
+
+        for (Likes like : likes) {
+            String likeTypeName = like.getLikeType().name();
+            likeTypeCount.put(likeTypeName, likeTypeCount.get(likeTypeName) + 1);
+        }
+
+        LikeStatsDTO likeStats = LikeStatsDTO.builder()
+                .likeTypeCount(likeTypeCount)
+                .build();
+
+        return CategoryPostDetailDTO.builder()
+                .postId(post.getId())
+                .profileImage(member.getProfileImage())
+                .nickname(member.getNickname())
+                .readingTasteType(member.getReadingTasteType())
+                .createdAt(post.getCreatedAt())
+                .content(post.getContent())
+                .userRating(post.getRating())
+                .readDate(post.getReadDate())
+                .bookImage(book.getBookImage())
+                .bookTitle(book.getTitle())
+                .publisher(book.getPublisher())
+                .bookRating(book.getRatingAverage())
+                .quotes(quoteDTOs)
+                .likeStats(likeStats)
                 .build();
     }
 }

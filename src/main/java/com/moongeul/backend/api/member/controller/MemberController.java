@@ -4,6 +4,7 @@ import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.FollowService;
 import com.moongeul.backend.api.member.service.MemberService;
+import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,6 +108,30 @@ public class MemberController {
             @RequestParam(required = false) Long userId){
         PostStatsResponseDTO response = memberService.getPostStats(userDetails.getUsername(), userId);
         return ApiResponse.success(SuccessStatus.GET_POST_STATS_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "카테고리별 기록 리스트 조회 API (마이페이지 기록장 상세)",
+            description = "특정 카테고리에 작성된 기록들을 조회합니다. 최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
+                    "<br><br>[enum] 정렬 옵션 (sortBy):" +
+                    "<br>- LATEST: 최신순 (기본값)" +
+                    "<br>- OLDEST: 오래된순" +
+                    "<br>- RATING_HIGH: 평점 높은순" +
+                    "<br>- RATING_LOW: 평점 낮은순"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리별 기록 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 카테고리를 찾을 수 없습니다.")
+    })
+    @GetMapping("/post-stats/{categoryId}")
+    public ResponseEntity<ApiResponse<CategoryPostListResponseDTO>> getCategoryPostList(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "LATEST") String sortBy,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+
+        CategoryPostListResponseDTO categoryPostListResponseDTO = memberService.getCategoryPostList(categoryId, sortBy, page, size);
+        return ApiResponse.success(SuccessStatus.GET_CATEGORY_POST_LIST_SUCCESS, categoryPostListResponseDTO);
     }
 
     @Operation(

@@ -41,4 +41,20 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // 특정 사용자의 카테고리별 기록 수 조회
     long countByMemberIdAndCategoryId(Long memberId, Long categoryId);
+
+    // 카테고리별 기록 조회 (최신순)
+    @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.createdAt DESC")
+    Page<Post> findByCategoryIdOrderByCreatedAtDesc(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    // 카테고리별 기록 조회 (오래된순)
+    @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.createdAt ASC")
+    Page<Post> findByCategoryIdOrderByCreatedAtAsc(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    // 카테고리별 기록 조회 (평점 높은순)
+    @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.rating DESC, p.createdAt DESC")
+    Page<Post> findByCategoryIdOrderByRatingDesc(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    // 카테고리별 기록 조회 (평점 낮은순)
+    @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.rating ASC, p.createdAt DESC")
+    Page<Post> findByCategoryIdOrderByRatingAsc(@Param("categoryId") Long categoryId, Pageable pageable);
 }

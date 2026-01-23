@@ -173,3 +173,4 @@ public class PostController {
         return ApiResponse.success(SuccessStatus.GET_WEEKLY_RECOMMENDATION_SUCCESS, weeklyRecommendationResponseDTO);
     }
 }
+
