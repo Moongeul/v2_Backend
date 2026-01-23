@@ -1,5 +1,7 @@
 package com.moongeul.backend.api.member.service;
 
+import com.moongeul.backend.api.category.entity.Category;
+import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
@@ -8,6 +10,7 @@ import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
+import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
@@ -18,7 +21,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +33,8 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final FollowRepository followRepository;
+    private final CategoryRepository categoryRepository;
+    private final PostRepository postRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
@@ -139,6 +147,47 @@ public class MemberService {
                 .readingTasteType(member.getReadingTasteType())
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .build();
+    }
+
+    /* 기록 통계 조회 (마이페이지 기록장) */
+    public PostStatsResponseDTO getPostStats(String email, Long userId) {
+
+        // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
+        Member member;
+        if (userId == null) {
+            member = getMemberByEmail(email);
+        } else {
+            member = memberRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        }
+
+        Long memberId = member.getId();
+
+        // 전체 작성 갯수
+        int totalPostCount = (int) postRepository.countByMemberId(memberId);
+
+        // 해당 사용자가 만든 카테고리 목록 조회
+        List<Category> categories = categoryRepository.findByMember(member).orElse(new ArrayList<>());
+
+        // 카테고리별 기록 갯수 계산
+        List<CategoryPostCountDTO> categoryStats = categories.stream()
+                .map(category -> {
+                    int postCount = (int) postRepository.countByMemberIdAndCategoryId(memberId, category.getId());
+                    return CategoryPostCountDTO.builder()
+                            .categoryId(category.getId())
+                            .categoryTitle(category.getTitle())
+                            .postCount(postCount)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        log.info("기록 통계 조회 완료 - 사용자 ID: {}, 전체 기록 수: {}, 카테고리 수: {}",
+                memberId, totalPostCount, categoryStats.size());
+
+        return PostStatsResponseDTO.builder()
+                .totalPostCount(totalPostCount)
+                .data(categoryStats)
                 .build();
     }
 

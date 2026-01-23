@@ -93,6 +93,23 @@ public class MemberController {
     }
 
     @Operation(
+            summary = "기록 통계 조회 API (마이페이지 기록장)",
+            description = "사용자의 기록 작성 통계를 조회합니다. userId 쿼리 파라미터가 없으면 본인 정보를 조회하고, 있으면 해당 사용자의 정보를 조회합니다. " +
+                    "전체 작성 갯수와 카테고리별 기록 갯수, 카테고리 이름, 카테고리 ID를 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록 통계 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/post-stats")
+    public ResponseEntity<ApiResponse<PostStatsResponseDTO>> getPostStats(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long userId){
+        PostStatsResponseDTO response = memberService.getPostStats(userDetails.getUsername(), userId);
+        return ApiResponse.success(SuccessStatus.GET_POST_STATS_SUCCESS, response);
+    }
+
+    @Operation(
             summary = "토큰 재발급 API",
             description = "엑세스 토큰 만료 시, 유효한 리프레시 토큰을 통해 엑세스 토큰을 재발급 받습니다."
     )

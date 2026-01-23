@@ -35,4 +35,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findWeeklyRecommendationByReadingTasteType(
             @Param("readingTasteType") ReadingTasteType readingTasteType,
             @Param("weekStart") LocalDateTime weekStart);
+
+    // 특정 사용자의 전체 기록 수 조회
+    long countByMemberId(Long memberId);
+
+    // 특정 사용자의 카테고리별 기록 수 조회
+    long countByMemberIdAndCategoryId(Long memberId, Long categoryId);
 }
