@@ -88,13 +88,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/moongeul-backend:latest
-
+          platforms: linux/amd64,linux/arm64
+          
   deploy:
     # 배포서버에서는 단순히 이미지 풀받고 실행
     name: Deploy (Self-hosted)
