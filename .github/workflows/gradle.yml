@@ -109,7 +109,7 @@ jobs:
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/moongeul-backend:latest
           docker run -d \
             --name moongeul-backend \
-            -p 8080:8080 \
+            -p 9000:8080 \
             --restart unless-stopped \
             ${{ secrets.DOCKERHUB_USERNAME }}/moongeul-backend:latest
           docker image prune -af
