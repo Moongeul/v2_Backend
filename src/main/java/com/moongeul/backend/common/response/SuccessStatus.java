@@ -17,6 +17,7 @@ public enum SuccessStatus {
 	/* MEMBER */
 	SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
 	GET_USERINFO_SUCCESS(HttpStatus.OK, "사용자 정보 조회 성공"),
+	GET_POST_STATS_SUCCESS(HttpStatus.OK, "기록 통계 조회 성공"),
 	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
 	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),
 	FOLLOW_SUCCESS(HttpStatus.OK, "팔로우 성공"),
@@ -44,6 +45,7 @@ public enum SuccessStatus {
 	/* POST */
 	GET_ALL_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 전체 조회 성공"),
 	GET_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 상세 조회 성공"),
+	GET_CATEGORY_POST_LIST_SUCCESS(HttpStatus.OK, "카테고리별 기록 리스트 조회 성공"),
 	UPDATE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 수정 성공"),
 	DELETE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 삭제 성공"),
 	POST_LIKE_SUCCESS(HttpStatus.OK, "기록(게시글) 공감 버튼 등록 성공"),

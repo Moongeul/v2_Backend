@@ -4,6 +4,7 @@ import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.FollowService;
 import com.moongeul.backend.api.member.service.MemberService;
+import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,7 +70,7 @@ public class MemberController {
 
     @Operation(
             summary = "사용자 정보 조회 API",
-            description = "토큰을 통해 인증된 사용자의 정보를 반환합니다." +
+            description = "토큰을 통해 인증된 사용자의 정보를 반환합니다. userId 쿼리 파라미터가 없으면 본인 정보를 조회하고, 있으면 해당 사용자의 정보를 조회합니다." +
                     "<br><br>[enum]독서 취향 유형 ->" +
                     "<br>- EMOTIONAL_REFLECTOR: 감성 사색 정리러" +
                     "<br>- CHATTY_READER: 수다쟁이 책러" +
@@ -85,9 +86,52 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/user-info")
-    public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(@AuthenticationPrincipal UserDetails userDetails){
-        UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long userId){
+        UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername(), userId);
         return ApiResponse.success(SuccessStatus.GET_USERINFO_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "기록 통계 조회 API (마이페이지 기록장)",
+            description = "사용자의 기록 작성 통계를 조회합니다. userId 쿼리 파라미터가 없으면 본인 정보를 조회하고, 있으면 해당 사용자의 정보를 조회합니다. " +
+                    "전체 작성 갯수와 카테고리별 기록 갯수, 카테고리 이름, 카테고리 ID를 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록 통계 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/post-stats")
+    public ResponseEntity<ApiResponse<PostStatsResponseDTO>> getPostStats(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long userId){
+        PostStatsResponseDTO response = memberService.getPostStats(userDetails.getUsername(), userId);
+        return ApiResponse.success(SuccessStatus.GET_POST_STATS_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "카테고리별 기록 리스트 조회 API (마이페이지 기록장 상세)",
+            description = "특정 카테고리에 작성된 기록들을 조회합니다. 최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
+                    "<br><br>[enum] 정렬 옵션 (sortBy):" +
+                    "<br>- LATEST: 최신순 (기본값)" +
+                    "<br>- OLDEST: 오래된순" +
+                    "<br>- RATING_HIGH: 평점 높은순" +
+                    "<br>- RATING_LOW: 평점 낮은순"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리별 기록 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 카테고리를 찾을 수 없습니다.")
+    })
+    @GetMapping("/post-stats/{categoryId}")
+    public ResponseEntity<ApiResponse<CategoryPostListResponseDTO>> getCategoryPostList(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "LATEST") String sortBy,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+
+        CategoryPostListResponseDTO categoryPostListResponseDTO = memberService.getCategoryPostList(categoryId, sortBy, page, size);
+        return ApiResponse.success(SuccessStatus.GET_CATEGORY_POST_LIST_SUCCESS, categoryPostListResponseDTO);
     }
 
     @Operation(
