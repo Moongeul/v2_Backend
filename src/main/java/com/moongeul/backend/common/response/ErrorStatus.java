@@ -33,6 +33,8 @@ public enum ErrorStatus {
     TOKEN_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었거나 유효하지 않은 토큰입니다."),
     POST_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "회원의 게시글이 아닙니다."),
     CATEGORY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "회원의 카테고리가 아닙니다."),
+    QUESTION_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "질문 수정 권한이 없습니다."),
+    ANSWER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "답변 수정 권한이 없습니다."),
 
     /**
      * 404 NOT_FOUND
@@ -44,6 +46,8 @@ public enum ErrorStatus {
     REVIEW_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
     USER_READING_TASTE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "사용자의 독서 취향 정보를 찾을 수 없습니다."),
     WEEKLY_RECOMMENDATION_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "주간 추천 기록을 찾을 수 없습니다."),
+    QUESTION_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 질문을 찾을 수 없습니다."),
+    ANSWER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 답변을 찾을 수 없습니다."),
 
     /**
      * 400 BAD_REQUEST

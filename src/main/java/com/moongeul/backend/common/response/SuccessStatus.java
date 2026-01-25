@@ -55,6 +55,12 @@ public enum SuccessStatus {
 	/* ALARM */
 	REGISTER_DEVICE_TOKEN(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
 
+	/* QUESTION */
+	GET_QUESTION_LIST_SUCCESS(HttpStatus.OK, "질문 리스트 조회 성공"),
+	GET_QUESTION_DETAIL_SUCCESS(HttpStatus.OK, "질문 상세 조회 성공"),
+	MODIFY_QUESTION_SUCCESS(HttpStatus.OK, "질문 수정 성공"),
+	DELETE_QUESTION_SUCCESS(HttpStatus.OK, "질문 삭제 성공"),
+
 
 	/**
 	 * 201
@@ -74,6 +80,12 @@ public enum SuccessStatus {
 
 	/* QUESTION */
 	CREATE_QUESTION_SUCCESS(HttpStatus.CREATED, "질문 생성 성공"),
+
+	/* ANSWER */
+	CREATE_ANSWER_SUCCESS(HttpStatus.CREATED, "답변 생성 성공"),
+	GET_ANSWER_LIST_SUCCESS(HttpStatus.OK, "답변 리스트 조회 성공"),
+	MODIFY_ANSWER_SUCCESS(HttpStatus.OK, "답변 수정 성공"),
+	DELETE_ANSWER_SUCCESS(HttpStatus.OK, "답변 삭제 성공"),
 	;
 
 	private final HttpStatus httpStatus;

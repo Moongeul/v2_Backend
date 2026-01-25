@@ -31,4 +31,22 @@ public class Question extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_isbn", nullable = false)
     private Book book;
+
+    // 댓글 수 증가
+    public void increaseCommentCnt() {
+        this.commentCnt++;
+    }
+
+    // 댓글 수 감소
+    public void decreaseCommentCnt() {
+        if (this.commentCnt > 0) {
+            this.commentCnt--;
+        }
+    }
+
+    // 질문 수정 (내용과 책)
+    public void modify(String content, Book book) {
+        this.content = content;
+        this.book = book;
+    }
 }
