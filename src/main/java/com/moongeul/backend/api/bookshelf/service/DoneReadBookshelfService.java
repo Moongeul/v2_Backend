@@ -54,7 +54,7 @@ public class DoneReadBookshelfService {
                 .size(size)
                 .totalPages(totalPages)
                 .isLast(isLast)
-                .books(books)
+                .data(books)
                 .build();
     }
 
