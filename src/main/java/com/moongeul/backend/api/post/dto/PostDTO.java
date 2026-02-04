@@ -16,6 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 public class PostDTO {
 
+    private Long postId; // 게시글 id
+
     private MemberInfo memberInfo; // 사용자 정보
     private LocalDateTime created; // 작성 시간
 
@@ -33,7 +35,7 @@ public class PostDTO {
     @Getter
     @Builder
     public static class MemberInfo {
-        private Long id;
+        private Long memberId;
         private String nickname; // 닉네임
         private String profileImage; // 회원 이미지
         private ReadingTasteType readingTasteType; // 독서 취향 유형

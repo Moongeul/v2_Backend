@@ -81,10 +81,14 @@ public class MemberService {
         JwtTokenDTO jwtToken = jwtTokenProvider.generateToken(member);
         member.updateRefreshToken(jwtToken.getRefreshToken()); // 생성된 refreshToken DB 저장
 
+        // 5. 취향테스트 수행 여부
+        boolean isReadingTaste = (member.getReadingTasteType() != null);
+
         return LoginResponseDTO.builder()
                 .role(member.getAuthorityKey())
                 .accessToken(jwtToken.getAccessToken())
                 .refreshToken(jwtToken.getRefreshToken())
+                .isReadingTaste(isReadingTaste)
                 .build();
     }
 
@@ -110,10 +114,14 @@ public class MemberService {
         JwtTokenDTO jwtToken = jwtTokenProvider.generateToken(member);
         member.updateRefreshToken(jwtToken.getRefreshToken()); // 생성된 refreshToken DB 저장
 
+        // 5. 취향테스트 수행 여부
+        boolean isReadingTaste = (member.getReadingTasteType() != null);
+
         return LoginResponseDTO.builder()
                 .role(member.getAuthorityKey())
                 .accessToken(jwtToken.getAccessToken())
                 .refreshToken(jwtToken.getRefreshToken())
+                .isReadingTaste(isReadingTaste)
                 .build();
     }
 
