@@ -148,7 +148,7 @@ public class PostService {
 
         // 멤버 정보(필요 정보만) DTO
         PostDTO.MemberInfo memberInfo = PostDTO.MemberInfo.builder()
-                .id(post.getMember().getId())
+                .memberId(post.getMember().getId())
                 .nickname(post.getMember().getNickname())
                 .profileImage(post.getMember().getProfileImage())
                 .readingTasteType(post.getMember().getReadingTasteType())
@@ -186,6 +186,7 @@ public class PostService {
                 .build();
 
         return PostDTO.builder()
+                .postId(postId)
                 .memberInfo(memberInfo)
                 .created(post.getCreatedAt())
                 .bookInfo(bookInfo)
