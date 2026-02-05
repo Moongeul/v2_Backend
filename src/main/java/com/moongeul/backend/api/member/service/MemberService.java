@@ -4,6 +4,8 @@ import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.Follow;
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
@@ -149,10 +151,12 @@ public class MemberService {
     @Transactional(readOnly = true)
     public UserInfoDTO getUserInfo(String email, Long userId){
 
+        Member currentMember = getMemberByEmail(email);
+
         // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
         Member member;
         if (userId == null) {
-            member = getMemberByEmail(email);
+            member = currentMember;
         } else {
             member = memberRepository.findById(userId)
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
@@ -164,6 +168,14 @@ public class MemberService {
         // 팔로잉 수 계산 (내가 팔로우한 사람들 중 승인된 경우)
         int followingCount = followRepository.findByFollowings(member.getId()).size();
 
+        // 내가 해당 사용자를 팔로우했는지 여부
+        FollowStatus myFollowStatus = FollowStatus.NONE;
+        if (!currentMember.getId().equals(member.getId())) {
+            myFollowStatus = followRepository.findByFollowingIdAndFollowerId(member.getId(), currentMember.getId())
+                    .map(Follow::getFollowStatus)
+                    .orElse(FollowStatus.NONE);
+        }
+
         return UserInfoDTO.builder()
                 .id(member.getId())
                 .name(member.getName())
@@ -172,6 +184,7 @@ public class MemberService {
                 .readingTasteType(member.getReadingTasteType())
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .myFollowStatus(myFollowStatus)
                 .build();
     }
 

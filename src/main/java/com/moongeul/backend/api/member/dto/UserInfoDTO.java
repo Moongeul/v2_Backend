@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.member.dto;
 
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.ReadingTasteType;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,4 +16,5 @@ public class UserInfoDTO {
     private ReadingTasteType readingTasteType; // 독서 취향 유형
     private final Integer followerCount; // 팔로워 수
     private final Integer followingCount; // 팔로잉 수
+    private final FollowStatus myFollowStatus; // 내가 해당 사용자를 팔로우했는지 여부
 }
