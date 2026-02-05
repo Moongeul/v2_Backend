@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class DeviceTokenRequestDTO {
 
     private String token;
-    private String platform; // 'ANDROID' or 'IOS' or 'WEB'
+    private String platform; // AND, IOS, WEB
 }
