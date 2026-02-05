@@ -8,6 +8,7 @@ import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.notification.service.NotificationTriggerService;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -27,6 +28,8 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final MemberRepository memberRepository;
+
+    private final NotificationTriggerService notificationTriggerService;
 
     /* 팔로우 API */
     @Transactional
@@ -59,6 +62,10 @@ public class FollowService {
                 .build();
 
         followRepository.save(newFollow);
+
+        log.info("팔로우 완료 - 팔로우 대상 ID: {}, 작성자 ID: {}", following.getNickname(), follower.getNickname());
+
+        notificationTriggerService.followNotification(following, follower); // 팔로우 알림 발생
     }
 
     /* 언팔로우 API - 이 경우, 승인 대기중 상태도 같이 삭제 */
@@ -71,6 +78,8 @@ public class FollowService {
                 .orElseThrow(() -> new BadRequestException(ErrorStatus.NO_FOLLOW_RELATIONSHIP.getMessage()));
 
         followRepository.delete(follow);
+
+        log.info("언팔로우 완료 - 언팔로우 대상 ID: {}, 작성자 ID: {}", follow.getFollowing().getNickname(), follower.getNickname());
     }
 
     // 팔로잉 사용자 목록 조회
