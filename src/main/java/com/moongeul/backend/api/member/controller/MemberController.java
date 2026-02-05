@@ -79,7 +79,11 @@ public class MemberController {
                     "<br>- IMMERSIVE_READER: 넷플릭스급 몰입러" +
                     "<br>- SECRET_DIARIST: 비밀 일기장 주인" +
                     "<br>- GENRE_SPECIALIST: 장르 고인물" +
-                    "<br>- RANDOM_PICKER: 랜덤 피커"
+                    "<br>- RANDOM_PICKER: 랜덤 피커" +
+                    "<br><br>[enum]myFollowStatus ->" +
+                    "<br>- NONE: 팔로우 아님" +
+                    "<br>- PENDING: 요청 대기중" +
+                    "<br>- ACCEPTED: 팔로우 완료"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "사용자 정보 조회 성공"),
