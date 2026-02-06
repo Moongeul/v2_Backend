@@ -6,6 +6,8 @@ import com.moongeul.backend.api.member.dto.*;
 import com.moongeul.backend.api.member.entity.Follow;
 import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.Follow;
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
@@ -167,7 +169,7 @@ public class MemberService {
                 ? currentMember
                 : memberRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-
+      
         // 팔로워 수 계산 (나를 팔로우하는 사람들 중 승인된 경우)
         int followerCount = followRepository.findByFollowers(member.getId()).size();
 
@@ -182,7 +184,6 @@ public class MemberService {
                     .orElse(FollowStatus.NONE);
         }
 
-        // 계정 공개 범위
         InfoOpen infoOpen = infoOpenRepository.findByMemberId(member.getId()).orElse(null);
         InfoOpenResponseDTO infoOpenResponse = (infoOpen == null)
                 ? InfoOpenResponseDTO.builder()
@@ -326,11 +327,22 @@ public class MemberService {
 
     // 카테고리별 기록 리스트 조회
     @Transactional(readOnly = true)
-    public CategoryPostListResponseDTO getCategoryPostList(Long categoryId, String sortBy, Integer page, Integer size) {
+    public CategoryPostListResponseDTO getCategoryPostList(String email, Long userId, Long categoryId, String sortBy, Integer page, Integer size) {
+
+        Member currentMember = getMemberByEmail(email);
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
 
         // 카테고리 존재 여부 확인
-        categoryRepository.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 카테고리 소유자 확인 (userId가 없으면 본인 기준)
+        if (!category.getMember().getId().equals(targetMember.getId())) {
+            throw new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage());
+        }
 
         Pageable pageable = PageRequest.of(page - 1, size);
 
@@ -352,8 +364,8 @@ public class MemberService {
                 .map(this::convertToCategoryPostDetailDTO)
                 .collect(Collectors.toList());
 
-        log.info("카테고리별 기록 리스트 조회 완료 - 카테고리 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
-                categoryId, sortBy, page, postList.size());
+        log.info("카테고리별 기록 리스트 조회 완료 - 카테고리 ID: {}, 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
+                categoryId, targetMember.getId(), sortBy, page, postList.size());
 
         return CategoryPostListResponseDTO.builder()
                 .total(postPage.getTotalElements())
