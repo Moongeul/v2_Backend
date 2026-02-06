@@ -12,14 +12,10 @@ import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
-import com.moongeul.backend.api.post.dto.CategoryPostDetailDTO;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
-import com.moongeul.backend.api.post.dto.LikeStatsDTO;
-import com.moongeul.backend.api.post.dto.QuoteDTO;
-import com.moongeul.backend.api.post.entity.Likes;
+import com.moongeul.backend.api.post.dto.PostDTO;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.Quote;
-import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
@@ -38,9 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -54,7 +48,6 @@ public class MemberService {
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
-    private final LikeRepository likeRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
@@ -185,7 +178,7 @@ public class MemberService {
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .myFollowStatus(myFollowStatus)
-                .privacyLevel(member.getPrivacyLevel())
+                .privacyLevel(member.getPrivacyLevel() == null ? PrivacyLevel.PUBLIC : member.getPrivacyLevel())
                 .build();
     }
 
@@ -341,8 +334,8 @@ public class MemberService {
                     postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
         };
 
-        List<CategoryPostDetailDTO> postList = postPage.getContent().stream()
-                .map(this::convertToCategoryPostDetailDTO)
+        List<PostDTO> postList = postPage.getContent().stream()
+                .map(this::convertToPostDTO)
                 .collect(Collectors.toList());
 
         log.info("카테고리별 기록 리스트 조회 완료 - 카테고리 ID: {}, 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
@@ -358,55 +351,55 @@ public class MemberService {
                 .build();
     }
 
-    // Post를 CategoryPostDetailDTO로 변환
-    private CategoryPostDetailDTO convertToCategoryPostDetailDTO(Post post) {
+    // Post를 PostDTO로 변환
+    private PostDTO convertToPostDTO(Post post) {
 
-        Member member = post.getMember();
         Book book = post.getBook();
 
-        // 인상깊은 구절 조회
+        PostDTO.MemberInfo memberInfo = PostDTO.MemberInfo.builder()
+                .memberId(post.getMember().getId())
+                .nickname(post.getMember().getNickname())
+                .profileImage(post.getMember().getProfileImage())
+                .readingTasteType(post.getMember().getReadingTasteType())
+                .build();
+
+        PostDTO.BookInfo bookInfo = PostDTO.BookInfo.builder()
+                .isbn(book.getIsbn())
+                .bookImage(book.getBookImage())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .publisher(book.getPublisher())
+                .pubdate(book.getPubdate())
+                .ratingAverage(book.getRatingAverage())
+                .build();
+
         List<Quote> quotes = quoteRepository.findByPostId(post.getId());
-        List<QuoteDTO> quoteDTOs = quotes.stream()
-                .map(quote -> QuoteDTO.builder()
+        List<PostDTO.QuoteDTO> quoteDTOList = quotes.stream()
+                .map(quote -> PostDTO.QuoteDTO.builder()
                         .quoteContent(quote.getQuoteContent())
                         .pageNumber(quote.getPageNumber())
                         .build())
                 .collect(Collectors.toList());
 
-        // 공감 통계 계산
-        List<Likes> likes = likeRepository.findByPostId(post.getId());
-
-        Map<String, Integer> likeTypeCount = new HashMap<>();
-        likeTypeCount.put("RELATABLE", 0);
-        likeTypeCount.put("SAME_TASTE", 0);
-        likeTypeCount.put("IMPRESSIVE_EXPRESSION", 0);
-        likeTypeCount.put("WANT_TO_READ", 0);
-        likeTypeCount.put("HELPFUL", 0);
-
-        for (Likes like : likes) {
-            String likeTypeName = like.getLikeType().name();
-            likeTypeCount.put(likeTypeName, likeTypeCount.get(likeTypeName) + 1);
-        }
-
-        LikeStatsDTO likeStats = LikeStatsDTO.builder()
-                .likeTypeCount(likeTypeCount)
+        PostDTO.LikesInfo likesInfo = PostDTO.LikesInfo.builder()
+                .relatableCount(post.getRelatableCount())
+                .sameTasteCount(post.getSameTasteCount())
+                .impressiveExpressionCount(post.getImpressiveExpressionCount())
+                .wantToReadCount(post.getWantToReadCount())
+                .helpfulCount(post.getHelpfulCount())
                 .build();
 
-        return CategoryPostDetailDTO.builder()
+        return PostDTO.builder()
                 .postId(post.getId())
-                .profileImage(member.getProfileImage())
-                .nickname(member.getNickname())
-                .readingTasteType(member.getReadingTasteType())
-                .createdAt(post.getCreatedAt())
+                .memberInfo(memberInfo)
+                .created(post.getCreatedAt())
+                .bookInfo(bookInfo)
+                .rating(post.getRating())
                 .content(post.getContent())
-                .userRating(post.getRating())
                 .readDate(post.getReadDate())
-                .bookImage(book.getBookImage())
-                .bookTitle(book.getTitle())
-                .publisher(book.getPublisher())
-                .bookRating(book.getRatingAverage())
-                .quotes(quoteDTOs)
-                .likeStats(likeStats)
+                .quotesCnt(quoteDTOList.size())
+                .quotes(quoteDTOList)
+                .likesInfo(likesInfo)
                 .build();
     }
 
