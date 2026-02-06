@@ -84,10 +84,10 @@ public class MemberController {
                     "<br>- NONE: 팔로우 아님" +
                     "<br>- PENDING: 요청 대기중" +
                     "<br>- ACCEPTED: 팔로우 완료" +
-                    "<br><br>[infoOpen] 계정 공개 범위 ->" +
-                    "<br>- isPublic: 전체 공개" +
-                    "<br>- isFollowersOnly: 팔로우한테만 공개" +
-                    "<br>- isPrivate: 비공개"
+                    "<br><br>[enum]privacyLevel ->" +
+                    "<br>- PUBLIC: 전체 공개" +
+                    "<br>- FOLLOWER_ONLY: 팔로워에게만 공개" +
+                    "<br>- PRIVATE: 비공개"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "사용자 정보 조회 성공"),
@@ -108,6 +108,7 @@ public class MemberController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록 통계 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 사용자의 정보는 공개되지 않습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/post-stats")
@@ -120,7 +121,8 @@ public class MemberController {
 
     @Operation(
             summary = "카테고리별 기록 리스트 조회 API (마이페이지 기록장 상세)",
-            description = "특정 카테고리에 작성된 기록들을 조회합니다. 최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
+            description = "특정 카테고리에 작성된 기록들을 조회합니다. userId 쿼리 파라미터가 없으면 본인, 있으면 해당 사용자의 기록을 조회합니다. " +
+                    "최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
                     "<br><br>[enum] 정렬 옵션 (sortBy):" +
                     "<br>- LATEST: 최신순 (기본값)" +
                     "<br>- OLDEST: 오래된순" +
@@ -129,16 +131,20 @@ public class MemberController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리별 기록 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 사용자의 정보는 공개되지 않습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 카테고리를 찾을 수 없습니다.")
     })
     @GetMapping("/post-stats/{categoryId}")
     public ResponseEntity<ApiResponse<CategoryPostListResponseDTO>> getCategoryPostList(
+            @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long categoryId,
+            @RequestParam(required = false) Long userId,
             @RequestParam(defaultValue = "LATEST") String sortBy,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
 
-        CategoryPostListResponseDTO categoryPostListResponseDTO = memberService.getCategoryPostList(categoryId, sortBy, page, size);
+        CategoryPostListResponseDTO categoryPostListResponseDTO =
+                memberService.getCategoryPostList(userDetails.getUsername(), userId, categoryId, sortBy, page, size);
         return ApiResponse.success(SuccessStatus.GET_CATEGORY_POST_LIST_SUCCESS, categoryPostListResponseDTO);
     }
 

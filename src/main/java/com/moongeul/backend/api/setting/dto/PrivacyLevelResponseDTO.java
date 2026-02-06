@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.setting.dto;
 
+import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,9 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InfoOpenResponseDTO {
+public class PrivacyLevelResponseDTO {
 
-    private Boolean isPublic; // 전체 공개
-    private Boolean isFollowersOnly; // 팔로우한테만 공개
-    private Boolean isPrivate; // 비공개
+    private PrivacyLevel privacyLevel; // 계정 공개 범위
 }

@@ -1,8 +1,8 @@
 package com.moongeul.backend.api.member.dto;
 
 import com.moongeul.backend.api.member.entity.FollowStatus;
+import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.ReadingTasteType;
-import com.moongeul.backend.api.setting.dto.InfoOpenResponseDTO;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,5 +18,5 @@ public class UserInfoDTO {
     private final Integer followerCount; // 팔로워 수
     private final Integer followingCount; // 팔로잉 수
     private final FollowStatus myFollowStatus; // 내가 해당 사용자를 팔로우했는지 여부
-    private final InfoOpenResponseDTO infoOpen; // 계정 공개 범위
+    private final PrivacyLevel privacyLevel; // 계정 공개 범위
 }
