@@ -18,5 +18,5 @@ public class CategoryPostListResponseDTO {
     private Integer size; // 페이지당 개수
     private Integer totalPages; // 전체 페이지 수
     private Boolean isLast; // 마지막 페이지 여부
-    private List<CategoryPostDetailDTO> data; // 기록 리스트
+    private List<PostDTO> data; // 기록 리스트
 }
