@@ -14,6 +14,8 @@ import com.moongeul.backend.api.post.dto.CategoryPostDetailDTO;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.LikeStatsDTO;
 import com.moongeul.backend.api.post.dto.QuoteDTO;
+import com.moongeul.backend.api.setting.entity.InfoOpen;
+import com.moongeul.backend.api.setting.repository.InfoOpenRepository;
 import com.moongeul.backend.api.post.entity.Likes;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.Quote;
@@ -56,6 +58,7 @@ public class MemberService {
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
     private final NicknameGenerator nicknameGenerator;
+    private final InfoOpenRepository infoOpenRepository;
 
     // 인가코드 받아 JWT로 교환 및 회원가입/로그인 처리
     @Transactional
@@ -142,7 +145,12 @@ public class MemberService {
                 .socialType(socialType)
                 .role(Role.GUEST) // 이후 필요 정보 모두 입력 시 USER 로 승격
                 .build();
-        return memberRepository.save(newUser);
+        Member savedMember = memberRepository.save(newUser);
+
+        // 계정 공개 범위 기본값 생성 (전체 공개)
+        infoOpenRepository.save(InfoOpen.createDefault(savedMember));
+
+        return savedMember;
     }
 
     // 사용자 정보 조회
