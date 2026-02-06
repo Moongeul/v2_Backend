@@ -3,6 +3,8 @@ package com.moongeul.backend.api.member.service;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
+import com.moongeul.backend.api.member.entity.Follow;
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.Role;
@@ -14,6 +16,7 @@ import com.moongeul.backend.api.post.dto.CategoryPostDetailDTO;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.LikeStatsDTO;
 import com.moongeul.backend.api.post.dto.QuoteDTO;
+import com.moongeul.backend.api.setting.dto.InfoOpenResponseDTO;
 import com.moongeul.backend.api.setting.entity.InfoOpen;
 import com.moongeul.backend.api.setting.repository.InfoOpenRepository;
 import com.moongeul.backend.api.post.entity.Likes;
@@ -157,20 +160,41 @@ public class MemberService {
     @Transactional(readOnly = true)
     public UserInfoDTO getUserInfo(String email, Long userId){
 
+        Member currentMember = getMemberByEmail(email);
+
         // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
-        Member member;
-        if (userId == null) {
-            member = getMemberByEmail(email);
-        } else {
-            member = memberRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-        }
+        Member member = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
 
         // 팔로워 수 계산 (나를 팔로우하는 사람들 중 승인된 경우)
         int followerCount = followRepository.findByFollowers(member.getId()).size();
 
         // 팔로잉 수 계산 (내가 팔로우한 사람들 중 승인된 경우)
         int followingCount = followRepository.findByFollowings(member.getId()).size();
+
+        // 내가 해당 사용자를 팔로우했는지 여부
+        FollowStatus myFollowStatus = FollowStatus.NONE;
+        if (!currentMember.getId().equals(member.getId())) {
+            myFollowStatus = followRepository.findByFollowingIdAndFollowerId(member.getId(), currentMember.getId())
+                    .map(Follow::getFollowStatus)
+                    .orElse(FollowStatus.NONE);
+        }
+
+        // 계정 공개 범위
+        InfoOpen infoOpen = infoOpenRepository.findByMemberId(member.getId()).orElse(null);
+        InfoOpenResponseDTO infoOpenResponse = (infoOpen == null)
+                ? InfoOpenResponseDTO.builder()
+                .isPublic(true)
+                .isFollowersOnly(false)
+                .isPrivate(false)
+                .build()
+                : InfoOpenResponseDTO.builder()
+                .isPublic(infoOpen.getIsPublic())
+                .isFollowersOnly(infoOpen.getIsFollowersOnly())
+                .isPrivate(infoOpen.getIsPrivate())
+                .build();
 
         return UserInfoDTO.builder()
                 .id(member.getId())
@@ -180,6 +204,8 @@ public class MemberService {
                 .readingTasteType(member.getReadingTasteType())
                 .followerCount(followerCount)
                 .followingCount(followingCount)
+                .myFollowStatus(myFollowStatus)
+                .infoOpen(infoOpenResponse)
                 .build();
     }
 
