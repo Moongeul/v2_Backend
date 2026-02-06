@@ -83,7 +83,11 @@ public class MemberController {
                     "<br><br>[enum]myFollowStatus ->" +
                     "<br>- NONE: 팔로우 아님" +
                     "<br>- PENDING: 요청 대기중" +
-                    "<br>- ACCEPTED: 팔로우 완료"
+                    "<br>- ACCEPTED: 팔로우 완료" +
+                    "<br><br>[enum]privacyLevel ->" +
+                    "<br>- PUBLIC: 전체 공개" +
+                    "<br>- FOLLOWER_ONLY: 팔로워에게만 공개" +
+                    "<br>- PRIVATE: 비공개"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "사용자 정보 조회 성공"),
@@ -104,6 +108,7 @@ public class MemberController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "기록 통계 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 사용자의 정보는 공개되지 않습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/post-stats")
@@ -126,6 +131,7 @@ public class MemberController {
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리별 기록 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 사용자의 정보는 공개되지 않습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 카테고리를 찾을 수 없습니다.")
     })
     @GetMapping("/post-stats/{categoryId}")

@@ -3,9 +3,9 @@ package com.moongeul.backend.api.member.service;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
-import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.Follow;
 import com.moongeul.backend.api.member.entity.FollowStatus;
+import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
@@ -25,6 +25,7 @@ import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
+import com.moongeul.backend.common.exception.ForbiddenException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -144,7 +145,9 @@ public class MemberService {
                 .socialType(socialType)
                 .role(Role.GUEST) // 이후 필요 정보 모두 입력 시 USER 로 승격
                 .build();
-        return memberRepository.save(newUser);
+        Member savedMember = memberRepository.save(newUser);
+
+        return savedMember;
     }
 
     // 사용자 정보 조회
@@ -154,13 +157,10 @@ public class MemberService {
         Member currentMember = getMemberByEmail(email);
 
         // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
-        Member member;
-        if (userId == null) {
-            member = currentMember;
-        } else {
-            member = memberRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-        }
+        Member member = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
 
         // 팔로워 수 계산 (나를 팔로우하는 사람들 중 승인된 경우)
         int followerCount = followRepository.findByFollowers(member.getId()).size();
@@ -185,28 +185,29 @@ public class MemberService {
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .myFollowStatus(myFollowStatus)
+                .privacyLevel(member.getPrivacyLevel())
                 .build();
     }
 
     /* 기록 통계 조회 (마이페이지 기록장) */
+    @Transactional(readOnly = true)
     public PostStatsResponseDTO getPostStats(String email, Long userId) {
 
-        // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
-        Member member;
-        if (userId == null) {
-            member = getMemberByEmail(email);
-        } else {
-            member = memberRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-        }
+        Member currentMember = getMemberByEmail(email);
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
 
-        Long memberId = member.getId();
+        validatePrivacyAccess(currentMember, targetMember);
+
+        Long memberId = targetMember.getId();
 
         // 전체 작성 갯수
         int totalPostCount = (int) postRepository.countByMemberId(memberId);
 
         // 해당 사용자가 만든 카테고리 목록 조회
-        List<Category> categories = categoryRepository.findByMember(member).orElse(new ArrayList<>());
+        List<Category> categories = categoryRepository.findByMember(targetMember).orElse(new ArrayList<>());
 
         // 카테고리별 기록 갯수 계산
         List<CategoryPostCountDTO> categoryStats = categories.stream()
@@ -313,11 +314,13 @@ public class MemberService {
                 : memberRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
 
+        validatePrivacyAccess(currentMember, targetMember);
+
         // 카테고리 존재 여부 확인
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
 
-        // 카테고리 소유자 확인 (userId가 없으면 본인 기준)
+        // 카테고리 소유자 확인
         if (!category.getMember().getId().equals(targetMember.getId())) {
             throw new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage());
         }
@@ -405,5 +408,31 @@ public class MemberService {
                 .quotes(quoteDTOs)
                 .likeStats(likeStats)
                 .build();
+    }
+
+    private void validatePrivacyAccess(Member currentMember, Member targetMember) {
+        if (currentMember.getId().equals(targetMember.getId())) {
+            return;
+        }
+
+        PrivacyLevel privacyLevel = targetMember.getPrivacyLevel();
+
+        if (privacyLevel == null || privacyLevel == PrivacyLevel.PUBLIC) {
+            return;
+        }
+
+        if (privacyLevel == PrivacyLevel.PRIVATE) {
+            throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+        }
+
+        if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
+                    .map(Follow::getFollowStatus)
+                    .orElse(FollowStatus.NONE);
+
+            if (status != FollowStatus.ACCEPTED) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+        }
     }
 }
