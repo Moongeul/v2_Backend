@@ -1,6 +1,5 @@
 package com.moongeul.backend.api.post.service;
 
-import com.moongeul.backend.api.notification.event.LikeNotificationEvent;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
 import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
@@ -8,6 +7,7 @@ import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository
 import com.moongeul.backend.api.bookshelf.util.BookshelfCalculator;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.notification.service.NotificationTriggerService;
 import com.moongeul.backend.api.post.dto.*;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.post.entity.*;
@@ -20,7 +20,6 @@ import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,8 +47,9 @@ public class PostService {
     private final QuoteRepository quoteRepository;
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
     private final BookshelfCalculator bookshelfCalculator;
+
+    private final NotificationTriggerService notificationTriggerService;
     
-    private final ApplicationEventPublisher eventPublisher; // Spring Event 발행 객체
 
     /*
      * 기록
@@ -312,7 +312,7 @@ public class PostService {
             currentLikes.changeLikeType(likeDTO.getLikeType());
             incrementLikeCount(post, likeDTO.getLikeType());
 
-            likeNotification(post.getMember(), member, post); // 알림 발생
+            notificationTriggerService.likeNotification(post.getMember(), member, post); // 알림 발생
             return;
         }
         
@@ -320,13 +320,7 @@ public class PostService {
         likeRepository.save(likeDTO.toEntity(member, post));
         incrementLikeCount(post, likeDTO.getLikeType());
 
-        likeNotification(post.getMember(), member, post); // 알림 발생
-    }
-
-    private void likeNotification(Member receiver, Member actor, Post post){
-        if (!receiver.getId().equals(actor.getId())) { // 자신의 게시글일 경우 알림 발생 x
-            eventPublisher.publishEvent(new LikeNotificationEvent(receiver, actor, post));
-        }
+        notificationTriggerService.likeNotification(post.getMember(), member, post); // 알림 발생
     }
     
     // 공감 카운트 증가 메서드
@@ -388,8 +382,12 @@ public class PostService {
         return WeeklyRecommendationResponseDTO.builder()
                 .postId(post.getId())
                 .bookImage(post.getBook().getBookImage())
-                .authorName(post.getMember().getName())
-                .profileImage(post.getMember().getProfileImage())
+                .bookTitle(post.getBook().getTitle())
+                .isbn(post.getBook().getIsbn())
+                .author(post.getBook().getAuthor())
+                .publisher(post.getBook().getPublisher())
+                .pubdate(post.getBook().getPubdate())
+                .bookRating(post.getBook().getRatingAverage())
                 .rating(post.getRating())
                 .content(post.getContent())
                 .readingTasteType(member.getReadingTasteType())

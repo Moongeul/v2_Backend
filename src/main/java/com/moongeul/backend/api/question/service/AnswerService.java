@@ -2,6 +2,7 @@ package com.moongeul.backend.api.question.service;
 
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.notification.service.NotificationTriggerService;
 import com.moongeul.backend.api.question.dto.AnswerCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.AnswerDTO;
 import com.moongeul.backend.api.question.dto.AnswerIdResponseDTO;
@@ -34,6 +35,8 @@ public class AnswerService {
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
 
+    private final NotificationTriggerService notificationTriggerService;
+
     // 답변 생성
     @Transactional
     public AnswerIdResponseDTO createAnswer(AnswerCreateRequestDTO answerCreateRequestDTO, String email) {
@@ -55,6 +58,8 @@ public class AnswerService {
 
         log.info("답변 생성 완료 - 답변 ID: {}, 질문 ID: {}, 작성자: {}, 현재 댓글 수: {}",
                 savedAnswer.getId(), question.getId(), member.getEmail(), question.getCommentCnt());
+
+        notificationTriggerService.answerNotification(question.getMember(), member, question); // 댓글 알림 발생
 
         return AnswerIdResponseDTO.builder()
                 .answerId(savedAnswer.getId())
