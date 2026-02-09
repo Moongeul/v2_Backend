@@ -41,7 +41,9 @@ jobs:
 
       - name: Create application-oauth.yml
         run: |
-          echo "${{ secrets.APPLICATION_OAUTH_YML }}" > src/main/resources/application-oauth.yml
+          cat <<'EOF' > src/main/resources/application-oauth.yml
+          ${{ secrets.APPLICATION_OAUTH_YML }}
+          EOF
 
       - name: Create application-book.yml
         run: |
