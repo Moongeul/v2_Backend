@@ -25,6 +25,7 @@ public enum ErrorStatus {
     INVALID_ANSWER_VALUE(HttpStatus.BAD_REQUEST, "테스트 답변은 A 또는 B여야 합니다. (질문번호: %d, 현재답변: %s)"),
     NO_SCORE_RESULT(HttpStatus.BAD_REQUEST, "테스트 점수 계산 결과가 없습니다."),
     REVIEW_UNAUTHORIZED(HttpStatus.BAD_REQUEST, "수정하려는 회원의 리뷰가 아닙니다."),
+    DISAGREE_REQUIRED_TERM(HttpStatus.BAD_REQUEST, "필수 약관에 모두 동의해야 합니다."),
 
     /**
      * 401 UNAUTHORIZED

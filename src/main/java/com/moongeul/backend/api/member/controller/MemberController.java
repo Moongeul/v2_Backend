@@ -288,5 +288,26 @@ public class MemberController {
         NicknameCheckResponseDTO nicknameCheckResponseDTO = memberService.checkNicknameDuplicate(nickname);
         return ApiResponse.success(SuccessStatus.CHECK_NICKNAME_DUPLICATE_SUCCESS, nicknameCheckResponseDTO);
     }
+
+    /*
+     *
+     * 약관동의 API
+     *
+     * */
+//    @Operation(
+//            summary = "이용약관동의 API",
+//            description = "이용약관 동의 여부를 저장합니다."
+//    )
+//    @ApiResponses({
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 중복 체크 성공")
+//    })
+//    @GetMapping("/agree-terms")
+//    public ResponseEntity<ApiResponse<NicknameCheckResponseDTO>> agreeToTerms(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestBody AgreeTermsRequestDTO agreeTermsRequestDTO) {
+//
+//        memberService.agreeToTerms(userDetails.getUsername(), agreeTermsRequestDTO);
+//        return ApiResponse.success(SuccessStatus.CHECK_NICKNAME_DUPLICATE_SUCCESS);
+//    }
     
 }
