@@ -118,5 +118,7 @@ jobs:
             --name moongeul-backend \
             -p 9000:8080 \
             --restart unless-stopped \
+            -e GOOGLE_REDIRECT_URI="https://moongeul.vercel.app/redirect?platform=google" \
+            -e KAKAO_REDIRECT_URI="https://moongeul.vercel.app/redirect?platform=kakao" \
             ${{ secrets.DOCKERHUB_USERNAME }}/moongeul-backend:latest
           docker image prune -af
