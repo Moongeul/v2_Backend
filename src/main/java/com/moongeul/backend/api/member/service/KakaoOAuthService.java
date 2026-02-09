@@ -30,17 +30,21 @@ public class KakaoOAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
     private String clientSecret;
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
-    private String redirectUri;
+    private String defaultRedirectUri;
 
     // Kakao 토큰 획득 로직
-    public AccessTokenResponseDTO getKakaoToken(String code){
+    public AccessTokenResponseDTO getKakaoToken(String code, String redirectUri){
 
         // HTTP Body 생성
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", clientId);
         params.add("client_secret", clientSecret);
-        params.add("redirect_uri", redirectUri);
+
+        // 프론트에서 보낸 redirectUri가 있으면 그것을 사용하고, 없으면 설정 파일의 기본값을 사용
+        String finalRedirectUri = (redirectUri != null && !redirectUri.isBlank()) ? redirectUri : defaultRedirectUri;
+
+        params.add("redirect_uri", finalRedirectUri);
         params.add("code", code);
 
         return webClient.post()

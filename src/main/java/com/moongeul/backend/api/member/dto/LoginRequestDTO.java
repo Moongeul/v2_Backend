@@ -8,4 +8,5 @@ public class LoginRequestDTO {
 
     @NotBlank(message = "인가코드가 입력되지 않았습니다.")
     private String code; // 인가코드
+    private String redirectUri; // 리다이렉트 uri
 }

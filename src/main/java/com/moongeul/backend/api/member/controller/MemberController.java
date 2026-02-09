@@ -47,7 +47,7 @@ public class MemberController {
     @PostMapping("/google/login")
     public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithGoogle(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
-        LoginResponseDTO response = memberService.loginWithGoogle(loginRequestDTO.getCode());
+        LoginResponseDTO response = memberService.loginWithGoogle(loginRequestDTO.getCode(), loginRequestDTO.getRedirectUri());
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
     }
 
@@ -64,7 +64,7 @@ public class MemberController {
     @PostMapping("/kakao/login")
     public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithKakao(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
-        LoginResponseDTO response = memberService.loginWithKakao(loginRequestDTO.getCode());
+        LoginResponseDTO response = memberService.loginWithKakao(loginRequestDTO.getCode(), loginRequestDTO.getRedirectUri());
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
     }
 

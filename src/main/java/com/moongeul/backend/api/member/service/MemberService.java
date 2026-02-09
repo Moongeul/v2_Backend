@@ -55,10 +55,10 @@ public class MemberService {
 
     // 인가코드 받아 JWT로 교환 및 회원가입/로그인 처리
     @Transactional
-    public LoginResponseDTO loginWithGoogle(String code){
+    public LoginResponseDTO loginWithGoogle(String code, String redirectUri){
 
         // 1. 인가 코드로 Google Access Token 및 사용자 정보 획득
-        AccessTokenResponseDTO tokenDTO = googleOAuthService.getGoogleToken(code);
+        AccessTokenResponseDTO tokenDTO = googleOAuthService.getGoogleToken(code, redirectUri);
         GoogleInfoResponseDTO userInfo = googleOAuthService.getGoogleUserInfo(tokenDTO.getAccessToken());
 
         // 2. 사용자 정보 추출
@@ -89,9 +89,9 @@ public class MemberService {
     }
 
     @Transactional
-    public LoginResponseDTO loginWithKakao(String code){
+    public LoginResponseDTO loginWithKakao(String code, String redirectUri){
 
-        AccessTokenResponseDTO tokenDTO = kakaoOAuthService.getKakaoToken(code);
+        AccessTokenResponseDTO tokenDTO = kakaoOAuthService.getKakaoToken(code, redirectUri);
         KakaoInfoResponseDTO userInfo = kakaoOAuthService.getKakaoUserInfo(tokenDTO.getAccessToken());
 
         // 2. 사용자 정보 추출
@@ -138,9 +138,8 @@ public class MemberService {
                 .socialType(socialType)
                 .role(Role.GUEST) // 이후 필요 정보 모두 입력 시 USER 로 승격
                 .build();
-        Member savedMember = memberRepository.save(newUser);
 
-        return savedMember;
+        return memberRepository.save(newUser);
     }
 
     // 사용자 정보 조회
