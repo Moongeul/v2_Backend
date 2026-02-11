@@ -41,9 +41,6 @@ public class GoogleOAuthService {
     // Google 토큰 획득 로직 (WebClient 방식으로 수정 - 비동기 방식 구현)
     public AccessTokenResponseDTO getGoogleToken(String code, String type) {
 
-        log.info("Request Body: code={}, client_id={}, redirect_uri={}, grant_type={}", 
-          code, clientId, redirectUri, "authorization_code");
-
         String decodedCode;
         try {
             // 인코딩된 code 값(예: %2F)을 원래 값(/)으로 디코딩합니다.
