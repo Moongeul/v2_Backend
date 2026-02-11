@@ -28,4 +28,8 @@ public class Agree extends BaseTimeEntity {
     private Terms terms;
 
     private boolean isAgreed; // 동의 여부 (true/false)
+
+    public void updateAgreement(boolean isAgreed) {
+        this.isAgreed = isAgreed;
+    }
 }

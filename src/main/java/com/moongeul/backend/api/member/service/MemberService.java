@@ -31,10 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -430,46 +427,45 @@ public class MemberService {
      * 약관동의 API
      *
      * */
-//    public void agreeToTerms(String email, AgreeTermsRequestDTO agreeTermsRequestDTO){
-//
-//        Member member = getMemberByEmail(email);
-//
-//        // 예외처리: 필수 동의 여부 검증
-//        if (!agreeTermsRequestDTO.isServiceTermsAgree() || !agreeTermsRequestDTO.isPrivatePolicyAgree()) {
-//            throw new BadRequestException(ErrorStatus.DISAGREE_REQUIRED_TERM.getMessage());
-//        }
-//
-//        // 1. 약관 타입과 DTO의 동의 여부 매핑
-//        Map<TermsType, Boolean> agreementData = Map.of(
-//                TermsType.SERVICE_TERMS_AGREE, agreeTermsRequestDTO.isServiceTermsAgree(),
-//                TermsType.PRIVACY_POLICY_AGREE, agreeTermsRequestDTO.isPrivatePolicyAgree(),
-//                TermsType.MARKETING_AGREE, agreeTermsRequestDTO.isMarketingAgree()
-//        );
-//
-//        // 2. DB에서 각 타입에 맞는 Terms 정보를 찾아 Agree 엔티티 생성
-//        List<Agree> agrees = agreementData.entrySet().stream()
-//                .map(entry -> {
-//                    TermsType type = entry.getKey();
-//                    boolean isAgreed = entry.getValue();
-//
-//                    // DB에 미리 들어가 있는 약관 마스터 정보를 찾아옴
-//                    Terms terms = termsRepository.findByTermsType(type)
-//                            .orElseThrow(() -> new EntityNotFoundException(type.getKey() + " 약관 정보가 DB에 없습니다."));
-//
-//                    return Agree.builder()
-//                            .member(member)
-//                            .terms(terms)
-//                            .isAgreed(isAgreed)
-//                            .build();
-//                })
-//                .toList();
-//
-//        Agree.builder()
-//                .member(member)
-//                .terms()
-//                .isAgreed()
-//                .build();
-//    }
+    @Transactional
+    public void agreeToTerms(String email, AgreeTermsRequestDTO agreeTermsRequestDTO){
+
+        Member member = getMemberByEmail(email);
+
+        // 예외처리: 필수 동의 여부 검증
+        if (!agreeTermsRequestDTO.isServiceTermsAgree() || !agreeTermsRequestDTO.isPrivatePolicyAgree()) {
+            throw new BadRequestException(ErrorStatus.DISAGREE_REQUIRED_TERM.getMessage());
+        }
+
+        // 1. 약관 타입과 DTO의 동의 여부 매핑
+        Map<TermsType, Boolean> agreementData = Map.of(
+                TermsType.SERVICE_TERMS_AGREE, agreeTermsRequestDTO.isServiceTermsAgree(),
+                TermsType.PRIVACY_POLICY_AGREE, agreeTermsRequestDTO.isPrivatePolicyAgree(),
+                TermsType.MARKETING_AGREE, agreeTermsRequestDTO.isMarketingAgree()
+        );
+
+        agreementData.forEach((type, isAgreed) -> {
+            // 1. 해당 타입의 약관 마스터 정보 조회
+            Terms terms = termsRepository.findByTermsType(type)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.TERMS_NOTFOUND_EXCEPTION.getMessage()));
+
+            // 2. 기존 동의 내역이 있는지 조회
+            agreeRepository.findByMemberAndTerms(member, terms)
+                    .ifPresentOrElse(
+                            // 이미 데이터가 있다면? -> 동의 여부 필드만 수정 (Dirty Checking 발생)
+                            existingAgree -> existingAgree.updateAgreement(isAgreed),
+                            // 데이터가 없다면? -> 새로 생성해서 저장
+                            () -> {
+                                Agree newAgree = Agree.builder()
+                                        .member(member)
+                                        .terms(terms)
+                                        .isAgreed(isAgreed)
+                                        .build();
+                                agreeRepository.save(newAgree);
+                            }
+                    );
+        });
+    }
 
     // 회원 조회 메서드
     private Member getMemberByEmail(String email) {

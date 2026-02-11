@@ -29,6 +29,7 @@ public enum SuccessStatus {
 	CHECK_NICKNAME_DUPLICATE_SUCCESS(HttpStatus.OK, "닉네임 중복 체크 성공"),
 	GET_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 조회 성공"),
 	UPDATE_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 수정 성공"),
+	TERMS_AGREE_SUCCESS(HttpStatus.OK, "약관 동의 성공"),
 
 	/* BOOK */
 	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),
