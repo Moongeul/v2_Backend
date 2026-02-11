@@ -30,9 +30,9 @@ public class KakaoOAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
     private String clientSecret;
 
-    @Value("${oauth-config.google.local}")
+    @Value("${oauth-config.kakao.local}")
     private String localRedirectUri;
-    @Value("${oauth-config.google.deploy}")
+    @Value("${oauth-config.kakao.deploy}")
     private String deployRedirectUri;
 
     // Kakao 토큰 획득 로직
