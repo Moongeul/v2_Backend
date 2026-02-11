@@ -25,6 +25,7 @@ public enum ErrorStatus {
     INVALID_ANSWER_VALUE(HttpStatus.BAD_REQUEST, "테스트 답변은 A 또는 B여야 합니다. (질문번호: %d, 현재답변: %s)"),
     NO_SCORE_RESULT(HttpStatus.BAD_REQUEST, "테스트 점수 계산 결과가 없습니다."),
     REVIEW_UNAUTHORIZED(HttpStatus.BAD_REQUEST, "수정하려는 회원의 리뷰가 아닙니다."),
+    DISAGREE_REQUIRED_TERM(HttpStatus.BAD_REQUEST, "필수 약관에 모두 동의해야 합니다."),
 
     /**
      * 401 UNAUTHORIZED
@@ -48,6 +49,7 @@ public enum ErrorStatus {
     WEEKLY_RECOMMENDATION_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "주간 추천 기록을 찾을 수 없습니다."),
     QUESTION_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 질문을 찾을 수 없습니다."),
     ANSWER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 답변을 찾을 수 없습니다."),
+    TERMS_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "약관 정보를 찾을 수 없습니다."),
 
     /**
      * 400 BAD_REQUEST

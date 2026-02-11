@@ -3,14 +3,12 @@ package com.moongeul.backend.api.member.service;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
-import com.moongeul.backend.api.member.entity.Follow;
-import com.moongeul.backend.api.member.entity.FollowStatus;
-import com.moongeul.backend.api.member.entity.Member;
-import com.moongeul.backend.api.member.entity.PrivacyLevel;
-import com.moongeul.backend.api.member.entity.Role;
+import com.moongeul.backend.api.member.entity.*;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
+import com.moongeul.backend.api.member.repository.AgreeRepository;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.member.repository.TermsRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.PostDTO;
@@ -33,9 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,6 +48,8 @@ public class MemberService {
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
     private final NicknameGenerator nicknameGenerator;
+    private final TermsRepository termsRepository;
+    private final AgreeRepository agreeRepository;
 
     // 인가코드 받아 JWT로 교환 및 회원가입/로그인 처리
     @Transactional
@@ -220,11 +218,6 @@ public class MemberService {
                 .totalPostCount(totalPostCount)
                 .data(categoryStats)
                 .build();
-    }
-
-    private Member getMemberByEmail(String email) {
-        return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
     }
 
     @Transactional
@@ -426,5 +419,56 @@ public class MemberService {
                 throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
             }
         }
+    }
+
+    /*
+     *
+     * 약관동의 API
+     *
+     * */
+    @Transactional
+    public void agreeToTerms(String email, AgreeTermsRequestDTO agreeTermsRequestDTO){
+
+        Member member = getMemberByEmail(email);
+
+        // 예외처리: 필수 동의 여부 검증
+        if (!agreeTermsRequestDTO.isServiceTermsAgree() || !agreeTermsRequestDTO.isPrivatePolicyAgree()) {
+            throw new BadRequestException(ErrorStatus.DISAGREE_REQUIRED_TERM.getMessage());
+        }
+
+        // 1. 약관 타입과 DTO의 동의 여부 매핑
+        Map<TermsType, Boolean> agreementData = Map.of(
+                TermsType.SERVICE_TERMS_AGREE, agreeTermsRequestDTO.isServiceTermsAgree(),
+                TermsType.PRIVACY_POLICY_AGREE, agreeTermsRequestDTO.isPrivatePolicyAgree(),
+                TermsType.MARKETING_AGREE, agreeTermsRequestDTO.isMarketingAgree()
+        );
+
+        agreementData.forEach((type, isAgreed) -> {
+            // 1. 해당 타입의 약관 마스터 정보 조회
+            Terms terms = termsRepository.findByTermsType(type)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.TERMS_NOTFOUND_EXCEPTION.getMessage()));
+
+            // 2. 기존 동의 내역이 있는지 조회
+            agreeRepository.findByMemberAndTerms(member, terms)
+                    .ifPresentOrElse(
+                            // 이미 데이터가 있다면? -> 동의 여부 필드만 수정 (Dirty Checking 발생)
+                            existingAgree -> existingAgree.updateAgreement(isAgreed),
+                            // 데이터가 없다면? -> 새로 생성해서 저장
+                            () -> {
+                                Agree newAgree = Agree.builder()
+                                        .member(member)
+                                        .terms(terms)
+                                        .isAgreed(isAgreed)
+                                        .build();
+                                agreeRepository.save(newAgree);
+                            }
+                    );
+        });
+    }
+
+    // 회원 조회 메서드
+    private Member getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
     }
 }
