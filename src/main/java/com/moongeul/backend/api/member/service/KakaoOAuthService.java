@@ -29,17 +29,23 @@ public class KakaoOAuthService {
     private String clientId;
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
     private String clientSecret;
-    @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
-    private String redirectUri;
+
+    @Value("${oauth-config.google.local}")
+    private String localRedirectUri;
+    @Value("${oauth-config.google.deploy}")
+    private String deployRedirectUri;
 
     // Kakao 토큰 획득 로직
-    public AccessTokenResponseDTO getKakaoToken(String code){
+    public AccessTokenResponseDTO getKakaoToken(String code, String type){
 
         // HTTP Body 생성
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", clientId);
         params.add("client_secret", clientSecret);
+
+        String redirectUri = "deploy".equalsIgnoreCase(type) ? deployRedirectUri : localRedirectUri;
+
         params.add("redirect_uri", redirectUri);
         params.add("code", code);
 

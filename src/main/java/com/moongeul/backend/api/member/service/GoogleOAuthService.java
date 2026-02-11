@@ -32,11 +32,14 @@ public class GoogleOAuthService {
     private String clientId;
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String redirectUri;
+
+    @Value("${oauth-config.google.local}")
+    private String localRedirectUri;
+    @Value("${oauth-config.google.deploy}")
+    private String deployRedirectUri;
 
     // Google 토큰 획득 로직 (WebClient 방식으로 수정 - 비동기 방식 구현)
-    public AccessTokenResponseDTO getGoogleToken(String code) {
+    public AccessTokenResponseDTO getGoogleToken(String code, String type) {
 
         String decodedCode;
         try {
@@ -47,6 +50,8 @@ public class GoogleOAuthService {
             log.error("URL Decoding Failed, using original code.", e);
             decodedCode = code;
         }
+
+        String redirectUri = "deploy".equalsIgnoreCase(type) ? deployRedirectUri : localRedirectUri;
 
         // ... (실제 Google OAuth 2.0 /token 엔드포인트 통신 로직 구현 필요)
         // HTTP Body에 전송할 파라미터 담기
