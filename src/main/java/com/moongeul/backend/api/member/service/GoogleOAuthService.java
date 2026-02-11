@@ -32,11 +32,14 @@ public class GoogleOAuthService {
     private String clientId;
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String defaultRedirectUri;
+
+    @Value("${oauth-config.google.local}")
+    private String localRedirectUri;
+    @Value("${oauth-config.google.deploy}")
+    private String deployRedirectUri;
 
     // Google 토큰 획득 로직 (WebClient 방식으로 수정 - 비동기 방식 구현)
-    public AccessTokenResponseDTO getGoogleToken(String code, String redirectUri) {
+    public AccessTokenResponseDTO getGoogleToken(String code, String type) {
 
         String decodedCode;
         try {
@@ -48,17 +51,15 @@ public class GoogleOAuthService {
             decodedCode = code;
         }
 
+        String redirectUri = "deploy".equalsIgnoreCase(type) ? deployRedirectUri : localRedirectUri;
+
         // ... (실제 Google OAuth 2.0 /token 엔드포인트 통신 로직 구현 필요)
         // HTTP Body에 전송할 파라미터 담기
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("code", decodedCode);
         params.add("client_id", clientId);
         params.add("client_secret", clientSecret);
-
-        // 프론트에서 보낸 redirectUri가 있으면 그것을 사용하고, 없으면 설정 파일의 기본값을 사용
-        String finalRedirectUri = (redirectUri != null && !redirectUri.isBlank()) ? redirectUri : defaultRedirectUri;
-
-        params.add("redirect_uri", finalRedirectUri);
+        params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code"); // 인가 코드를 토큰으로 교환함을 명시
 
         return webClient.post()

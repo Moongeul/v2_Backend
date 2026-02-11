@@ -36,7 +36,8 @@ public class MemberController {
     @Operation(
             summary = "구글 로그인 API",
             description = "구글 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. " +
-                    "<br><br>[enum]ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN"
+                    "<br>- type: 환경에 따라 local 또는 deploy를 보내주세요" +
+                    "<br>- [enum]ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
@@ -47,13 +48,15 @@ public class MemberController {
     @PostMapping("/google/login")
     public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithGoogle(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
-        LoginResponseDTO response = memberService.loginWithGoogle(loginRequestDTO.getCode(), loginRequestDTO.getRedirectUri());
+        LoginResponseDTO response = memberService.loginWithGoogle(loginRequestDTO.getCode(), loginRequestDTO.getType());
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
     }
 
     @Operation(
             summary = "카카오 로그인 API",
-            description = "카카오 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다. (ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN)"
+            description = "카카오 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다." +
+                    "<br>- type: 환경에 따라 local 또는 deploy를 보내주세요" +
+                    "<br>- [enum]ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
@@ -64,7 +67,7 @@ public class MemberController {
     @PostMapping("/kakao/login")
     public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithKakao(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
 
-        LoginResponseDTO response = memberService.loginWithKakao(loginRequestDTO.getCode(), loginRequestDTO.getRedirectUri());
+        LoginResponseDTO response = memberService.loginWithKakao(loginRequestDTO.getCode(), loginRequestDTO.getType());
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
     }
 
