@@ -49,6 +49,9 @@ public class KakaoOAuthService {
         params.add("redirect_uri", redirectUri);
         params.add("code", code);
 
+        log.info("Request Body: code={}, client_id={}, redirect_uri={}, grant_type={}", 
+          code, clientId, redirectUri, "authorization_code");
+
         return webClient.post()
                 .uri(KAKAO_TOKEN_URL)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
