@@ -115,11 +115,17 @@ public class PostService {
         // 빈 페이지 객체로 초기화 (null 방지)
         Page<Post> postPage = Page.empty(pageable);
 
+        // 비회원 여부 판단
+        boolean isAnonymous = (email == null || "anonymousUser".equals(email));
+
         if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.PUBLIC)){
-            postPage = postRepository.findAll(pageable);
-        } else if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.FOLLOWERS) && !email.equals("anonymousUser")){
-            Member member = getMemberByEmail(email);
-            postPage = postRepository.findAllByFollower(member, pageable);
+            if(isAnonymous) {
+                postPage = postRepository.findAllForAnonymousUsers(pageable);
+            } else{
+                postPage = postRepository.findAllForMember(email, pageable);
+            }
+        } else if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.FOLLOWERS) && !isAnonymous){
+            postPage = postRepository.findAllByFollower(email, pageable);
         }
 
         List<PostDTO> postDTOList = new ArrayList<>();
