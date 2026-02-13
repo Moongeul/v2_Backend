@@ -110,7 +110,6 @@ public class PostService {
     @Transactional
     public PostAllResponseDTO getPostAll(PostAllRequestDTO postAllRequestDTO, String email){
 
-        Member member = getMemberByEmail(email);
         Pageable pageable = PageRequest.of(postAllRequestDTO.getPage() - 1, postAllRequestDTO.getSize());
 
         // 빈 페이지 객체로 초기화 (null 방지)
@@ -118,7 +117,8 @@ public class PostService {
 
         if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.PUBLIC)){
             postPage = postRepository.findAll(pageable);
-        } else if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.FOLLOWERS)){
+        } else if(postAllRequestDTO.getPostVisibility().equals(PostVisibility.FOLLOWERS) && !email.equals("anonymousUser")){
+            Member member = getMemberByEmail(email);
             postPage = postRepository.findAllByFollower(member, pageable);
         }
 

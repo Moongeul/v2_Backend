@@ -55,7 +55,10 @@ public class ReadingTasteController {
     public ResponseEntity<ApiResponse<TestResponseDTO>> calculateReadingTasteType(@AuthenticationPrincipal UserDetails userDetails,
                                                                                   @RequestBody TestRequestDTO testRequestDTO) {
 
-        TestResponseDTO response = readingTasteService.calculateReadingTasteType(testRequestDTO, userDetails.getUsername());
+        // 비회원인 경우 "anonymousUser", 회원인 경우 email
+        String username = (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
+
+        TestResponseDTO response = readingTasteService.calculateReadingTasteType(testRequestDTO, username);
         return ApiResponse.success(SuccessStatus.CALCULATE_READING_TASTE_SUCCESS, response);
     }
 

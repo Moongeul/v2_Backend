@@ -62,6 +62,9 @@ public class GoogleOAuthService {
         params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code"); // 인가 코드를 토큰으로 교환함을 명시
 
+        log.info("Request Body: code={}, client_id={}, redirect_uri={}, grant_type={}",
+                code, clientId, redirectUri, "authorization_code");
+
         return webClient.post()
                 .uri(GOOGLE_TOKEN_URL)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)

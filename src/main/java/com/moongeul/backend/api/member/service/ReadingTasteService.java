@@ -29,15 +29,18 @@ public class ReadingTasteService {
     @Transactional
     public TestResponseDTO calculateReadingTasteType(TestRequestDTO testRequestDTO, String email){
 
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-
         // 테스트 결과 계산 (가장 높은 유형 반환)
         ReadingTasteType type = findTopType(calculateScore(testRequestDTO.getAnswers()));
 
-        // member 필드 readingTasteType 저장
-        member.updateReadingTasteType(type);
-        memberRepository.save(member);
+        // 회원이라면 취향테스트 결과 DB 저장
+        if(!email.equals("anonymousUser")){
+            Member member = memberRepository.findByEmail(email)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+            // member 필드 readingTasteType 저장
+            member.updateReadingTasteType(type);
+            memberRepository.save(member);
+        }
 
         return TestResponseDTO.builder()
                 .readingTasteType(type.getName())
