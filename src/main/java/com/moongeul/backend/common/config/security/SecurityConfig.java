@@ -5,6 +5,7 @@ import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -35,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/static/**", "/index.html", "/firebase-messaging-sw.js", "/favicon.ico").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/api-doc/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/v2/member/google/login", "/api/v2/member/kakao/login", "/api/v2/member/reissue-token", "/api/v2/reading-taste").permitAll()
-                        .requestMatchers("/api/v2/post").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v2/post/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
