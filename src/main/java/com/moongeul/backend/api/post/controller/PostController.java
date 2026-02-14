@@ -73,7 +73,11 @@ public class PostController {
                 .page(page)
                 .size(size)
                 .build();
-        PostAllResponseDTO response = postService.getPostAll(postAllRequestDTO, userDetails.getUsername());
+
+        // 비회원인 경우 "anonymousUser", 회원인 경우 email
+        String username = (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
+
+        PostAllResponseDTO response = postService.getPostAll(postAllRequestDTO, username);
         return ApiResponse.success(SuccessStatus.GET_ALL_POST_SUCCESS, response);
     }
 

@@ -79,6 +79,7 @@ public class MemberService {
         boolean isReadingTaste = (member.getReadingTasteType() != null);
 
         return LoginResponseDTO.builder()
+                .memberId(member.getId())
                 .role(member.getAuthorityKey())
                 .accessToken(jwtToken.getAccessToken())
                 .refreshToken(jwtToken.getRefreshToken())
@@ -112,6 +113,7 @@ public class MemberService {
         boolean isReadingTaste = (member.getReadingTasteType() != null);
 
         return LoginResponseDTO.builder()
+                .memberId(member.getId())
                 .role(member.getAuthorityKey())
                 .accessToken(jwtToken.getAccessToken())
                 .refreshToken(jwtToken.getRefreshToken())

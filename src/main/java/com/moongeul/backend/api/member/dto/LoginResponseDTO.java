@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LoginResponseDTO {
 
+    private Long memberId;
     private String role;
     private String accessToken; // JWT Access Token (우리 서버)
     private String refreshToken; // JWT Refresh Token (우리 서버)
