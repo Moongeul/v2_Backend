@@ -93,9 +93,11 @@ public class PostController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 기록(게시글)을 찾을 수 없습니다.")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PostDTO>> getPost(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PostDTO>> getPost(@AuthenticationPrincipal UserDetails userDetails,
+                                                        @PathVariable Long id) {
 
-        PostDTO response = postService.getPostDetail(id);
+        String username = (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
+        PostDTO response = postService.getPostDetail(id, username);
         return ApiResponse.success(SuccessStatus.GET_POST_SUCCESS, response);
     }
 

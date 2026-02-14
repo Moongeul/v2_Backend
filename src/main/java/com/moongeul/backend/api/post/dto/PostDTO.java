@@ -30,7 +30,8 @@ public class PostDTO {
     private Integer quotesCnt; // 인용 총 개수
     private List<QuoteDTO> quotes; // 인상깊은구절 리스트
 
-    private LikesInfo likesInfo; // 공감 개수 정보
+    private LikesCnt likesCnt; // 공감 개수 정보
+    private MyLikesStatus myLikesStatus; // 내가 누른 공감 유형 정보
 
     @Getter
     @Builder
@@ -63,12 +64,31 @@ public class PostDTO {
 
     @Getter
     @Builder
-    public static class LikesInfo{
+    public static class LikesCnt {
         private Integer relatableCount; // 공감돼요
         private Integer sameTasteCount; // 취향이 같아요
         private Integer impressiveExpressionCount; // 표현이 인상적이에요
         private Integer wantToReadCount; // 읽고싶네요
         private Integer helpfulCount; // 도움이 됐어요
     }
-    
+
+    @Getter
+    @Builder
+    public static class MyLikesStatus{
+        private boolean relatableCount; // 공감돼요
+        private boolean sameTasteCount; // 취향이 같아요
+        private boolean impressiveExpressionCount; // 표현이 인상적이에요
+        private boolean wantToReadCount; // 읽고싶네요
+        private boolean helpfulCount; // 도움이 됐어요
+
+        public static MyLikesStatus empty() {
+            return MyLikesStatus.builder()
+                    .relatableCount(false)
+                    .sameTasteCount(false)
+                    .impressiveExpressionCount(false)
+                    .wantToReadCount(false)
+                    .helpfulCount(false)
+                    .build();
+        }
+    }
 }

@@ -67,7 +67,7 @@ public class ReviewService {
                         .build())
                 .collect(Collectors.toList());
 
-        PostDTO.LikesInfo likesInfo = PostDTO.LikesInfo.builder()
+        PostDTO.LikesCnt likesCnt = PostDTO.LikesCnt.builder()
                 .relatableCount(post.getRelatableCount())
                 .sameTasteCount(post.getSameTasteCount())
                 .impressiveExpressionCount(post.getImpressiveExpressionCount())
@@ -84,7 +84,7 @@ public class ReviewService {
                 .rating(post.getRating())
                 .content(post.getContent())
                 .quotes(quoteDTOs)
-                .likesInfo(likesInfo)
+                .likesCnt(likesCnt)
                 .build();
     }
 }
