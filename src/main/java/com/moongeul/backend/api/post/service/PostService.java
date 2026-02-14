@@ -133,7 +133,7 @@ public class PostService {
         List<PostDTO> postDTOList = new ArrayList<>();
         if (!postPage.isEmpty()) {
             for(Post post : postPage.getContent()){
-                postDTOList.add(getPostDetail(post.getId(), member.getEmail()));
+                postDTOList.add(getPostDetail(post.getId(), email));
             }
         }
 
