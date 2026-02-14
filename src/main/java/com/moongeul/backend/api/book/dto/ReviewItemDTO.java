@@ -24,5 +24,5 @@ public class ReviewItemDTO {
     private Double rating; // 별점
     private String content; // 내용
     private List<QuoteDTO> quotes; // 인상 깊은 구절들
-    private PostDTO.LikesInfo likesInfo; // 받은 감정 상태들(공감 통계)
+    private PostDTO.LikesCnt likesCnt; // 받은 감정 상태들(공감 통계)
 }

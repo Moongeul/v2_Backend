@@ -33,6 +33,8 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -131,7 +133,7 @@ public class PostService {
         List<PostDTO> postDTOList = new ArrayList<>();
         if (!postPage.isEmpty()) {
             for(Post post : postPage.getContent()){
-                postDTOList.add(getPostDetail(post.getId()));
+                postDTOList.add(getPostDetail(post.getId(), member.getEmail()));
             }
         }
 
@@ -147,7 +149,7 @@ public class PostService {
 
     /* 기록(게시글) 상세 조회 */
     @Transactional
-    public PostDTO getPostDetail(Long postId){
+    public PostDTO getPostDetail(Long postId, String email){
 
         Post post = getPost(postId);
         Book book = getBook(post.getBook().getIsbn());
@@ -183,13 +185,19 @@ public class PostService {
         }
 
         // 공감 개수 DTO
-        PostDTO.LikesInfo likesInfo = PostDTO.LikesInfo.builder()
+        PostDTO.LikesCnt likesCnt = PostDTO.LikesCnt.builder()
                 .relatableCount(post.getRelatableCount())
                 .sameTasteCount(post.getSameTasteCount())
                 .impressiveExpressionCount(post.getImpressiveExpressionCount())
                 .wantToReadCount(post.getWantToReadCount())
                 .helpfulCount(post.getHelpfulCount())
                 .build();
+
+        /* 내가 누른 공감 유형 정보 DTO */
+        boolean isAnonymous = (email == null || "anonymousUser".equals(email));
+        PostDTO.MyLikesStatus myLikesStatus = isAnonymous
+                ? PostDTO.MyLikesStatus.empty()
+                : convertToMyLikesStatus(email, postId);
 
         return PostDTO.builder()
                 .postId(postId)
@@ -201,7 +209,33 @@ public class PostService {
                 .readDate(post.getReadDate())
                 .quotesCnt(quoteDTOList.size())
                 .quotes(quoteDTOList)
-                .likesInfo(likesInfo)
+                .likesCnt(likesCnt)
+                .myLikesStatus(myLikesStatus)
+                .build();
+    }
+
+    // 메서드: 내가 누른 공감 유형 정보 DTO 변환
+    private PostDTO.MyLikesStatus convertToMyLikesStatus(String email, Long postId){
+        Member member = getMemberByEmail(email);
+
+        List<Likes> myLikes = likeRepository.findByPostIdAndMemberId(postId, member.getId());
+
+        // 아무것도 누르지 않았을 때의 로직
+        if (myLikes.isEmpty()) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        // 리스트를 돌면서 각 타입이 있는지 확인
+        Set<LikeType> myLikesTypes = myLikes.stream()
+                .map(Likes::getLikeType)
+                .collect(Collectors.toSet());
+
+        return PostDTO.MyLikesStatus.builder()
+                .relatableCount(myLikesTypes.contains(LikeType.RELATABLE))
+                .sameTasteCount(myLikesTypes.contains(LikeType.SAME_TASTE))
+                .impressiveExpressionCount(myLikesTypes.contains(LikeType.IMPRESSIVE_EXPRESSION))
+                .wantToReadCount(myLikesTypes.contains(LikeType.WANT_TO_READ))
+                .helpfulCount(myLikesTypes.contains(LikeType.HELPFUL))
                 .build();
     }
 
@@ -299,34 +333,23 @@ public class PostService {
 
         Member member = getMemberByEmail(email);
         Post post = getPost(postId);
+        LikeType requestLikeType = likeDTO.getLikeType();
 
-        // 사용자가 해당 게시글에 누른 공감 유형이 있다면
-        Optional<Likes> existingLike = likeRepository.findByPostIdAndMemberId(postId, member.getId());
+        // 사용자가 해당 게시글에 '해당 유형'의 공감을 눌렀는지
+        Optional<Likes> existingLike = likeRepository.findByPostIdAndMemberIdAndLikeType(postId, member.getId(), requestLikeType);
 
         if(existingLike.isPresent()){
-            Likes currentLikes = existingLike.get();
-
-            // 사용자가 해당 게시글에 누른 "같은 공감 유형"이 있다면(또 누른 경우) -> 공감 삭제
-            if (currentLikes.getLikeType().equals(likeDTO.getLikeType())) {
-                decrementLikeCount(post, currentLikes.getLikeType());
-                likeRepository.delete(currentLikes);
-                return;
-            }
-
-            // 사용자가 해당 게시글에 누른 "다른 공감 유형"이 있다면 -> 공감 유형 수정
-            decrementLikeCount(post, currentLikes.getLikeType());
-            currentLikes.changeLikeType(likeDTO.getLikeType());
-            incrementLikeCount(post, likeDTO.getLikeType());
+            // 이미 있다면 -> 취소
+            decrementLikeCount(post, requestLikeType);
+            likeRepository.delete(existingLike.get());
+        } else{
+            // 없다면 새로 추가
+            Likes newLike = likeDTO.toEntity(member, post);
+            likeRepository.save(newLike);
+            incrementLikeCount(post, requestLikeType);
 
             notificationTriggerService.likeNotification(post.getMember(), member, post); // 알림 발생
-            return;
         }
-        
-        // 처음 공감을 누르는 경우 -> 새로 저장
-        likeRepository.save(likeDTO.toEntity(member, post));
-        incrementLikeCount(post, likeDTO.getLikeType());
-
-        notificationTriggerService.likeNotification(post.getMember(), member, post); // 알림 발생
     }
     
     // 공감 카운트 증가 메서드
