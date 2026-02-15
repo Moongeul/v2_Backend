@@ -15,6 +15,7 @@ import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
+import com.moongeul.backend.api.post.util.WritingGuideGenerator;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -51,6 +52,7 @@ public class PostService {
     private final BookshelfCalculator bookshelfCalculator;
 
     private final NotificationTriggerService notificationTriggerService;
+    private final WritingGuideGenerator writingGuideGenerator;
     
 
     /*
@@ -106,6 +108,11 @@ public class PostService {
         return PostIdResponseDTO.builder()
                 .postId(savedPost.getId())
                 .build();
+    }
+
+    /* 글쓰기 도움 받기 */
+    public String writingGuide(){
+        return writingGuideGenerator.getRandomGuide();
     }
 
     /* 기록(게시글) 전체 조회 */
