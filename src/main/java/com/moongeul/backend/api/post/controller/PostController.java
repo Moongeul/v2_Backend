@@ -45,6 +45,22 @@ public class PostController {
     }
 
     @Operation(
+            summary = "글쓰기 도움 받기 API",
+            description = "글쓰기 페이지에서 '글쓰기 도움 받기' 버튼 클릭 시 질문을 생성하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "글쓰기 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ISBN은 필수입니다. (isbn)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 도서를 찾을 수 없습니다.")
+    })
+    @GetMapping("/writing-guide")
+    public ResponseEntity<ApiResponse<String>> writingGuide() {
+
+        String response = postService.writingGuide();
+        return ApiResponse.success(SuccessStatus.GET_WRITING_GUIDE, response);
+    }
+
+    @Operation(
             summary = "기록(게시글) 전체 조회 API",
             description = "메인페이지(홈화면)에서 사용되는 기록(게시글)의 전체 조회 API 입니다." +
                     "<br><br>[enum] postVisibility -> 전체 공개 : PUBLIC, 팔로워 공개 : FOLLOWERS, 나만보기 : PRIVATE" +
