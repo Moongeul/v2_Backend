@@ -17,5 +17,6 @@ public interface DoneReadBookshelfRepository extends JpaRepository<DoneReadBooks
     
     @Query("SELECT d FROM DoneReadBookshelf d WHERE d.member = :member AND d.article.book = :book")
     Optional<DoneReadBookshelf> findByMemberAndBook(@Param("member") Member member, @Param("book") Book book);
-}
 
+    long countByMember(Member member);
+}

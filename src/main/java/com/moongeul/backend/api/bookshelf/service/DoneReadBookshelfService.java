@@ -5,6 +5,8 @@ import com.moongeul.backend.api.bookshelf.dto.DoneReadCalendarDayDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadCalendarResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadBookshelfItemDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadBookshelfResponseDTO;
+import com.moongeul.backend.api.bookshelf.dto.DoneReadRatingRangeCountDTO;
+import com.moongeul.backend.api.bookshelf.dto.DoneReadRatingSummaryResponseDTO;
 import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
 import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
 import com.moongeul.backend.api.member.entity.Member;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,12 @@ public class DoneReadBookshelfService {
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
+    private static final String[] RATING_RANGES = {
+            "1.0~1.4", "1.5~1.9", "2.0~2.4", "2.5~2.9",
+            "3.0~3.4", "3.5~3.9", "4.0~4.4", "4.5~5.0"
+    };
+    private static final double[] RANGE_STARTS = {1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5};
+    private static final double[] RANGE_ENDS = {1.4, 1.9, 2.4, 2.9, 3.4, 3.9, 4.4, 5.0};
 
     @Transactional(readOnly = true)
     public DoneReadBookshelfResponseDTO getDoneReadBooks(String email, Integer page, Integer size) {
@@ -134,6 +143,44 @@ public class DoneReadBookshelfService {
                 .year(year)
                 .month(month)
                 .data(calendarData)
+                .build();
+    }
+
+    // 읽은 책 별점 요약 조회
+    @Transactional(readOnly = true)
+    public DoneReadRatingSummaryResponseDTO getDoneReadRatingSummary(String email) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        long totalBooks = doneReadBookshelfRepository.countByMember(member);
+        List<Double> ratings = postRepository.findRatingsByMember(member);
+
+        int[] counts = new int[RATING_RANGES.length];
+        for (Double rating : ratings) {
+            if (rating == null) {
+                continue;
+            }
+
+            for (int i = 0; i < RATING_RANGES.length; i++) {
+                if (rating >= RANGE_STARTS[i] && rating <= RANGE_ENDS[i] + 1e-9) {
+                    counts[i]++;
+                    break;
+                }
+            }
+        }
+
+        List<DoneReadRatingRangeCountDTO> data = new ArrayList<>();
+        for (int i = 0; i < RATING_RANGES.length; i++) {
+            data.add(DoneReadRatingRangeCountDTO.builder()
+                    .range(RATING_RANGES[i])
+                    .count(counts[i])
+                    .build());
+        }
+
+        return DoneReadRatingSummaryResponseDTO.builder()
+                .totalBooks(totalBooks)
+                .data(data)
                 .build();
     }
 

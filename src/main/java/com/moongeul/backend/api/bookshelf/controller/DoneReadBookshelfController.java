@@ -1,6 +1,7 @@
 package com.moongeul.backend.api.bookshelf.controller;
 
 import com.moongeul.backend.api.bookshelf.dto.DoneReadCalendarResponseDTO;
+import com.moongeul.backend.api.bookshelf.dto.DoneReadRatingSummaryResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadBookshelfResponseDTO;
 import com.moongeul.backend.api.bookshelf.service.DoneReadBookshelfService;
 import com.moongeul.backend.common.response.ApiResponse;
@@ -64,5 +65,21 @@ public class DoneReadBookshelfController {
         DoneReadCalendarResponseDTO doneReadCalendar = doneReadBookshelfService.getDoneReadCalendar(
                 userDetails.getUsername(), year, month);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_CALENDAR_SUCCESS, doneReadCalendar);
+    }
+
+    @Operation(
+            summary = "읽은 책 별점 요약 조회 API",
+            description = "사용자가 기록한 총 책 수와 별점 구간(1.0~1.4, 1.5~1.9, ... , 4.5~5.0)별 기록 수를 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "읽은 책 별점 요약 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/rating-summary")
+    public ResponseEntity<ApiResponse<DoneReadRatingSummaryResponseDTO>> getDoneReadRatingSummary(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        DoneReadRatingSummaryResponseDTO doneReadRatingSummaryResponseDTO = doneReadBookshelfService.getDoneReadRatingSummary(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_DONE_READ_RATING_SUMMARY_SUCCESS, doneReadRatingSummaryResponseDTO);
     }
 }
