@@ -83,4 +83,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 사용자 별점 목록 조회 (null 제외)
     @Query("SELECT p.rating FROM Post p WHERE p.member = :member AND p.rating IS NOT NULL")
     List<Double> findRatingsByMember(@Param("member") Member member);
+
+    Page<Post> findByMemberAndRatingBetween(Member member, Double startRating, Double endRating, Pageable pageable);
 }
