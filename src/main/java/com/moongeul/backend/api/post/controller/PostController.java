@@ -194,5 +194,19 @@ public class PostController {
         WeeklyRecommendationResponseDTO weeklyRecommendationResponseDTO = postService.getWeeklyRecommendation(userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_WEEKLY_RECOMMENDATION_SUCCESS, weeklyRecommendationResponseDTO);
     }
-}
 
+    @Operation(
+            summary = "가장 많이 기록된 책 조회 API",
+            description = "전체 공개 기록 기준으로 가장 많이 기록된 책을 조회합니다. 동률이면 최근에 작성된 책을 우선합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "가장 많이 기록된 책 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가장 많이 기록된 책을 찾을 수 없습니다.")
+    })
+    @GetMapping("/most-recorded-book")
+    public ResponseEntity<ApiResponse<MostRecordedBookResponseDTO>> getMostRecordedBook() {
+
+        MostRecordedBookResponseDTO mostRecordedBookResponseDTO = postService.getMostRecordedBook();
+        return ApiResponse.success(SuccessStatus.GET_MOST_RECORDED_BOOK_SUCCESS, mostRecordedBookResponseDTO);
+    }
+}
