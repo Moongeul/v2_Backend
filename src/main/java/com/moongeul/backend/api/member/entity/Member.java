@@ -81,6 +81,13 @@ public class Member extends BaseTimeEntity {
     }
 
     /**
+     * 프로필 이미지 업데이트
+     */
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    /**
      * 공개 범위 변경 메서드
      */
     public void updatePrivacy(PrivacyLevel level) {

@@ -26,6 +26,7 @@ public enum SuccessStatus {
 	GET_FOLLOWER_SUCCESS(HttpStatus.OK, "팔로워 목록 조회 성공"),
 	REGENERATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 재생성 성공"),
 	UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 등록 성공"),
+	UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 변경 성공"),
 	CHECK_NICKNAME_DUPLICATE_SUCCESS(HttpStatus.OK, "닉네임 중복 체크 성공"),
 	GET_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 조회 성공"),
 	UPDATE_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 수정 성공"),
