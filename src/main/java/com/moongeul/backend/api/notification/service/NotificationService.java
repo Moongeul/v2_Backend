@@ -56,8 +56,8 @@ public class NotificationService {
     public checkNotificationsResponseDTO checkUnReadNotifications(String email){
         Member member = getMemberByEmail(email);
 
-        boolean isExist = notificationRepository.existsByReceiverIdAndReadFalse(member.getId());
-        Long count = notificationRepository.countByReceiverIdAndReadFalse(member.getId());
+        boolean isExist = notificationRepository.existsByReceiverIdAndIsReadFalse(member.getId());
+        Long count = notificationRepository.countByReceiverIdAndIsReadFalse(member.getId());
 
         return checkNotificationsResponseDTO.builder()
                 .exist(isExist)

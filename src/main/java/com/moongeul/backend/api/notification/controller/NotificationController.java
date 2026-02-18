@@ -66,7 +66,15 @@ public class NotificationController {
     @Operation(
             summary = "알림 내역 전체 조회 API",
             description = "알림 페이지에 띄울 정보들을 전체 조회 합니다." +
-                    "<br>profileImage 값이 null인 것은 '서버공지'인 경우 입니다."
+                    "<br>- profileImage 값이 null인 것은 '서버공지'인 경우 입니다." +
+                    "<br>- 알림 유형이 'FOLLOW_PRIVATE'일 경우, 승인/삭제 버튼 필요" +
+                    "<br><br>[enum] 알림 유형 ->" +
+                    "<br>- NOTICE: 서버공지" +
+                    "<br>- LIKE: 공감 알림" +
+                    "<br>- COMMENT: 댓글 알림" +
+                    "<br>- FOLLOW_OPEN: 팔로우(공개 계정)" +
+                    "<br>- FOLLOW_PRIVATE: 팔로우(비공개 계정)" +
+                    "<br>- FOLLOW_PRIVATE_ACCEPTED: 팔로우(비공개 계정) - 승인됨"
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "알림 내역 전체 조회 성공"),

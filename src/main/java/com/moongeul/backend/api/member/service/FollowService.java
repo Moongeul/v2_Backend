@@ -1,6 +1,7 @@
 package com.moongeul.backend.api.member.service;
 
 
+import com.moongeul.backend.api.member.dto.AcceptFollowRequestDTO;
 import com.moongeul.backend.api.member.dto.FollowResponseDTO;
 import com.moongeul.backend.api.member.entity.Follow;
 import com.moongeul.backend.api.member.entity.FollowStatus;
@@ -8,6 +9,9 @@ import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.notification.entity.NotificationType;
+import com.moongeul.backend.api.notification.entity.Notifications;
+import com.moongeul.backend.api.notification.repository.NotificationRepository;
 import com.moongeul.backend.api.notification.service.NotificationTriggerService;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
@@ -28,13 +32,14 @@ public class FollowService {
 
     private final FollowRepository followRepository;
     private final MemberRepository memberRepository;
+    private final NotificationRepository notificationRepository;
 
     private final NotificationTriggerService notificationTriggerService;
 
     /* 팔로우 API */
     @Transactional
     public void follow(Long following_id, String email){
-        Member following = getById(following_id); // 팔로우 대상
+        Member following = getMemberById(following_id); // 팔로우 대상
         Member follower = getMemberByEmail(email); // 나
 
         // 에러처리: 자기자신을 팔로우하는 경우 (불가)
@@ -137,7 +142,33 @@ public class FollowService {
                 .toList();
     }
 
-    private Member getById(Long id) {
+    /* 팔로우 승인 API */
+    @Transactional
+    public void acceptFollow(AcceptFollowRequestDTO acceptFollowRequestDTO, String email){
+
+        Member member = getMemberByEmail(email);
+
+        Follow follow = followRepository.findByFollowingIdAndFollowerId(member.getId(), acceptFollowRequestDTO.getFollowerId())
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.NO_FOLLOW_RELATIONSHIP.getMessage()));
+
+        // 알림 상태를 바꿔주기 위해
+        Notifications notifications = notificationRepository.findByReceiverIdAndActorIdAndType(member.getId(), acceptFollowRequestDTO.getFollowerId(), NotificationType.FOLLOW_PRIVATE)
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.NOTIFICATION_NOTFOUND_EXCEPTION.getMessage()));
+
+        if(acceptFollowRequestDTO.getStatus().equals("ACCEPT")){
+            // '승인'한 경우 -> ACCEPTED 변경 + 알림 타입 변경
+            follow.accept();
+            notifications.switchNotificationType();
+        } else if(acceptFollowRequestDTO.getStatus().equals("DELETE")){
+            // '삭제'한 경우 -> 팔로우/알림 삭제
+            followRepository.delete(follow);
+            notificationRepository.delete(notifications);
+        } else{
+            throw new BadRequestException(ErrorStatus.BAD_FOLLOW_PROCESS_REQUEST.getMessage());
+        }
+    }
+
+    private Member getMemberById(Long id) {
         return memberRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
     }

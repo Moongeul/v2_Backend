@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.notification.repository;
 
+import com.moongeul.backend.api.notification.entity.NotificationType;
 import com.moongeul.backend.api.notification.entity.Notifications;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -7,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface NotificationRepository extends JpaRepository<Notifications, Long> {
 
@@ -17,9 +20,12 @@ public interface NotificationRepository extends JpaRepository<Notifications, Lon
     void updateIsReadByReceiverId(@Param("receiverId") Long receiverId);
 
     // 읽지 않은 알림이 있는지 여부 확인 (EXISTS 쿼리 사용으로 빠름)
-    boolean existsByReceiverIdAndReadFalse(Long receiverId);
+    boolean existsByReceiverIdAndIsReadFalse(Long receiverId);
 
     // 읽지 않은 알림의 개수 확인
-    long countByReceiverIdAndReadFalse(Long receiverId);
+    long countByReceiverIdAndIsReadFalse(Long receiverId);
+
+    // receiverId와 actorId로 FOLLOW_PRIVATE 알림 가져오기
+    Optional<Notifications> findByReceiverIdAndActorIdAndType(Long receiverId, Long actorId, NotificationType notificationType);
 
 }
