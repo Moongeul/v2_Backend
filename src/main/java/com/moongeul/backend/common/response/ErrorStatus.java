@@ -62,6 +62,7 @@ public enum ErrorStatus {
     NO_FOLLOW_RELATIONSHIP(HttpStatus.BAD_REQUEST, "팔로우 관계가 존재하지 않습니다."),
     EXISTS_FOLLOW_ACCEPTED(HttpStatus.BAD_REQUEST, "이미 팔로우하고 있는 사용자입니다."),
     EXISTS_FOLLOW_PENDING(HttpStatus.BAD_REQUEST, "이미 팔로우 요청을 보냈습니다. 승인을 기다려주세요."),
+    INVALID_RATING_RANGE_EXCEPTION(HttpStatus.BAD_REQUEST, "유효하지 않은 별점 구간입니다."),
     BAD_FOLLOW_PROCESS_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 팔로우 처리 요청입니다."),
     PRIVACY_FORBIDDEN_EXCEPTION(HttpStatus.FORBIDDEN, "해당 사용자의 정보는 공개되지 않습니다."),
 
