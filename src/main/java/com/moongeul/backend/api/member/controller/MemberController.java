@@ -239,6 +239,22 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
     }
 
+    @Operation(
+            summary = "팔로우 승인/삭제 API",
+            description = "팔로우를 승인 또는 삭제하는 API 입니다." +
+                    "<br>status - 승인: ACCEPT / 삭제: DELETE 로 보내주시기 바랍니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "팔로우 승인/삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @PostMapping("/follow/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptFollow(@AuthenticationPrincipal UserDetails userDetails,
+                                                          @RequestBody AcceptFollowRequestDTO acceptFollowRequestDTO){
+        followService.acceptFollow(acceptFollowRequestDTO, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.FOLLOW_PROCESS_SUCCESS);
+    }
+
     /*
      *
      * 닉네임 API

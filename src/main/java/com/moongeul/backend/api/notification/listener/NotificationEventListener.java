@@ -5,7 +5,7 @@ import com.moongeul.backend.api.notification.entity.NotificationType;
 import com.moongeul.backend.api.notification.event.AnswerNotificationEvent;
 import com.moongeul.backend.api.notification.event.FollowNotificationEvent;
 import com.moongeul.backend.api.notification.event.LikeNotificationEvent;
-import com.moongeul.backend.api.notification.service.NotificationService;
+import com.moongeul.backend.api.notification.service.PushNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NotificationEventListener { // 발행된 이벤트를 받아서 별도의 스레드에서 비동기적으로 알림을 저장하고 전송하는 클래스
 
-    private final NotificationService notificationService;
+    private final PushNotificationService pushNotificationService;
 
     /* 공감 알림 */
     @Async // 별도의 스레드에서 실행되도록 설정
@@ -24,7 +24,7 @@ public class NotificationEventListener { // 발행된 이벤트를 받아서 별
         String message = event.actor().getNickname() + "님이 회원님의 기록에 공감했습니다.";
 
         // 실제 DB 저장 및 Expo 푸시 알림 발송 로직 실행
-        notificationService.send(
+        pushNotificationService.send(
                 event.receiver(),
                 event.actor(),
                 NotificationType.LIKE,
@@ -40,7 +40,7 @@ public class NotificationEventListener { // 발행된 이벤트를 받아서 별
         String message = event.actor().getNickname() + "님이 회원님의 질문에 댓글을 달았습니다.";
 
         // 실제 DB 저장 및 Expo 푸시 알림 발송 로직 실행
-        notificationService.send(
+        pushNotificationService.send(
                 event.receiver(),
                 event.actor(),
                 NotificationType.LIKE,
@@ -63,7 +63,7 @@ public class NotificationEventListener { // 발행된 이벤트를 받아서 별
         }
 
         // 실제 DB 저장 및 Expo 푸시 알림 발송 로직 실행
-        notificationService.send(
+        pushNotificationService.send(
                 event.receiver(),
                 event.actor(),
                 notificationType,
