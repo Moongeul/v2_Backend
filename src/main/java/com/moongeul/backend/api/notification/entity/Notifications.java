@@ -33,4 +33,8 @@ public class Notifications extends BaseTimeEntity {
     private Long relatedId; // 클릭 시 이동할 게시글 ID or 유저 ID or 공지사항 ID
 
     private boolean isRead; // 읽음 처리 여부
+
+    public void switchNotificationType(){
+        this.type = NotificationType.FOLLOW_PRIVATE_ACCEPTED;
+    }
 }

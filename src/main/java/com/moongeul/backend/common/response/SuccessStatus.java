@@ -24,6 +24,7 @@ public enum SuccessStatus {
 	UNFOLLOW_SUCCESS(HttpStatus.OK, "언팔로우 성공"),
 	GET_FOLLOWING_SUCCESS(HttpStatus.OK, "팔로잉 목록 조회 성공"),
 	GET_FOLLOWER_SUCCESS(HttpStatus.OK, "팔로워 목록 조회 성공"),
+	FOLLOW_PROCESS_SUCCESS(HttpStatus.OK, "팔로우 승인/삭제 성공"),
 	REGENERATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 재생성 성공"),
 	UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 등록 성공"),
 	CHECK_NICKNAME_DUPLICATE_SUCCESS(HttpStatus.OK, "닉네임 중복 체크 성공"),
@@ -59,7 +60,9 @@ public enum SuccessStatus {
 	GET_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 전체 조회 성공"),
 
 	/* ALARM */
-	REGISTER_DEVICE_TOKEN(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
+	REGISTER_DEVICE_TOKEN_SUCCESS(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
+	GET_NOTIFICATIONS_SUCCESS(HttpStatus.OK, "알림 내역 전체 조회 성공"),
+	GET_UNREAD_NOTIFICATIONS_SUCCESS(HttpStatus.OK, "미확인 알림 존재 여부 조회 성공"),
 
 	/* QUESTION */
 	GET_QUESTION_LIST_SUCCESS(HttpStatus.OK, "질문 리스트 조회 성공"),
