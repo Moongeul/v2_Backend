@@ -45,6 +45,7 @@ public enum SuccessStatus {
 	REMOVE_WISH_READ_BOOK_SUCCESS(HttpStatus.OK, "읽고 싶은 책 삭제 성공"),
 	GET_WISH_READ_BOOKS_SUCCESS(HttpStatus.OK, "읽고 싶은 책장 조회 성공"),
 	GET_DONE_READ_BOOKS_SUCCESS(HttpStatus.OK, "읽은 책장 조회 성공"),
+	GET_DONE_READ_CALENDAR_SUCCESS(HttpStatus.OK, "읽은 책 캘린더 조회 성공"),
 
 	/* POST */
 	GET_ALL_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 전체 조회 성공"),

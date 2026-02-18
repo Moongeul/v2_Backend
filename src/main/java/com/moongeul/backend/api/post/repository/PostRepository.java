@@ -1,6 +1,7 @@
 package com.moongeul.backend.api.post.repository;
 
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.ReadingTasteType;
 import com.moongeul.backend.api.post.entity.Post;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -68,4 +70,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 카테고리별 기록 조회 (평점 낮은순)
     @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.rating ASC, p.createdAt DESC")
     Page<Post> findByCategoryIdOrderByRatingAsc(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    // 읽은 날짜 기준 월별 게시글 조회 (일자 오름차순, 같은 일자 내 최신 작성순)
+    @Query("SELECT p FROM Post p JOIN FETCH p.book " +
+            "WHERE p.member = :member AND p.readDate BETWEEN :startDate AND :endDate " +
+            "ORDER BY p.readDate ASC, p.createdAt DESC")
+    List<Post> findCalendarPostsByMemberAndReadDateBetweenOrderByReadDateAscCreatedAtDesc(
+            @Param("member") Member member,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }
