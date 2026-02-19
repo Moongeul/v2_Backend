@@ -1,5 +1,6 @@
-package com.moongeul.backend.api.member.entity;
+package com.moongeul.backend.api.setting.entity;
 
+import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

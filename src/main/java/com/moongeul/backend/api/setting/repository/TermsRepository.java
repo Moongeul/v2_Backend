@@ -1,7 +1,7 @@
-package com.moongeul.backend.api.member.repository;
+package com.moongeul.backend.api.setting.repository;
 
-import com.moongeul.backend.api.member.entity.Terms;
-import com.moongeul.backend.api.member.entity.TermsType;
+import com.moongeul.backend.api.setting.entity.Terms;
+import com.moongeul.backend.api.setting.entity.TermsType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
