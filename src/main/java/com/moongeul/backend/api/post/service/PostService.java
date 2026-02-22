@@ -384,6 +384,37 @@ public class PostService {
     /*
      * 추천
      */
+
+    // 가장 많이 기록된 책 조회
+    @Transactional(readOnly = true)
+    public MostRecordedBookResponseDTO getMostRecordedBook() {
+        List<String> mostRecordedBookIsbnList = postRepository.findMostRecordedPublicBookIsbn(PageRequest.of(0, 1));
+
+        if (mostRecordedBookIsbnList.isEmpty()) {
+            throw new NotFoundException(ErrorStatus.MOST_RECORDED_BOOK_NOT_FOUND_EXCEPTION.getMessage());
+        }
+
+        String mostRecordedBookIsbn = mostRecordedBookIsbnList.get(0);
+
+        Post post = postRepository.findFirstByBookIsbnAndPostVisibilityOrderByCreatedAtDesc(
+                        mostRecordedBookIsbn,
+                        PostVisibility.PUBLIC
+                )
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.MOST_RECORDED_BOOK_NOT_FOUND_EXCEPTION.getMessage()));
+
+        return MostRecordedBookResponseDTO.builder()
+                .postId(post.getId())
+                .bookImage(post.getBook().getBookImage())
+                .bookTitle(post.getBook().getTitle())
+                .isbn(post.getBook().getIsbn())
+                .author(post.getBook().getAuthor())
+                .publisher(post.getBook().getPublisher())
+                .pubdate(post.getBook().getPubdate())
+                .bookRating(post.getBook().getRatingAverage())
+                .rating(post.getRating())
+                .content(post.getContent())
+                .build();
+    }
     
     // 주간 추천 기록 조회
     @Transactional(readOnly = true)

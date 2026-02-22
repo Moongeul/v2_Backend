@@ -58,6 +58,7 @@ public enum SuccessStatus {
 	DELETE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 삭제 성공"),
 	POST_LIKE_SUCCESS(HttpStatus.OK, "기록(게시글) 공감 버튼 등록 성공"),
 	GET_WEEKLY_RECOMMENDATION_SUCCESS(HttpStatus.OK, "주간 추천 기록 조회 성공"),
+	GET_MOST_RECORDED_BOOK_SUCCESS(HttpStatus.OK, "가장 많이 기록된 책 조회 성공"),
 	GET_WRITING_GUIDE(HttpStatus.OK, "글쓰기 도움 받기 조회 성공"),
 
 	/* CATEGORY */
