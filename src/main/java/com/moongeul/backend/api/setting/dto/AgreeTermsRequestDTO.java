@@ -1,6 +1,5 @@
-package com.moongeul.backend.api.member.dto;
+package com.moongeul.backend.api.setting.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

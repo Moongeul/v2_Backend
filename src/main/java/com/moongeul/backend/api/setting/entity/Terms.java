@@ -1,4 +1,4 @@
-package com.moongeul.backend.api.member.entity;
+package com.moongeul.backend.api.setting.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

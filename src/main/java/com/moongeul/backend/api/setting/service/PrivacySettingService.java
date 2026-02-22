@@ -1,7 +1,6 @@
 package com.moongeul.backend.api.setting.service;
 
-import com.moongeul.backend.api.member.entity.Member;
-import com.moongeul.backend.api.member.entity.PrivacyLevel;
+import com.moongeul.backend.api.member.entity.*;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.setting.dto.PrivacyLevelResponseDTO;
 import com.moongeul.backend.api.setting.dto.PrivacyLevelUpdateRequestDTO;
