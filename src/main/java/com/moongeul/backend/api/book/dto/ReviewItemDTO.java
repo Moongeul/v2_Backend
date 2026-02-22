@@ -1,6 +1,6 @@
 package com.moongeul.backend.api.book.dto;
 
-import com.moongeul.backend.api.member.entity.ReadingTasteType;
+import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import com.moongeul.backend.api.post.dto.PostDTO;
 import com.moongeul.backend.api.post.dto.QuoteDTO;
 import lombok.AllArgsConstructor;

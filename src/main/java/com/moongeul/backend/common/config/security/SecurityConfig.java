@@ -35,7 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/h2-console/**").permitAll()
                         .requestMatchers("/static/**", "/index.html", "/firebase-messaging-sw.js", "/favicon.ico").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/api-doc/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/api/v2/member/google/login", "/api/v2/member/kakao/login", "/api/v2/member/reissue-token", "/api/v2/reading-taste").permitAll()
+                        .requestMatchers("/api/v2/member/google/login", "/api/v2/member/kakao/login", "/api/v2/member/reissue-token").permitAll()
+                        .requestMatchers("/api/v2/reading-taste", "/api/v2/reading-taste/total-count").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/post/**").permitAll()
                         .anyRequest().authenticated()
                 );
