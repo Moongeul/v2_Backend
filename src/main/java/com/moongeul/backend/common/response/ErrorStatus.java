@@ -26,6 +26,8 @@ public enum ErrorStatus {
     NO_SCORE_RESULT(HttpStatus.BAD_REQUEST, "테스트 점수 계산 결과가 없습니다."),
     REVIEW_UNAUTHORIZED(HttpStatus.BAD_REQUEST, "수정하려는 회원의 리뷰가 아닙니다."),
     DISAGREE_REQUIRED_TERM(HttpStatus.BAD_REQUEST, "필수 약관에 모두 동의해야 합니다."),
+    PROFILE_IMAGE_EMPTY_EXCEPTION(HttpStatus.BAD_REQUEST, "업로드할 프로필 이미지가 없습니다."),
+    PROFILE_IMAGE_INVALID_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드할 수 있습니다."),
 
     /**
      * 401 UNAUTHORIZED
@@ -47,6 +49,7 @@ public enum ErrorStatus {
     REVIEW_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
     USER_READING_TASTE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "사용자의 독서 취향 정보를 찾을 수 없습니다."),
     WEEKLY_RECOMMENDATION_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "주간 추천 기록을 찾을 수 없습니다."),
+    MOST_RECORDED_BOOK_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "가장 많이 기록된 책을 찾을 수 없습니다."),
     QUESTION_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 질문을 찾을 수 없습니다."),
     ANSWER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 답변을 찾을 수 없습니다."),
     TERMS_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "약관 정보를 찾을 수 없습니다."),
@@ -72,6 +75,8 @@ public enum ErrorStatus {
     INTERNAL_SERVER_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR,"서버 내부 오류 발생"),
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "로그인 서버 오류 발생"),
     NAVER_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "네이버 서버 오류 발생"),
+    FILE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
+    FILE_DELETE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "파일 삭제에 실패했습니다."),
 
     ;
 

@@ -12,10 +12,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -306,6 +308,46 @@ public class MemberController {
         
         NicknameCheckResponseDTO nicknameCheckResponseDTO = memberService.checkNicknameDuplicate(nickname);
         return ApiResponse.success(SuccessStatus.CHECK_NICKNAME_DUPLICATE_SUCCESS, nicknameCheckResponseDTO);
+    }
+
+    @Operation(
+            summary = "프로필 이미지 변경 API",
+            description = "사용자의 프로필 이미지를 변경합니다. 기존 이미지가 있으면 삭제 후 새 이미지를 저장합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "프로필 이미지 변경 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "업로드할 이미지가 없거나 이미지 형식이 아닙니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "파일 업로드/삭제에 실패했습니다.")
+    })
+    @PatchMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Void>> updateProfileImage(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestPart("profileImage") MultipartFile profileImage) {
+
+        memberService.updateProfileImage(userDetails.getUsername(), profileImage);
+        return ApiResponse.success_only(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS);
+    }
+
+    /*
+     *
+     * 약관동의 API
+     *
+     * */
+    @Operation(
+            summary = "이용약관동의 API",
+            description = "이용약관 동의 여부를 저장합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 중복 체크 성공")
+    })
+    @PostMapping("/agree-terms")
+    public ResponseEntity<ApiResponse<Void>> agreeToTerms(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody AgreeTermsRequestDTO agreeTermsRequestDTO) {
+
+        memberService.agreeToTerms(userDetails.getUsername(), agreeTermsRequestDTO);
+        return ApiResponse.success_only(SuccessStatus.TERMS_AGREE_SUCCESS);
     }
     
 }
