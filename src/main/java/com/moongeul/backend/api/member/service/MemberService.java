@@ -23,13 +23,16 @@ import com.moongeul.backend.common.exception.ForbiddenException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
+import com.moongeul.backend.common.service.FileUploadService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,6 +53,7 @@ public class MemberService {
     private final NicknameGenerator nicknameGenerator;
     private final TermsRepository termsRepository;
     private final AgreeRepository agreeRepository;
+    private final FileUploadService fileUploadService;
 
     // 인가코드 받아 JWT로 교환 및 회원가입/로그인 처리
     @Transactional
@@ -291,6 +295,20 @@ public class MemberService {
                 .build();
     }
 
+    // 프로필 이미지 변경
+    @Transactional
+    public void updateProfileImage(String email, MultipartFile profileImage) {
+        validateProfileImage(profileImage);
+
+        Member member = getMemberByEmail(email);
+        String previousProfileImage = member.getProfileImage();
+
+        String uploadedProfileImageUrl = fileUploadService.uploadFile(profileImage, "profile/" + member.getId());
+        member.updateProfileImage(uploadedProfileImageUrl);
+
+        fileUploadService.deleteFileByUrl(previousProfileImage);
+    }
+
     // 카테고리별 기록 리스트 조회
     @Transactional(readOnly = true)
     public CategoryPostListResponseDTO getCategoryPostList(String email, Long userId, Long categoryId, String sortBy, Integer page, Integer size) {
@@ -472,5 +490,16 @@ public class MemberService {
     private Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private void validateProfileImage(MultipartFile profileImage) {
+        if (profileImage == null || profileImage.isEmpty()) {
+            throw new BadRequestException(ErrorStatus.PROFILE_IMAGE_EMPTY_EXCEPTION.getMessage());
+        }
+
+        String contentType = profileImage.getContentType();
+        if (!StringUtils.hasText(contentType) || !contentType.startsWith("image/")) {
+            throw new BadRequestException(ErrorStatus.PROFILE_IMAGE_INVALID_TYPE_EXCEPTION.getMessage());
+        }
     }
 }
