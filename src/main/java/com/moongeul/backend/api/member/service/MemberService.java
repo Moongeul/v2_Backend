@@ -15,7 +15,6 @@ import com.moongeul.backend.api.post.entity.Quote;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
-import com.moongeul.backend.api.setting.repository.*;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.ForbiddenException;
@@ -50,8 +49,6 @@ public class MemberService {
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
     private final NicknameGenerator nicknameGenerator;
-    private final TermsRepository termsRepository;
-    private final AgreeRepository agreeRepository;
     private final FileUploadService fileUploadService;
 
     // 인가코드 받아 JWT로 교환 및 회원가입/로그인 처리
