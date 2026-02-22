@@ -15,6 +15,7 @@ import com.moongeul.backend.api.post.entity.Quote;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.setting.repository.*;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.ForbiddenException;
