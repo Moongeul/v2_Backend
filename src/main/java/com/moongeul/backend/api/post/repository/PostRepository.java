@@ -2,7 +2,7 @@ package com.moongeul.backend.api.post.repository;
 
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.member.entity.Member;
-import com.moongeul.backend.api.member.entity.ReadingTasteType;
+import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.PostVisibility;
 import org.springframework.data.domain.Page;

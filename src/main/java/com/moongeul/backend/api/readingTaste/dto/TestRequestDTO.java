@@ -1,4 +1,4 @@
-package com.moongeul.backend.api.member.dto;
+package com.moongeul.backend.api.readingTaste.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +14,13 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class TestRequestDTO {
+
+    @Schema(
+            description = "비회원 식별을 위한 UUID (브라우저 로컬스토리지 저장용)",
+            example = "550e8400-e29b-41d4-a716-446655440000"
+    )
+    @NotNull(message = "비회원 식별자는 필수입니다")
+    private String guestUuid;
 
     @Schema(
             description = "질문 번호(1-12)와 답변(A or B) 매핑",

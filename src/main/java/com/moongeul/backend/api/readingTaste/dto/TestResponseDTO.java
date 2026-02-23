@@ -1,4 +1,4 @@
-package com.moongeul.backend.api.member.dto;
+package com.moongeul.backend.api.readingTaste.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

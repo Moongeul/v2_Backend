@@ -1,4 +1,4 @@
-package com.moongeul.backend.api.member.entity;
+package com.moongeul.backend.api.readingTaste.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

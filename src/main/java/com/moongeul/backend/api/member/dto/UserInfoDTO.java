@@ -2,7 +2,7 @@ package com.moongeul.backend.api.member.dto;
 
 import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.PrivacyLevel;
-import com.moongeul.backend.api.member.entity.ReadingTasteType;
+import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import lombok.Builder;
 import lombok.Getter;
 

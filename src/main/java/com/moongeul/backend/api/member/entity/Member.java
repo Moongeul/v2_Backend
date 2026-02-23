@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.member.entity;
 
+import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import com.moongeul.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

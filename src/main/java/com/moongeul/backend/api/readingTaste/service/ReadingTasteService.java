@@ -1,10 +1,13 @@
-package com.moongeul.backend.api.member.service;
+package com.moongeul.backend.api.readingTaste.service;
 
-import com.moongeul.backend.api.member.dto.TestRequestDTO;
-import com.moongeul.backend.api.member.dto.TestResponseDTO;
+import com.moongeul.backend.api.readingTaste.dto.TestRequestDTO;
+import com.moongeul.backend.api.readingTaste.dto.TestResponseDTO;
 import com.moongeul.backend.api.member.entity.Member;
-import com.moongeul.backend.api.member.entity.ReadingTasteType;
+import com.moongeul.backend.api.readingTaste.dto.TestStatisticsResponseDTO;
+import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.readingTaste.entity.TestResult;
+import com.moongeul.backend.api.readingTaste.repository.TestResultRepository;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -22,6 +25,7 @@ import java.util.Map;
 public class ReadingTasteService {
 
     private final MemberRepository memberRepository;
+    private final TestResultRepository testResultRepository;
 
     private static final String ANSWER_A = "A";
     private static final String ANSWER_B = "B";
@@ -32,15 +36,21 @@ public class ReadingTasteService {
         // 테스트 결과 계산 (가장 높은 유형 반환)
         ReadingTasteType type = findTopType(calculateScore(testRequestDTO.getAnswers()));
 
+        // 로그 엔티티 생성
+        TestResult testLog = TestResult.builder()
+                .guestUuid(testRequestDTO.getGuestUuid())
+                .readingTasteType(type)
+                .build();
+
         // 회원이라면 취향테스트 결과 DB 저장
         if(!email.equals("anonymousUser")){
-            Member member = memberRepository.findByEmail(email)
-                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+            Member member = getMemberByEmail(email);
 
-            // member 필드 readingTasteType 저장
-            member.updateReadingTasteType(type);
-            memberRepository.save(member);
+            member.updateReadingTasteType(type); // Member 테이블 업데이트
+            testLog.updateMemberId(member.getId()); // TestResult 로그에 member_id 연결
         }
+
+        testResultRepository.save(testLog);
 
         return TestResponseDTO.builder()
                 .readingTasteType(type.getName())
@@ -235,5 +245,42 @@ public class ReadingTasteService {
         }
 
         return topType;
+    }
+
+    /*
+    * 전체 참여자 수 반환 API
+     */
+    public TestStatisticsResponseDTO getTotalParticipantsCount() {
+        long count = testResultRepository.count(); // DB의 전체 레코드 개수 조회
+
+        return TestStatisticsResponseDTO.builder()
+                .totalParticipants(count)
+                .build();
+    }
+
+    /*
+     * 비회원 독서 취향 테스트 결과 조회 및 로그인 연동 API
+     */
+    @Transactional
+    public void linkTestResult(String guestUuid, String email) {
+
+        Member member = getMemberByEmail(email);
+
+        // 가장 최신 테스트 결과 조회
+        TestResult lastTestResult = testResultRepository.findFirstByGuestUuidOrderByCreatedAtDesc(guestUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.READING_TASTE_TEST_RESULT_NOTFOUND_EXCEPTION.getMessage()));
+
+        // 테스트 결과가 있다면 -> memberId 회원 연결 + Member 테이블 독서 취향 업데이트 반영
+        lastTestResult.updateMemberId(member.getId());
+        member.updateReadingTasteType(lastTestResult.getReadingTasteType());
+    }
+
+    /*
+     * 단순 데이터 불러오기용 코드 메서드 - 코드 깔끔하게 하기용
+     */
+
+    private Member getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
     }
 }

@@ -1,6 +1,6 @@
 package com.moongeul.backend.api.question.dto;
 
-import com.moongeul.backend.api.member.entity.ReadingTasteType;
+import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

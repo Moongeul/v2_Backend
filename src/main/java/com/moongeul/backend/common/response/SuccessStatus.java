@@ -19,7 +19,6 @@ public enum SuccessStatus {
 	GET_USERINFO_SUCCESS(HttpStatus.OK, "사용자 정보 조회 성공"),
 	GET_POST_STATS_SUCCESS(HttpStatus.OK, "기록 통계 조회 성공"),
 	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
-	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),
 	FOLLOW_SUCCESS(HttpStatus.OK, "팔로우 성공"),
 	UNFOLLOW_SUCCESS(HttpStatus.OK, "언팔로우 성공"),
 	GET_FOLLOWING_SUCCESS(HttpStatus.OK, "팔로잉 목록 조회 성공"),
@@ -32,6 +31,11 @@ public enum SuccessStatus {
 	GET_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 조회 성공"),
 	UPDATE_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 수정 성공"),
 	TERMS_AGREE_SUCCESS(HttpStatus.OK, "약관 동의 성공"),
+
+	/* READING TASTE */
+	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),
+	GET_READING_TASTE_PARTICIPANTS_SUCCESS(HttpStatus.OK, "독서 취향 테스트 참여자 수 반환 성공"),
+	LINK_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 연동 성공"),
 
 	/* BOOK */
 	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),

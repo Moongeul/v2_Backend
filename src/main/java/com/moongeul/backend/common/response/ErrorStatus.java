@@ -54,6 +54,7 @@ public enum ErrorStatus {
     ANSWER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 답변을 찾을 수 없습니다."),
     TERMS_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "약관 정보를 찾을 수 없습니다."),
     NOTIFICATION_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 알림을 찾을 수 없습니다."),
+    READING_TASTE_TEST_RESULT_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 UUID에 해당하는 독서 취향 테스트 결과가 없습니다."),
 
     /**
      * 400 BAD_REQUEST
