@@ -3,16 +3,21 @@ package com.moongeul.backend.api.book.controller;
 import com.moongeul.backend.api.book.dto.BookDTO;
 import com.moongeul.backend.api.book.dto.BookSearchRequestDTO;
 import com.moongeul.backend.api.book.dto.BookSearchResponseDTO;
+import com.moongeul.backend.api.book.dto.BestsellerBookListResponseDTO;
+import com.moongeul.backend.api.book.dto.BestsellerRegisterRequestDTO;
 import com.moongeul.backend.api.book.service.BookService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,5 +70,37 @@ public class BookController {
         BookDTO bookDTO = bookService.getBookDetail(isbn);
         return ApiResponse.success(SuccessStatus.GET_BOOK_DETAIL_SUCCESS, bookDTO);
     }
-}
 
+    @Operation(
+            summary = "베스트셀러 도서 등록 API (관리자 전용)",
+            description = "관리자가 베스트셀러 도서를 ISBN 기준으로 최대 10권까지 등록합니다. 기존 목록은 새 목록으로 전체 교체됩니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "베스트셀러 도서 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 ISBN 리스트 요청"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "관리자만 접근할 수 있습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "등록하려는 도서를 찾을 수 없습니다.")
+    })
+    @PutMapping("/bestseller")
+    public ResponseEntity<ApiResponse<Void>> registerBestsellerBooks(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody BestsellerRegisterRequestDTO bestsellerRegisterRequestDTO) {
+
+        bookService.registerBestsellerBooks(userDetails.getUsername(), bestsellerRegisterRequestDTO);
+        return ApiResponse.success_only(SuccessStatus.REGISTER_BESTSELLER_BOOK_SUCCESS);
+    }
+
+    @Operation(
+            summary = "베스트셀러 도서 조회 API",
+            description = "등록된 베스트셀러 도서를 조회합니다. (최대 10권)"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "베스트셀러 도서 조회 성공")
+    })
+    @GetMapping("/bestseller")
+    public ResponseEntity<ApiResponse<BestsellerBookListResponseDTO>> getBestsellerBooks() {
+
+        BestsellerBookListResponseDTO bestsellerBookListResponseDTO = bookService.getBestsellerBooks();
+        return ApiResponse.success(SuccessStatus.GET_BESTSELLER_BOOK_SUCCESS, bestsellerBookListResponseDTO);
+    }
+}

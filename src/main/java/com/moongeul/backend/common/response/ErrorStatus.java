@@ -28,6 +28,9 @@ public enum ErrorStatus {
     DISAGREE_REQUIRED_TERM(HttpStatus.BAD_REQUEST, "필수 약관에 모두 동의해야 합니다."),
     PROFILE_IMAGE_EMPTY_EXCEPTION(HttpStatus.BAD_REQUEST, "업로드할 프로필 이미지가 없습니다."),
     PROFILE_IMAGE_INVALID_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "이미지 파일만 업로드할 수 있습니다."),
+    BESTSELLER_LIMIT_EXCEEDED_EXCEPTION(HttpStatus.BAD_REQUEST, "베스트셀러 도서는 1권 이상 10권 이하로 등록해야 합니다."),
+    BESTSELLER_DUPLICATE_ISBN_EXCEPTION(HttpStatus.BAD_REQUEST, "중복된 ISBN은 등록할 수 없습니다."),
+    BESTSELLER_INVALID_ISBN_EXCEPTION(HttpStatus.BAD_REQUEST, "ISBN 값이 올바르지 않습니다."),
 
     /**
      * 401 UNAUTHORIZED
@@ -50,6 +53,7 @@ public enum ErrorStatus {
     USER_READING_TASTE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "사용자의 독서 취향 정보를 찾을 수 없습니다."),
     WEEKLY_RECOMMENDATION_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "주간 추천 기록을 찾을 수 없습니다."),
     MOST_RECORDED_BOOK_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "가장 많이 기록된 책을 찾을 수 없습니다."),
+    BESTSELLER_BOOK_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "등록하려는 도서를 찾을 수 없습니다."),
     QUESTION_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 질문을 찾을 수 없습니다."),
     ANSWER_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 답변을 찾을 수 없습니다."),
     TERMS_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "약관 정보를 찾을 수 없습니다."),
@@ -69,6 +73,7 @@ public enum ErrorStatus {
     INVALID_RATING_RANGE_EXCEPTION(HttpStatus.BAD_REQUEST, "유효하지 않은 별점 구간입니다."),
     BAD_FOLLOW_PROCESS_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 팔로우 처리 요청입니다."),
     PRIVACY_FORBIDDEN_EXCEPTION(HttpStatus.FORBIDDEN, "해당 사용자의 정보는 공개되지 않습니다."),
+    ADMIN_FORBIDDEN_EXCEPTION(HttpStatus.FORBIDDEN, "관리자만 접근할 수 있습니다."),
 
     /**
      * 500 SERVER_ERROR
