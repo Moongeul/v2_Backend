@@ -38,7 +38,7 @@ public enum SuccessStatus {
 	LINK_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 연동 성공"),
 
 	/* BOOK */
-	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),
+	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서/사용자 검색 성공"),
 	GET_BOOK_DETAIL_SUCCESS(HttpStatus.OK, "도서 상세 조회 성공"),
 	REGISTER_BESTSELLER_BOOK_SUCCESS(HttpStatus.OK, "베스트셀러 도서 등록 성공"),
 	GET_BESTSELLER_BOOK_SUCCESS(HttpStatus.OK, "베스트셀러 도서 조회 성공"),

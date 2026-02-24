@@ -15,6 +15,9 @@ import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -27,9 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,21 +53,57 @@ public class BookService {
     @Value("${naver.book.client-secret}")
     private String clientSecret;
 
-    // 도서 검색 메서드 (with 네이버 도서)
+    // 도서/사용자 통합 검색
     @Transactional
     public BookSearchResponseDTO searchBooks(BookSearchRequestDTO bookSearchRequestDTO) {
-        // 네이버 API 호출
+        String searchType = resolveSearchType(bookSearchRequestDTO.getType());
+
+        SearchPageResult<BookDTO> bookResult = SearchPageResult.empty();
+        SearchPageResult<BookSearchUserDTO> userResult = SearchPageResult.empty();
+
+        if ("book".equals(searchType) || "all".equals(searchType)) {
+            bookResult = searchBookData(bookSearchRequestDTO);
+        }
+
+        if ("user".equals(searchType) || "all".equals(searchType)) {
+            userResult = searchUserData(bookSearchRequestDTO);
+        }
+
+        int total;
+        int totalPages;
+        boolean isLast;
+
+        if ("book".equals(searchType)) {
+            total = bookResult.total;
+            totalPages = bookResult.totalPages;
+            isLast = bookResult.isLast;
+        } else if ("user".equals(searchType)) {
+            total = userResult.total;
+            totalPages = userResult.totalPages;
+            isLast = userResult.isLast;
+        } else {
+            total = bookResult.total + userResult.total;
+            totalPages = Math.max(bookResult.totalPages, userResult.totalPages);
+            isLast = bookResult.isLast && userResult.isLast;
+        }
+
+        return BookSearchResponseDTO.builder()
+                .type(searchType)
+                .total(total)
+                .page(bookSearchRequestDTO.getPage())
+                .size(bookSearchRequestDTO.getSize())
+                .totalPages(totalPages)
+                .isLast(isLast)
+                .bookData(bookResult.data)
+                .userData(userResult.data)
+                .build();
+    }
+
+    private SearchPageResult<BookDTO> searchBookData(BookSearchRequestDTO bookSearchRequestDTO) {
         NaverBookSearchResponseDTO naverBookSearchResponseDTO = callNaverBookAPI(bookSearchRequestDTO);
 
         if (naverBookSearchResponseDTO.getItems() == null || naverBookSearchResponseDTO.getItems().isEmpty()) {
-            return BookSearchResponseDTO.builder()
-                    .data(new ArrayList<>())
-                    .total(0)
-                    .page(bookSearchRequestDTO.getPage())
-                    .size(bookSearchRequestDTO.getSize())
-                    .totalPages(0)
-                    .isLast(true)
-                    .build();
+            return SearchPageResult.empty();
         }
 
         // ISBN 리스트 추출 (첫 번째 ISBN만 사용)
@@ -73,7 +112,6 @@ public class BookService {
                     if (item.getIsbn() == null || item.getIsbn().isEmpty()) {
                         return null;
                     }
-                    // 네이버 API는 여러 ISBN을 공백으로 구분하므로 첫 번째 ISBN만 사용
                     return item.getIsbn().split(" ")[0].trim();
                 })
                 .filter(isbn -> isbn != null && !isbn.isEmpty())
@@ -92,38 +130,55 @@ public class BookService {
                 continue;
             }
 
-            // ISBN에서 공백 제거 및 첫 번째 ISBN만 사용 (네이버 API는 여러 ISBN을 공백으로 구분)
             String isbn = naverItem.getIsbn().split(" ")[0].trim();
-
             Book book = existingBookMap.get(isbn);
-            
+
             if (book != null) {
-                // 기존 책이 있으면 업데이트 (최신 정보로)
                 updateBookIfChanged(book, naverItem);
             } else {
-                // 새 책이면 저장
                 book = saveNewBook(naverItem, isbn);
             }
 
             bookDTOs.add(convertToDTO(book));
         }
 
-        // 페이지네이션 정보 계산
         int total = naverBookSearchResponseDTO.getTotal() != null ? naverBookSearchResponseDTO.getTotal() : 0;
         int totalPages = (int) Math.ceil((double) total / bookSearchRequestDTO.getSize());
         int start = (bookSearchRequestDTO.getPage() - 1) * bookSearchRequestDTO.getSize() + 1;
-        
-        // 마지막 페이지 여부 계산
         boolean isLast = (start + bookSearchRequestDTO.getSize() - 1) >= total;
 
-        return BookSearchResponseDTO.builder()
-                .data(bookDTOs)
-                .total(total)
-                .page(bookSearchRequestDTO.getPage())
-                .size(bookSearchRequestDTO.getSize())
-                .totalPages(totalPages)
-                .isLast(isLast)
-                .build();
+        return SearchPageResult.of(total, totalPages, isLast, bookDTOs);
+    }
+
+    private SearchPageResult<BookSearchUserDTO> searchUserData(BookSearchRequestDTO bookSearchRequestDTO) {
+        Pageable pageable = PageRequest.of(bookSearchRequestDTO.getPage() - 1, bookSearchRequestDTO.getSize());
+        Page<Member> memberPage = memberRepository.findByNicknameContainingIgnoreCase(bookSearchRequestDTO.getQuery(), pageable);
+
+        List<BookSearchUserDTO> userDTOList = memberPage.getContent().stream()
+                .map(member -> BookSearchUserDTO.builder()
+                        .userId(member.getId())
+                        .profileImage(member.getProfileImage())
+                        .nickname(member.getNickname())
+                        .readingTasteType(member.getReadingTasteType())
+                        .build())
+                .toList();
+
+        return SearchPageResult.of(
+                (int) memberPage.getTotalElements(),
+                memberPage.getTotalPages(),
+                memberPage.isLast(),
+                userDTOList
+        );
+    }
+
+    private String resolveSearchType(String rawType) {
+        String type = StringUtils.hasText(rawType) ? rawType.trim().toLowerCase(Locale.ROOT) : "all";
+
+        if (!type.equals("book") && !type.equals("user") && !type.equals("all")) {
+            throw new BadRequestException(ErrorStatus.INVALID_SEARCH_TYPE_EXCEPTION.getMessage());
+        }
+
+        return type;
     }
 
     private NaverBookSearchResponseDTO callNaverBookAPI(BookSearchRequestDTO request) {
@@ -358,5 +413,27 @@ public class BookService {
     private Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private static class SearchPageResult<T> {
+        private final int total;
+        private final int totalPages;
+        private final boolean isLast;
+        private final List<T> data;
+
+        private SearchPageResult(int total, int totalPages, boolean isLast, List<T> data) {
+            this.total = total;
+            this.totalPages = totalPages;
+            this.isLast = isLast;
+            this.data = data;
+        }
+
+        private static <T> SearchPageResult<T> of(int total, int totalPages, boolean isLast, List<T> data) {
+            return new SearchPageResult<>(total, totalPages, isLast, data);
+        }
+
+        private static <T> SearchPageResult<T> empty() {
+            return new SearchPageResult<>(0, 0, true, new ArrayList<>());
+        }
     }
 }

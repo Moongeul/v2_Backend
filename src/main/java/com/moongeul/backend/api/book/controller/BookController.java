@@ -31,22 +31,28 @@ public class BookController {
     private final BookService bookService;
 
     @Operation(
-            summary = "도서 검색 API",
-            description = "네이버 도서 API를 활용하여 책 제목으로 도서를 검색합니다. 검색 결과는 DB에 저장되며, 이미 저장된 도서는 최신 정보로 업데이트됩니다. (페이지와 사이즈는 1부터 시작합니다)"
+            summary = "도서/사용자 검색 API",
+            description = "검색어로 도서/사용자를 검색합니다." +
+                    "<br>- type=book: 도서만 검색" +
+                    "<br>- type=user: 사용자만 검색" +
+                    "<br>- type=all: 도서와 사용자 모두 검색" +
+                    "<br><br>도서 검색 결과는 DB에 저장되며, 이미 저장된 도서는 최신 정보로 업데이트됩니다. (페이지와 사이즈는 1부터 시작합니다)"
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "도서 검색 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "도서/사용자 검색 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류 발생")
     })
-    @GetMapping("/search")
+    @GetMapping("/user/search")
     public ResponseEntity<ApiResponse<BookSearchResponseDTO>> searchBooks(
             @RequestParam @NotBlank(message = "검색어는 필수입니다.") String query,
+            @RequestParam(required = false, defaultValue = "all") String type,
             @RequestParam(required = false, defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") Integer page,
             @RequestParam(required = false, defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
         
         BookSearchRequestDTO bookSearchRequestDTO = BookSearchRequestDTO.builder()
                 .query(query)
+                .type(type)
                 .page(page)
                 .size(size)
                 .build();

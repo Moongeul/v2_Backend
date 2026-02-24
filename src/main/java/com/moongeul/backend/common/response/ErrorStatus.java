@@ -31,6 +31,7 @@ public enum ErrorStatus {
     BESTSELLER_LIMIT_EXCEEDED_EXCEPTION(HttpStatus.BAD_REQUEST, "베스트셀러 도서는 1권 이상 10권 이하로 등록해야 합니다."),
     BESTSELLER_DUPLICATE_ISBN_EXCEPTION(HttpStatus.BAD_REQUEST, "중복된 ISBN은 등록할 수 없습니다."),
     BESTSELLER_INVALID_ISBN_EXCEPTION(HttpStatus.BAD_REQUEST, "ISBN 값이 올바르지 않습니다."),
+    INVALID_SEARCH_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "검색 타입은 book, user, all 중 하나여야 합니다."),
 
     /**
      * 401 UNAUTHORIZED
