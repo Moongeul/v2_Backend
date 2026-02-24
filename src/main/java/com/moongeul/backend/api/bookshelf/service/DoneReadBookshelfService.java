@@ -9,7 +9,11 @@ import com.moongeul.backend.api.bookshelf.dto.DoneReadRatingRangeCountDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadRatingSummaryResponseDTO;
 import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
 import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
+import com.moongeul.backend.api.member.entity.Follow;
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.PrivacyLevel;
+import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.PostDTO;
@@ -18,6 +22,7 @@ import com.moongeul.backend.api.post.entity.Quote;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.common.exception.BadRequestException;
+import com.moongeul.backend.common.exception.ForbiddenException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +50,7 @@ public class DoneReadBookshelfService {
 
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
     private final MemberRepository memberRepository;
+    private final FollowRepository followRepository;
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
     private static final String[] RATING_RANGES = {
@@ -55,10 +61,8 @@ public class DoneReadBookshelfService {
     private static final double[] RANGE_ENDS = {1.4, 1.9, 2.4, 2.9, 3.4, 3.9, 4.4, 5.0};
 
     @Transactional(readOnly = true)
-    public DoneReadBookshelfResponseDTO getDoneReadBooks(String email, Integer page, Integer size) {
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    public DoneReadBookshelfResponseDTO getDoneReadBooks(String email, Long userId, Integer page, Integer size) {
+        Member member = getTargetMember(email, userId);
 
         // 페이지네이션 설정
         Pageable pageable = PageRequest.of(page - 1, size);
@@ -87,10 +91,8 @@ public class DoneReadBookshelfService {
 
     // 읽은 책 캘린더 조회
     @Transactional(readOnly = true)
-    public DoneReadCalendarResponseDTO getDoneReadCalendar(String email, Integer year, Integer month) {
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    public DoneReadCalendarResponseDTO getDoneReadCalendar(String email, Long userId, Integer year, Integer month) {
+        Member member = getTargetMember(email, userId);
 
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
@@ -156,10 +158,8 @@ public class DoneReadBookshelfService {
 
     // 읽은 책 별점 요약 조회
     @Transactional(readOnly = true)
-    public DoneReadRatingSummaryResponseDTO getDoneReadRatingSummary(String email) {
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    public DoneReadRatingSummaryResponseDTO getDoneReadRatingSummary(String email, Long userId) {
+        Member member = getTargetMember(email, userId);
 
         long totalBooks = doneReadBookshelfRepository.countByMember(member);
         List<Double> ratings = postRepository.findRatingsByMember(member);
@@ -194,10 +194,8 @@ public class DoneReadBookshelfService {
 
     // 읽은 책 별점 구간 상세 조회
     @Transactional(readOnly = true)
-    public CategoryPostListResponseDTO getDoneReadRatingDetail(String email, String range, String sortBy, Integer page, Integer size) {
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    public CategoryPostListResponseDTO getDoneReadRatingDetail(String email, Long userId, String range, String sortBy, Integer page, Integer size) {
+        Member member = getTargetMember(email, userId);
 
         int rangeIndex = findRangeIndex(range);
         Pageable pageable = PageRequest.of(page - 1, size, resolveSort(sortBy));
@@ -316,6 +314,45 @@ public class DoneReadBookshelfService {
         }
 
         throw new BadRequestException(ErrorStatus.INVALID_RATING_RANGE_EXCEPTION.getMessage());
+    }
+
+    private Member getTargetMember(String email, Long userId) {
+        Member currentMember = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        validatePrivacyAccess(currentMember, targetMember);
+        return targetMember;
+    }
+
+    private void validatePrivacyAccess(Member currentMember, Member targetMember) {
+        if (currentMember.getId().equals(targetMember.getId())) {
+            return;
+        }
+
+        PrivacyLevel privacyLevel = targetMember.getPrivacyLevel();
+
+        if (privacyLevel == null || privacyLevel == PrivacyLevel.PUBLIC) {
+            return;
+        }
+
+        if (privacyLevel == PrivacyLevel.PRIVATE) {
+            throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+        }
+
+        if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
+                    .map(Follow::getFollowStatus)
+                    .orElse(FollowStatus.NONE);
+
+            if (status != FollowStatus.ACCEPTED) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+        }
     }
 
     private static class CalendarDayAggregate {
