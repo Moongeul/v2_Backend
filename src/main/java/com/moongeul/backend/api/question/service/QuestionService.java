@@ -76,6 +76,34 @@ public class QuestionService {
                 .build();
     }
 
+    // 마이페이지 질문 리스트 조회
+    public QuestionListResponseDTO getMyQuestionList(Integer page, Integer size, String email, Long userId) {
+
+        Member currentMember = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Question> questionPage = questionRepository.findByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+
+        List<QuestionDTO> questionDTOList = questionPage.getContent().stream()
+                .map(question -> convertToQuestionDTO(question, email))
+                .collect(Collectors.toList());
+
+        return QuestionListResponseDTO.builder()
+                .total(questionPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(questionPage.getTotalPages())
+                .isLast(questionPage.isLast())
+                .data(questionDTOList)
+                .build();
+    }
+
     // 질문 상세 조회
     public QuestionDTO getQuestionDetail(Long questionId, String email) {
 
