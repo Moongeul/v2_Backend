@@ -359,6 +359,50 @@ public class MemberService {
                 .build();
     }
 
+    // 공감한 기록 리스트 조회
+    @Transactional(readOnly = true)
+    public CategoryPostListResponseDTO getLikedPostList(String email, Long userId, String sortBy, Integer page, Integer size) {
+
+        Member currentMember = getMemberByEmail(email);
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        validatePrivacyAccess(currentMember, targetMember);
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        Page<Post> postPage = switch (sortBy.toUpperCase()) {
+            case "LATEST" ->
+                    postRepository.findLikedPostsByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+            case "OLDEST" ->
+                    postRepository.findLikedPostsByMemberIdOrderByCreatedAtAsc(targetMember.getId(), pageable);
+            case "RATING_HIGH" ->
+                    postRepository.findLikedPostsByMemberIdOrderByRatingDesc(targetMember.getId(), pageable);
+            case "RATING_LOW" ->
+                    postRepository.findLikedPostsByMemberIdOrderByRatingAsc(targetMember.getId(), pageable);
+            default ->
+                    postRepository.findLikedPostsByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+        };
+
+        List<PostDTO> postList = postPage.getContent().stream()
+                .map(this::convertToPostDTO)
+                .collect(Collectors.toList());
+
+        log.info("공감한 기록 리스트 조회 완료 - 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
+                targetMember.getId(), sortBy, page, postList.size());
+
+        return CategoryPostListResponseDTO.builder()
+                .total(postPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(postPage.getTotalPages())
+                .isLast(postPage.isLast())
+                .data(postList)
+                .build();
+    }
+
     // Post를 PostDTO로 변환
     private PostDTO convertToPostDTO(Post post) {
 

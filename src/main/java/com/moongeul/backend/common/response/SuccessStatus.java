@@ -58,6 +58,7 @@ public enum SuccessStatus {
 	GET_ALL_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 전체 조회 성공"),
 	GET_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 상세 조회 성공"),
 	GET_CATEGORY_POST_LIST_SUCCESS(HttpStatus.OK, "카테고리별 기록 리스트 조회 성공"),
+	GET_LIKED_POST_LIST_SUCCESS(HttpStatus.OK, "공감한 기록 리스트 조회 성공"),
 	UPDATE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 수정 성공"),
 	DELETE_POST_SUCCESS(HttpStatus.OK, "기록(게시글) 삭제 성공"),
 	POST_LIKE_SUCCESS(HttpStatus.OK, "기록(게시글) 공감 버튼 등록 성공"),

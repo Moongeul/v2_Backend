@@ -84,6 +84,34 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.rating ASC, p.createdAt DESC")
     Page<Post> findByCategoryIdOrderByRatingAsc(@Param("categoryId") Long categoryId, Pageable pageable);
 
+    // 사용자가 공감한 기록 조회 (최신순)
+    @Query(value = "SELECT DISTINCT l.post FROM Likes l " +
+            "WHERE l.member.id = :memberId " +
+            "ORDER BY l.post.createdAt DESC",
+            countQuery = "SELECT COUNT(DISTINCT l.post.id) FROM Likes l WHERE l.member.id = :memberId")
+    Page<Post> findLikedPostsByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자가 공감한 기록 조회 (오래된순)
+    @Query(value = "SELECT DISTINCT l.post FROM Likes l " +
+            "WHERE l.member.id = :memberId " +
+            "ORDER BY l.post.createdAt ASC",
+            countQuery = "SELECT COUNT(DISTINCT l.post.id) FROM Likes l WHERE l.member.id = :memberId")
+    Page<Post> findLikedPostsByMemberIdOrderByCreatedAtAsc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자가 공감한 기록 조회 (평점 높은순)
+    @Query(value = "SELECT DISTINCT l.post FROM Likes l " +
+            "WHERE l.member.id = :memberId " +
+            "ORDER BY l.post.rating DESC, l.post.createdAt DESC",
+            countQuery = "SELECT COUNT(DISTINCT l.post.id) FROM Likes l WHERE l.member.id = :memberId")
+    Page<Post> findLikedPostsByMemberIdOrderByRatingDesc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자가 공감한 기록 조회 (평점 낮은순)
+    @Query(value = "SELECT DISTINCT l.post FROM Likes l " +
+            "WHERE l.member.id = :memberId " +
+            "ORDER BY l.post.rating ASC, l.post.createdAt DESC",
+            countQuery = "SELECT COUNT(DISTINCT l.post.id) FROM Likes l WHERE l.member.id = :memberId")
+    Page<Post> findLikedPostsByMemberIdOrderByRatingAsc(@Param("memberId") Long memberId, Pageable pageable);
+
     // 읽은 날짜 기준 월별 게시글 조회 (일자 오름차순, 같은 일자 내 최신 작성순)
     @Query("SELECT p FROM Post p JOIN FETCH p.book " +
             "WHERE p.member = :member AND p.readDate BETWEEN :startDate AND :endDate " +
