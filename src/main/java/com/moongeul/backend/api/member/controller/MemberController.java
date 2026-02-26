@@ -5,6 +5,8 @@ import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.service.FollowService;
 import com.moongeul.backend.api.member.service.MemberService;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
+import com.moongeul.backend.api.question.dto.QuestionListResponseDTO;
+import com.moongeul.backend.api.question.service.QuestionService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +31,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final FollowService followService;
+    private final QuestionService questionService;
 
     /*
      *
@@ -179,6 +182,25 @@ public class MemberController {
         CategoryPostListResponseDTO likedPostListResponseDTO =
                 memberService.getLikedPostList(userDetails.getUsername(), userId, sortBy, page, size);
         return ApiResponse.success(SuccessStatus.GET_LIKED_POST_LIST_SUCCESS, likedPostListResponseDTO);
+      
+    @Operation(
+            summary = "마이페이지 질문 리스트 조회 API",
+            description = "사용자가 작성한 질문 리스트를 페이징하여 조회합니다. userId 쿼리파라미터가 없으면 본인 질문, 있으면 해당 사용자의 질문을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "마이페이지 질문 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/question-list")
+    public ResponseEntity<ApiResponse<QuestionListResponseDTO>> getMyQuestionList(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+
+        QuestionListResponseDTO questionListResponseDTO =
+                questionService.getMyQuestionList(page, size, userDetails.getUsername(), userId);
+        return ApiResponse.success(SuccessStatus.GET_MY_QUESTION_LIST_SUCCESS, questionListResponseDTO);
     }
 
     @Operation(

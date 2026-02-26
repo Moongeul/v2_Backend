@@ -38,8 +38,10 @@ public enum SuccessStatus {
 	LINK_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 연동 성공"),
 
 	/* BOOK */
-	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서 검색 성공"),
+	SEARCH_BOOK_SUCCESS(HttpStatus.OK, "도서/사용자 검색 성공"),
 	GET_BOOK_DETAIL_SUCCESS(HttpStatus.OK, "도서 상세 조회 성공"),
+	REGISTER_BESTSELLER_BOOK_SUCCESS(HttpStatus.OK, "베스트셀러 도서 등록 성공"),
+	GET_BESTSELLER_BOOK_SUCCESS(HttpStatus.OK, "베스트셀러 도서 조회 성공"),
 	
 	/* BOOK REVIEW */
 	GET_BOOK_REVIEWS_SUCCESS(HttpStatus.OK, "책 리뷰 조회 성공"),
@@ -76,6 +78,7 @@ public enum SuccessStatus {
 
 	/* QUESTION */
 	GET_QUESTION_LIST_SUCCESS(HttpStatus.OK, "질문 리스트 조회 성공"),
+	GET_MY_QUESTION_LIST_SUCCESS(HttpStatus.OK, "마이페이지 질문 리스트 조회 성공"),
 	GET_QUESTION_DETAIL_SUCCESS(HttpStatus.OK, "질문 상세 조회 성공"),
 	MODIFY_QUESTION_SUCCESS(HttpStatus.OK, "질문 수정 성공"),
 	DELETE_QUESTION_SUCCESS(HttpStatus.OK, "질문 삭제 성공"),
