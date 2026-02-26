@@ -1,27 +1,37 @@
 package com.moongeul.backend.api.book.service;
 
 import com.moongeul.backend.api.book.dto.*;
+import com.moongeul.backend.api.book.entity.BestsellerBook;
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.book.repository.BestsellerBookRepository;
 import com.moongeul.backend.api.book.repository.BookRepository;
+import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.Role;
+import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.common.exception.BadRequestException;
+import com.moongeul.backend.common.exception.ForbiddenException;
 import com.moongeul.backend.common.exception.InternalServerException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +41,8 @@ public class BookService {
 
     private final WebClient webClient;
     private final BookRepository bookRepository;
+    private final BestsellerBookRepository bestsellerBookRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${naver.book.client-id}")
     private String clientId;
@@ -266,5 +278,85 @@ public class BookService {
         
         return convertToDTO(book);
     }
-}
 
+    // 베스트셀러 ISBN 등록 (관리자 전용)
+    @Transactional
+    public void registerBestsellerBooks(String email, BestsellerRegisterRequestDTO requestDTO) {
+        Member member = getMemberByEmail(email);
+        validateAdmin(member);
+
+        List<String> normalizedIsbnList = normalizeIsbnList(requestDTO.getIsbnList());
+        validateBestsellerIsbnList(normalizedIsbnList);
+
+        List<Book> books = bookRepository.findByIsbnIn(normalizedIsbnList);
+        Map<String, Book> bookMap = books.stream()
+                .collect(Collectors.toMap(Book::getIsbn, book -> book));
+
+        if (bookMap.size() != normalizedIsbnList.size()) {
+            throw new NotFoundException(ErrorStatus.BESTSELLER_BOOK_NOT_FOUND_EXCEPTION.getMessage());
+        }
+
+        bestsellerBookRepository.deleteAllInBatch();
+
+        List<BestsellerBook> bestsellerBooks = new ArrayList<>();
+        for (int i = 0; i < normalizedIsbnList.size(); i++) {
+            String isbn = normalizedIsbnList.get(i);
+            bestsellerBooks.add(BestsellerBook.builder()
+                    .sortOrder(i + 1)
+                    .book(bookMap.get(isbn))
+                    .build());
+        }
+
+        bestsellerBookRepository.saveAll(bestsellerBooks);
+    }
+
+    // 베스트셀러 조회
+    @Transactional(readOnly = true)
+    public BestsellerBookListResponseDTO getBestsellerBooks() {
+        List<BestsellerBookItemDTO> bookList = bestsellerBookRepository.findAllByOrderBySortOrderAsc().stream()
+                .map(bestsellerBook -> BestsellerBookItemDTO.builder()
+                        .isbn(bestsellerBook.getBook().getIsbn())
+                        .bookImage(bestsellerBook.getBook().getBookImage())
+                        .title(bestsellerBook.getBook().getTitle())
+                        .author(bestsellerBook.getBook().getAuthor())
+                        .build())
+                .toList();
+
+        return BestsellerBookListResponseDTO.builder()
+                .data(bookList)
+                .build();
+    }
+
+    private List<String> normalizeIsbnList(List<String> isbnList) {
+        List<String> normalizedList = new ArrayList<>();
+        for (String isbn : isbnList) {
+            if (!StringUtils.hasText(isbn)) {
+                throw new BadRequestException(ErrorStatus.BESTSELLER_INVALID_ISBN_EXCEPTION.getMessage());
+            }
+            normalizedList.add(isbn.trim());
+        }
+        return normalizedList;
+    }
+
+    private void validateBestsellerIsbnList(List<String> isbnList) {
+        if (isbnList.isEmpty() || isbnList.size() > 10) {
+            throw new BadRequestException(ErrorStatus.BESTSELLER_LIMIT_EXCEEDED_EXCEPTION.getMessage());
+        }
+
+        Set<String> isbnSet = new LinkedHashSet<>(isbnList);
+        if (isbnSet.size() != isbnList.size()) {
+            throw new BadRequestException(ErrorStatus.BESTSELLER_DUPLICATE_ISBN_EXCEPTION.getMessage());
+        }
+    }
+
+    private void validateAdmin(Member member) {
+        if (member.getRole() != Role.ADMIN) {
+            throw new ForbiddenException(ErrorStatus.ADMIN_FORBIDDEN_EXCEPTION.getMessage());
+        }
+    }
+
+    private Member getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+}
