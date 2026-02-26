@@ -157,6 +157,34 @@ public class MemberController {
     }
 
     @Operation(
+            summary = "공감한 기록 리스트 조회 API (마이페이지)",
+            description = "사용자가 공감한 기록 리스트를 조회합니다. userId 쿼리 파라미터가 없으면 본인, 있으면 해당 사용자의 공감 기록을 조회합니다. " +
+                    "최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
+                    "<br><br>[enum] 정렬 옵션 (sortBy):" +
+                    "<br>- LATEST: 최신순 (기본값)" +
+                    "<br>- OLDEST: 오래된순" +
+                    "<br>- RATING_HIGH: 평점 높은순" +
+                    "<br>- RATING_LOW: 평점 낮은순"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공감한 기록 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 사용자의 정보는 공개되지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/liked-posts")
+    public ResponseEntity<ApiResponse<CategoryPostListResponseDTO>> getLikedPostList(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "LATEST") String sortBy,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+
+        CategoryPostListResponseDTO likedPostListResponseDTO =
+                memberService.getLikedPostList(userDetails.getUsername(), userId, sortBy, page, size);
+        return ApiResponse.success(SuccessStatus.GET_LIKED_POST_LIST_SUCCESS, likedPostListResponseDTO);
+    }
+    
+    @Operation(
             summary = "마이페이지 질문 리스트 조회 API",
             description = "사용자가 작성한 질문 리스트를 페이징하여 조회합니다. userId 쿼리파라미터가 없으면 본인 질문, 있으면 해당 사용자의 질문을 조회합니다."
     )
