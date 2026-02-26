@@ -2,7 +2,11 @@ package com.moongeul.backend.api.question.service;
 
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
+import com.moongeul.backend.api.member.entity.Follow;
+import com.moongeul.backend.api.member.entity.FollowStatus;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.member.entity.PrivacyLevel;
+import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.question.dto.QuestionCreateRequestDTO;
 import com.moongeul.backend.api.question.dto.QuestionDTO;
@@ -12,6 +16,7 @@ import com.moongeul.backend.api.question.dto.QuestionModifyRequestDTO;
 import com.moongeul.backend.api.question.entity.Question;
 import com.moongeul.backend.api.question.repository.AnswerRepository;
 import com.moongeul.backend.api.question.repository.QuestionRepository;
+import com.moongeul.backend.common.exception.ForbiddenException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -34,6 +39,7 @@ import java.util.stream.Collectors;
 public class QuestionService {
 
     private final MemberRepository memberRepository;
+    private final FollowRepository followRepository;
     private final BookRepository bookRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
@@ -74,6 +80,62 @@ public class QuestionService {
                 .isLast(questionPage.isLast())
                 .data(questionDTOList)
                 .build();
+    }
+
+    // 마이페이지 질문 리스트 조회
+    public QuestionListResponseDTO getMyQuestionList(Integer page, Integer size, String email, Long userId) {
+
+        Member currentMember = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        validatePrivacyAccess(currentMember, targetMember);
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Question> questionPage = questionRepository.findByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+
+        List<QuestionDTO> questionDTOList = questionPage.getContent().stream()
+                .map(question -> convertToQuestionDTO(question, email))
+                .collect(Collectors.toList());
+
+        return QuestionListResponseDTO.builder()
+                .total(questionPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(questionPage.getTotalPages())
+                .isLast(questionPage.isLast())
+                .data(questionDTOList)
+                .build();
+    }
+
+    private void validatePrivacyAccess(Member currentMember, Member targetMember) {
+        if (currentMember.getId().equals(targetMember.getId())) {
+            return;
+        }
+
+        PrivacyLevel privacyLevel = targetMember.getPrivacyLevel();
+
+        if (privacyLevel == null || privacyLevel == PrivacyLevel.PUBLIC) {
+            return;
+        }
+
+        if (privacyLevel == PrivacyLevel.PRIVATE) {
+            throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+        }
+
+        if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
+                    .map(Follow::getFollowStatus)
+                    .orElse(FollowStatus.NONE);
+
+            if (status != FollowStatus.ACCEPTED) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+        }
     }
 
     // 질문 상세 조회
