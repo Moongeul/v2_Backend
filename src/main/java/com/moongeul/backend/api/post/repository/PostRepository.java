@@ -8,6 +8,7 @@ import com.moongeul.backend.api.post.entity.PostVisibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -126,4 +127,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Double> findRatingsByMember(@Param("member") Member member);
 
     Page<Post> findByMemberAndRatingBetween(Member member, Double startRating, Double endRating, Pageable pageable);
+
+    // 회원 탈퇴 시 작성한 모든 게시글 삭제
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Post p WHERE p.member.id = :memberId")
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }

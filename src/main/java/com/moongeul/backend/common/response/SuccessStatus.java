@@ -31,6 +31,8 @@ public enum SuccessStatus {
 	GET_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 조회 성공"),
 	UPDATE_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 수정 성공"),
 	TERMS_AGREE_SUCCESS(HttpStatus.OK, "약관 동의 성공"),
+	LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공"),
+	WITHDRAW_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공"),
 
 	/* READING TASTE */
 	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),
