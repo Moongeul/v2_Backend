@@ -182,7 +182,8 @@ public class MemberController {
         CategoryPostListResponseDTO likedPostListResponseDTO =
                 memberService.getLikedPostList(userDetails.getUsername(), userId, sortBy, page, size);
         return ApiResponse.success(SuccessStatus.GET_LIKED_POST_LIST_SUCCESS, likedPostListResponseDTO);
-      
+    }
+    
     @Operation(
             summary = "마이페이지 질문 리스트 조회 API",
             description = "사용자가 작성한 질문 리스트를 페이징하여 조회합니다. userId 쿼리파라미터가 없으면 본인 질문, 있으면 해당 사용자의 질문을 조회합니다."
