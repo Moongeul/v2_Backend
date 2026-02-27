@@ -19,4 +19,5 @@ public class UserInfoDTO {
     private final Integer followingCount; // 팔로잉 수
     private final FollowStatus myFollowStatus; // 내가 해당 사용자를 팔로우했는지 여부
     private final PrivacyLevel privacyLevel; // 계정 공개 범위
+    private final boolean isPushEnabled; // 푸시 알림 허용 여부
 }

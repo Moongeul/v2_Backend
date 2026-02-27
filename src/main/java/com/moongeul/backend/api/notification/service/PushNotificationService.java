@@ -59,7 +59,13 @@ public class PushNotificationService {
 
     /* 알림 전송 */
     @Transactional
-    public void send(Member receiver, Member actor, NotificationType notificationType, String message, Long relatedId) {
+    public void send(Long receiverId, Long actorId, NotificationType notificationType, String message, Long relatedId) {
+
+        Member receiver = memberRepository.findById(receiverId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member actor = memberRepository.findById(actorId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
         // 1. 알림 내역 DB 저장
         Notifications notifications = Notifications.builder()
                 .receiver(receiver)
@@ -70,6 +76,12 @@ public class PushNotificationService {
                 .isRead(false)
                 .build();
         notificationRepository.save(notifications);
+
+        // 예외: 푸시알림허용 off일 경우 푸시 전송 X
+        if (!receiver.isPushEnabled()) {
+            log.info("사용자(id: {}, Nickname: {})가 알림을 비활성화하여 푸시를 전송하지 않습니다.", receiver.getId(), receiver.getNickname());
+            return;
+        }
 
         // 2. 수신자의 모든 디바이스 토큰 조회
         List<String> tokenStrings = deviceTokenRepository.findAllByMemberId(receiver.getId())

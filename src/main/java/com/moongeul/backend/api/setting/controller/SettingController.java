@@ -3,6 +3,7 @@ package com.moongeul.backend.api.setting.controller;
 import com.moongeul.backend.api.setting.dto.AgreeTermsRequestDTO;
 import com.moongeul.backend.api.setting.dto.PrivacyLevelResponseDTO;
 import com.moongeul.backend.api.setting.dto.PrivacyLevelUpdateRequestDTO;
+import com.moongeul.backend.api.setting.dto.PushSettingRequestDTO;
 import com.moongeul.backend.api.setting.service.AgreeTermsSettingService;
 import com.moongeul.backend.api.setting.service.PrivacySettingService;
 import com.moongeul.backend.common.response.ApiResponse;
@@ -82,5 +83,21 @@ public class SettingController {
 
         agreeTermsSettingService.agreeToTerms(userDetails.getUsername(), agreeTermsRequestDTO);
         return ApiResponse.success_only(SuccessStatus.TERMS_AGREE_SUCCESS);
+    }
+
+    @Operation(
+            summary = "푸시 알림 허용 on/off API",
+            description = "푸시 알림 허용 기능을 on/off 합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "푸시 알림 허용 on/off 설정 성공")
+    })
+    @PatchMapping("/push")
+    public ResponseEntity<ApiResponse<Void>> updatePushSetting(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody PushSettingRequestDTO pushSettingRequestDTO) {
+
+        agreeTermsSettingService.updatePushSetting(userDetails.getUsername(), pushSettingRequestDTO.isPushEnabled());
+        return ApiResponse.success_only(SuccessStatus.UPDATE_PUSH_SETTING_SUCCESS);
     }
 }

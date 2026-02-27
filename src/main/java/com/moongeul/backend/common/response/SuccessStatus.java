@@ -28,9 +28,12 @@ public enum SuccessStatus {
 	UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 등록 성공"),
 	UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 변경 성공"),
 	CHECK_NICKNAME_DUPLICATE_SUCCESS(HttpStatus.OK, "닉네임 중복 체크 성공"),
+
+	/* SETTING */
 	GET_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 조회 성공"),
 	UPDATE_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 수정 성공"),
 	TERMS_AGREE_SUCCESS(HttpStatus.OK, "약관 동의 성공"),
+	UPDATE_PUSH_SETTING_SUCCESS(HttpStatus.OK, "푸시 알림 허용 on/off 설정 성공"),
 
 	/* READING TASTE */
 	CALCULATE_READING_TASTE_SUCCESS(HttpStatus.OK, "독서 취향 테스트 결과 계산 성공"),

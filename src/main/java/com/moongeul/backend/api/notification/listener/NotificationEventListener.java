@@ -25,8 +25,8 @@ public class NotificationEventListener { // 발행된 이벤트를 받아서 별
 
         // 실제 DB 저장 및 Expo 푸시 알림 발송 로직 실행
         pushNotificationService.send(
-                event.receiver(),
-                event.actor(),
+                event.receiver().getId(),
+                event.actor().getId(),
                 NotificationType.LIKE,
                 message,
                 event.post().getId()
@@ -41,8 +41,8 @@ public class NotificationEventListener { // 발행된 이벤트를 받아서 별
 
         // 실제 DB 저장 및 Expo 푸시 알림 발송 로직 실행
         pushNotificationService.send(
-                event.receiver(),
-                event.actor(),
+                event.receiver().getId(),
+                event.actor().getId(),
                 NotificationType.LIKE,
                 message,
                 event.question().getId()
@@ -64,8 +64,8 @@ public class NotificationEventListener { // 발행된 이벤트를 받아서 별
 
         // 실제 DB 저장 및 Expo 푸시 알림 발송 로직 실행
         pushNotificationService.send(
-                event.receiver(),
-                event.actor(),
+                event.receiver().getId(),
+                event.actor().getId(),
                 notificationType,
                 message,
                 event.actor().getId()
