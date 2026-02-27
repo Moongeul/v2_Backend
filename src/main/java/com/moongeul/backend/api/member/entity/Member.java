@@ -44,6 +44,10 @@ public class Member extends BaseTimeEntity {
 
     private String refreshToken; // Refresh Token
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean isPushEnabled = true; // 푸시알림 허용, 기본값: ON
+
     /**
      * 권한 가져오기
      */
@@ -93,5 +97,12 @@ public class Member extends BaseTimeEntity {
      */
     public void updatePrivacy(PrivacyLevel level) {
         this.privacyLevel = level;
+    }
+
+    /**
+     * 푸시 알림 허용 업데이트
+     */
+    public void updatePushEnabled(boolean isPushEnabled) {
+        this.isPushEnabled = isPushEnabled;
     }
 }

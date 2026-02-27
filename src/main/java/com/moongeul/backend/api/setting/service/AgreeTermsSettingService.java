@@ -68,6 +68,13 @@ public class AgreeTermsSettingService {
         });
     }
 
+    @Transactional
+    public void updatePushSetting(String email, boolean isPushEnabled) {
+        Member member = getMemberByEmail(email);
+        member.updatePushEnabled(isPushEnabled);
+        log.info("사용자 id: {}, Nickname: {}의 푸시 설정이 {}로 변경되었습니다.", member.getId(), member.getNickname(), isPushEnabled);
+    }
+
     private Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
