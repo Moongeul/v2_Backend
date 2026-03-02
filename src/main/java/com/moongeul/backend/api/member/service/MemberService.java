@@ -15,8 +15,11 @@ import com.moongeul.backend.api.notification.repository.DeviceTokenRepository;
 import com.moongeul.backend.api.notification.repository.NotificationRepository;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.PostDTO;
+import com.moongeul.backend.api.post.entity.LikeType;
+import com.moongeul.backend.api.post.entity.Likes;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.Quote;
+import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
@@ -54,6 +57,7 @@ public class MemberService {
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
+    private final LikeRepository likeRepository;
     private final WithdrawalRepository withdrawalRepository;
     private final NotificationRepository notificationRepository;
     private final AnswerRepository answerRepository;
@@ -455,7 +459,7 @@ public class MemberService {
         }
 
         List<PostDTO> postList = postPage.getContent().stream()
-                .map(this::convertToPostDTO)
+                .map(post -> convertToPostDTO(post, currentMember))
                 .collect(Collectors.toList());
 
         log.info("카테고리별 기록 리스트 조회 완료 - 카테고리 ID: {}, 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
@@ -499,7 +503,7 @@ public class MemberService {
         };
 
         List<PostDTO> postList = postPage.getContent().stream()
-                .map(this::convertToPostDTO)
+                .map(post -> convertToPostDTO(post, currentMember))
                 .collect(Collectors.toList());
 
         log.info("공감한 기록 리스트 조회 완료 - 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
@@ -516,7 +520,7 @@ public class MemberService {
     }
 
     // Post를 PostDTO로 변환
-    private PostDTO convertToPostDTO(Post post) {
+    private PostDTO convertToPostDTO(Post post, Member currentMember) {
 
         Book book = post.getBook();
 
@@ -553,6 +557,8 @@ public class MemberService {
                 .helpfulCount(post.getHelpfulCount())
                 .build();
 
+        PostDTO.MyLikesStatus myLikesStatus = convertToMyLikesStatus(currentMember, post.getId());
+
         return PostDTO.builder()
                 .postId(post.getId())
                 .memberInfo(memberInfo)
@@ -564,6 +570,31 @@ public class MemberService {
                 .quotesCnt(quoteDTOList.size())
                 .quotes(quoteDTOList)
                 .likesCnt(likesCnt)
+                .myLikesStatus(myLikesStatus)
+                .build();
+    }
+
+    private PostDTO.MyLikesStatus convertToMyLikesStatus(Member currentMember, Long postId) {
+        if (currentMember == null) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        List<Likes> myLikes = likeRepository.findByPostIdAndMemberId(postId, currentMember.getId());
+
+        if (myLikes.isEmpty()) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        Set<LikeType> myLikesTypes = myLikes.stream()
+                .map(Likes::getLikeType)
+                .collect(Collectors.toSet());
+
+        return PostDTO.MyLikesStatus.builder()
+                .relatableCount(myLikesTypes.contains(LikeType.RELATABLE))
+                .sameTasteCount(myLikesTypes.contains(LikeType.SAME_TASTE))
+                .impressiveExpressionCount(myLikesTypes.contains(LikeType.IMPRESSIVE_EXPRESSION))
+                .wantToReadCount(myLikesTypes.contains(LikeType.WANT_TO_READ))
+                .helpfulCount(myLikesTypes.contains(LikeType.HELPFUL))
                 .build();
     }
 
