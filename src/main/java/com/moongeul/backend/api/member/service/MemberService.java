@@ -218,6 +218,8 @@ public class MemberService {
     public void withdraw(String email, WithdrawalRequestDTO withdrawalRequestDTO) {
 
         Member member = getMemberByEmail(email);
+        String profileImageUrl = member.getProfileImage();
+        String targetDomain = "https://api-bucket.rhkr8521.com";
 
         /* 1. 벌크 삭제 쿼리 실행 (각 Repository에 작성된 @Modifying 쿼리 호출) - 호출 순서 중요! */
         // [팔로우] 내가 팔로우한 & 나를 팔로우한 사람들 삭제
@@ -260,7 +262,12 @@ public class MemberService {
                 .build();
         withdrawalRepository.save(withdrawal);
 
-        // 탈퇴 이므로, 공개 상태를 PRIVATE 으로 변경
+        // 버킷 내 이미지 삭제
+        if (profileImageUrl != null && profileImageUrl.startsWith(targetDomain)) {
+            log.info("탈퇴 회원 프로필 버킷 이미지 삭제: {}", profileImageUrl);
+            fileUploadService.deleteFileByUrl(profileImageUrl);
+        }
+        // 공개 상태를 PRIVATE 으로 변경
         member.updatePrivacy(PrivacyLevel.PRIVATE);
         // 3. Member 정보 초기화
         member.withdrawMember();
