@@ -192,7 +192,8 @@ public class MemberController {
 
     @Operation(
             summary = "카테고리별 기록 리스트 조회 API (마이페이지 기록장 상세)",
-            description = "특정 카테고리에 작성된 기록들을 조회합니다. userId 쿼리 파라미터가 없으면 본인, 있으면 해당 사용자의 기록을 조회합니다. " +
+            description = "특정 카테고리에 작성된 기록들을 조회합니다. categoryId에 0을 전달하면 모든 카테고리의 기록을 함께 조회합니다. " +
+                    "userId 쿼리 파라미터가 없으면 본인, 있으면 해당 사용자의 기록을 조회합니다. " +
                     "최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
                     "<br><br>[enum] 정렬 옵션 (sortBy):" +
                     "<br>- LATEST: 최신순 (기본값)" +

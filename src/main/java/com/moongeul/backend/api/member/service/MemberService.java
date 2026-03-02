@@ -412,30 +412,47 @@ public class MemberService {
 
         validatePrivacyAccess(currentMember, targetMember);
 
-        // 카테고리 존재 여부 확인
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
-
-        // 카테고리 소유자 확인
-        if (!category.getMember().getId().equals(targetMember.getId())) {
-            throw new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage());
-        }
-
         Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Post> postPage;
 
-        // 정렬 조건에 따라 조회
-        Page<Post> postPage = switch (sortBy.toUpperCase()) {
-            case "LATEST" ->  // 최신순
-                    postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
-            case "OLDEST" ->  // 오래된순
-                    postRepository.findByCategoryIdOrderByCreatedAtAsc(categoryId, pageable);
-            case "RATING_HIGH" ->  // 평점 높은순
-                    postRepository.findByCategoryIdOrderByRatingDesc(categoryId, pageable);
-            case "RATING_LOW" ->  // 평점 낮은순
-                    postRepository.findByCategoryIdOrderByRatingAsc(categoryId, pageable);
-            default ->  // 기본값: 최신순
-                    postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
-        };
+        // categoryId=0 은 전체보기(모든 카테고리 포함)
+        if (Long.valueOf(0L).equals(categoryId)) {
+            postPage = switch (sortBy.toUpperCase()) {
+                case "LATEST" ->
+                        postRepository.findByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+                case "OLDEST" ->
+                        postRepository.findByMemberIdOrderByCreatedAtAsc(targetMember.getId(), pageable);
+                case "RATING_HIGH" ->
+                        postRepository.findByMemberIdOrderByRatingDesc(targetMember.getId(), pageable);
+                case "RATING_LOW" ->
+                        postRepository.findByMemberIdOrderByRatingAsc(targetMember.getId(), pageable);
+                default ->
+                        postRepository.findByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+            };
+        } else {
+            // 카테고리 존재 여부 확인
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+
+            // 카테고리 소유자 확인
+            if (!category.getMember().getId().equals(targetMember.getId())) {
+                throw new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage());
+            }
+
+            // 정렬 조건에 따라 조회
+            postPage = switch (sortBy.toUpperCase()) {
+                case "LATEST" ->  // 최신순
+                        postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
+                case "OLDEST" ->  // 오래된순
+                        postRepository.findByCategoryIdOrderByCreatedAtAsc(categoryId, pageable);
+                case "RATING_HIGH" ->  // 평점 높은순
+                        postRepository.findByCategoryIdOrderByRatingDesc(categoryId, pageable);
+                case "RATING_LOW" ->  // 평점 낮은순
+                        postRepository.findByCategoryIdOrderByRatingAsc(categoryId, pageable);
+                default ->  // 기본값: 최신순
+                        postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
+            };
+        }
 
         List<PostDTO> postList = postPage.getContent().stream()
                 .map(this::convertToPostDTO)

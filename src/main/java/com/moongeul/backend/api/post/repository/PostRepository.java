@@ -85,6 +85,22 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.rating ASC, p.createdAt DESC")
     Page<Post> findByCategoryIdOrderByRatingAsc(@Param("categoryId") Long categoryId, Pageable pageable);
 
+    // 사용자의 전체 기록 조회 (최신순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.createdAt DESC")
+    Page<Post> findByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자의 전체 기록 조회 (오래된순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.createdAt ASC")
+    Page<Post> findByMemberIdOrderByCreatedAtAsc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자의 전체 기록 조회 (평점 높은순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.rating DESC, p.createdAt DESC")
+    Page<Post> findByMemberIdOrderByRatingDesc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자의 전체 기록 조회 (평점 낮은순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.rating ASC, p.createdAt DESC")
+    Page<Post> findByMemberIdOrderByRatingAsc(@Param("memberId") Long memberId, Pageable pageable);
+
     // 사용자가 공감한 기록 조회 (최신순)
     @Query(value = "SELECT DISTINCT l.post FROM Likes l " +
             "WHERE l.member.id = :memberId " +
