@@ -33,6 +33,8 @@ public enum SuccessStatus {
 	GET_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 조회 성공"),
 	UPDATE_PRIVACY_LEVEL_SUCCESS(HttpStatus.OK, "계정 공개 범위 수정 성공"),
 	TERMS_AGREE_SUCCESS(HttpStatus.OK, "약관 동의 성공"),
+	LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공"),
+	WITHDRAW_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공"),
 	UPDATE_PUSH_SETTING_SUCCESS(HttpStatus.OK, "푸시 알림 허용 on/off 설정 성공"),
 	GET_ALL_NOTICE_SUCCESS(HttpStatus.OK, "공지사항 전체 조회 성공"),
 	GET_NOTICE_SUCCESS(HttpStatus.OK, "공지사항 상세 조회 성공"),

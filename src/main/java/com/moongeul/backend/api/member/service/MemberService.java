@@ -1,5 +1,7 @@
 package com.moongeul.backend.api.member.service;
 
+import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
+import com.moongeul.backend.api.bookshelf.repository.WishReadBookshelfRepository;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
@@ -7,7 +9,10 @@ import com.moongeul.backend.api.member.entity.*;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.member.repository.WithdrawalRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
+import com.moongeul.backend.api.notification.repository.DeviceTokenRepository;
+import com.moongeul.backend.api.notification.repository.NotificationRepository;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.PostDTO;
 import com.moongeul.backend.api.post.entity.Post;
@@ -15,6 +20,9 @@ import com.moongeul.backend.api.post.entity.Quote;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.question.repository.AnswerRepository;
+import com.moongeul.backend.api.question.repository.QuestionRepository;
+import com.moongeul.backend.api.setting.repository.AgreeRepository;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.ForbiddenException;
@@ -32,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,6 +54,15 @@ public class MemberService {
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
+    private final WithdrawalRepository withdrawalRepository;
+    private final NotificationRepository notificationRepository;
+    private final AnswerRepository answerRepository;
+    private final DoneReadBookshelfRepository doneReadBookshelfRepository;
+    private final WishReadBookshelfRepository wishReadBookshelfRepository;
+    private final QuestionRepository questionRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
+    private final AgreeRepository agreeRepository;
+
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
@@ -180,6 +198,82 @@ public class MemberService {
                 .privacyLevel(member.getPrivacyLevel() == null ? PrivacyLevel.PUBLIC : member.getPrivacyLevel())
                 .isPushEnabled(member.isPushEnabled())
                 .build();
+    }
+
+    /* 로그아웃 API */
+    @Transactional
+    public void logout(String email, String deviceToken) {
+        Member member = getMemberByEmail(email);
+
+        // 리프레시 토큰 null 처리
+        member.updateRefreshToken(null);
+
+        // 현재 기기의 디바이스 토큰만 삭제 (알림 차단)
+        if (deviceToken != null) {
+            deviceTokenRepository.deleteByToken(deviceToken);
+        }
+    }
+
+    /* 탈퇴하기 API - soft delete 처리 */
+    @Transactional
+    public void withdraw(String email, WithdrawalRequestDTO withdrawalRequestDTO) {
+
+        Member member = getMemberByEmail(email);
+        String profileImageUrl = member.getProfileImage();
+        String targetDomain = "https://api-bucket.rhkr8521.com";
+
+        /* 1. 벌크 삭제 쿼리 실행 (각 Repository에 작성된 @Modifying 쿼리 호출) - 호출 순서 중요! */
+        // [팔로우] 내가 팔로우한 & 나를 팔로우한 사람들 삭제
+        followRepository.deleteAllByFollowerId(member.getId());
+        followRepository.deleteAllByFollowingId(member.getId());
+
+        // [디바이스토큰]
+        deviceTokenRepository.deleteAllByMemberId(member.getId());
+
+        // [약관 동의]
+        agreeRepository.deleteAllByMemberId(member.getId());
+
+        // [알림] 내가 받은 알림만 삭제
+        notificationRepository.deleteAllByReceiverId(member.getId());
+
+        // [답변] 내가 쓴 답변 & 내 질문에 달린 답변 삭제
+        answerRepository.deleteAllByMemberId(member.getId());
+        answerRepository.deleteAllByQuestionMemberId(member.getId());
+
+        // [질문]
+        questionRepository.deleteAllByMemberId(member.getId());
+
+        // [책장]
+        doneReadBookshelfRepository.deleteAllByMemberId(member.getId());
+        wishReadBookshelfRepository.deleteAllByMemberId(member.getId());
+
+        // [게시글 & 인용구]
+        quoteRepository.deleteAllByMemberId(member.getId()); // Post 이전에 삭제
+        postRepository.deleteAllByMemberId(member.getId());
+
+        // [카테고리] Post가 모두 삭제된 후 삭제 가능
+        categoryRepository.deleteAllByMemberId(member.getId());
+
+        // 2. 탈퇴 이력 저장 (나중에 통계 및 재가입 방지 체크에 사용)
+        Withdrawal withdrawal = Withdrawal.builder()
+                .email(email)
+                .reason(withdrawalRequestDTO.getReason()) // 예: "기타"
+                .detailReason(withdrawalRequestDTO.getDetailReason()) // 예: "이유작성완료"
+                .withdrawalDate(LocalDateTime.now())
+                .build();
+        withdrawalRepository.save(withdrawal);
+
+        // 버킷 내 이미지 삭제
+        if (profileImageUrl != null && profileImageUrl.startsWith(targetDomain)) {
+            log.info("탈퇴 회원 프로필 버킷 이미지 삭제: {}", profileImageUrl);
+            fileUploadService.deleteFileByUrl(profileImageUrl);
+        }
+        // 공개 상태를 PRIVATE 으로 변경
+        member.updatePrivacy(PrivacyLevel.PRIVATE);
+        // 3. Member 정보 초기화
+        member.withdrawMember();
+
+        memberRepository.saveAndFlush(member);
     }
 
     /* 기록 통계 조회 (마이페이지 기록장) */
