@@ -1,10 +1,9 @@
 package com.moongeul.backend.api.setting.controller;
 
-import com.moongeul.backend.api.setting.dto.AgreeTermsRequestDTO;
-import com.moongeul.backend.api.setting.dto.PrivacyLevelResponseDTO;
-import com.moongeul.backend.api.setting.dto.PrivacyLevelUpdateRequestDTO;
-import com.moongeul.backend.api.setting.dto.PushSettingRequestDTO;
+import com.moongeul.backend.api.post.entity.PostVisibility;
+import com.moongeul.backend.api.setting.dto.*;
 import com.moongeul.backend.api.setting.service.AgreeTermsSettingService;
+import com.moongeul.backend.api.setting.service.NoticeSettingService;
 import com.moongeul.backend.api.setting.service.PrivacySettingService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
@@ -12,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +26,7 @@ public class SettingController {
 
     private final PrivacySettingService privacySettingService;
     private final AgreeTermsSettingService agreeTermsSettingService;
+    private final NoticeSettingService noticeSettingService;
 
     @Operation(
             summary = "계정 공개 범위 조회 API",
@@ -99,5 +100,72 @@ public class SettingController {
 
         agreeTermsSettingService.updatePushSetting(userDetails.getUsername(), pushSettingRequestDTO.isPushEnabled());
         return ApiResponse.success_only(SuccessStatus.UPDATE_PUSH_SETTING_SUCCESS);
+    }
+
+    /*
+    *
+    * 공지사항 API
+    *
+    * */
+    @Operation(
+            summary = "공지사항 전체 조회 API",
+            description = "공지사항을 전체 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 전체 조회 성공")
+    })
+    @GetMapping("/notice")
+    public ResponseEntity<ApiResponse<NoticeAllResponseDTO>> getAllNotice(
+            @RequestParam(required = false, defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.(1부터 시작)") Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size
+    ) {
+
+        NoticeAllResponseDTO noticeAllResponseDTO = noticeSettingService.getAllNotice(page, size);
+        return ApiResponse.success(SuccessStatus.GET_ALL_NOTICE_SUCCESS, noticeAllResponseDTO);
+    }
+
+    @Operation(
+            summary = "공지사항 상세 조회 API",
+            description = "공지사항을 상세 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 상세 조회 성공")
+    })
+    @GetMapping("/notice/{id}")
+    public ResponseEntity<ApiResponse<NoticeDTO>> getNotice(@PathVariable Long id) {
+
+        NoticeDTO noticeDTO = noticeSettingService.getNotice(id);
+        return ApiResponse.success(SuccessStatus.GET_NOTICE_SUCCESS, noticeDTO);
+    }
+
+    @Operation(
+            summary = "공지사항 작성 API",
+            description = "공지사항을 작성합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 작성 성공")
+    })
+    @PostMapping("/notice")
+    public ResponseEntity<ApiResponse<NoticeDTO>> createNotice(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody NoticeRequestDTO noticeRequestDTO) {
+
+        NoticeDTO noticeDTO = noticeSettingService.createNotice(userDetails.getUsername(), noticeRequestDTO);
+        return ApiResponse.success(SuccessStatus.CREATE_NOTICE_SUCCESS, noticeDTO);
+    }
+
+    @Operation(
+            summary = "공지사항 삭제 API",
+            description = "공지사항을 삭제합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "공지사항 삭제 성공")
+    })
+    @DeleteMapping("/notice/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteNotice(@AuthenticationPrincipal UserDetails userDetails,
+                                                          @PathVariable Long id) {
+
+        noticeSettingService.deleteNotice(userDetails.getUsername(), id);
+        return ApiResponse.success_only(SuccessStatus.DELETE_NOTICE_SUCCESS);
     }
 }
