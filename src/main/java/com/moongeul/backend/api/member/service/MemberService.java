@@ -160,7 +160,7 @@ public class MemberService {
         return memberRepository.save(newUser);
     }
 
-    // 사용자 정보 조회
+    /* 사용자 정보 조회 */
     @Transactional(readOnly = true)
     public UserInfoDTO getUserInfo(String email, Long userId){
 
@@ -196,6 +196,7 @@ public class MemberService {
                 .followingCount(followingCount)
                 .myFollowStatus(myFollowStatus)
                 .privacyLevel(member.getPrivacyLevel() == null ? PrivacyLevel.PUBLIC : member.getPrivacyLevel())
+                .isPushEnabled(member.isPushEnabled())
                 .build();
     }
 

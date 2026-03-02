@@ -42,6 +42,8 @@ public enum ErrorStatus {
     CATEGORY_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "회원의 카테고리가 아닙니다."),
     QUESTION_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "질문 수정 권한이 없습니다."),
     ANSWER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "답변 수정 권한이 없습니다."),
+    CREATE_NOTICE_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "공지사항 작성 권한이 없습니다."),
+    DELETE_NOTICE_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "공지사항 삭제 권한이 없습니다."),
 
     /**
      * 404 NOT_FOUND
@@ -60,6 +62,7 @@ public enum ErrorStatus {
     TERMS_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "약관 정보를 찾을 수 없습니다."),
     NOTIFICATION_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 알림을 찾을 수 없습니다."),
     READING_TASTE_TEST_RESULT_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 UUID에 해당하는 독서 취향 테스트 결과가 없습니다."),
+    NOTICE_NOTFOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 공지사항을 찾을 수 없습니다."),
 
     /**
      * 400 BAD_REQUEST
