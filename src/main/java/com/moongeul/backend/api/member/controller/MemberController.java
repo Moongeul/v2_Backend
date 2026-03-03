@@ -110,6 +110,69 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.GET_USERINFO_SUCCESS, response);
     }
 
+    /*
+     *
+     * 로그아웃 API
+     *
+     * */
+    @Operation(
+            summary = "로그아웃 API",
+            description = "사용자의 계정을 로그아웃합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공")
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal UserDetails userDetails,
+                                                    @RequestBody LogoutRequestDTO logoutRequestDTO) {
+
+        memberService.logout(userDetails.getUsername(), logoutRequestDTO.getDeviceToken());
+        return ApiResponse.success_only(SuccessStatus.LOGOUT_SUCCESS);
+    }
+
+    /*
+     *
+     * 토큰 재발급 API
+     *
+     * */
+    @Operation(
+            summary = "토큰 재발급 API",
+            description = "엑세스 토큰 만료 시, 유효한 리프레시 토큰을 통해 엑세스 토큰을 재발급 받습니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "토큰이 만료되었거나 유효하지 않은 토큰입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
+    })
+    @GetMapping("/reissue-token")
+    public ResponseEntity<ApiResponse<JwtTokenDTO>> reissueAccessToken(@RequestHeader(value = "Authorization-Refresh") String refreshToken){
+        JwtTokenDTO response = memberService.reissueToken(refreshToken);
+        return ApiResponse.success(SuccessStatus.REISSUE_TOKEN_SUCCESS, response);
+    }
+
+    /**
+     * 회원 탈퇴 API
+     */
+    @Operation(
+            summary = "회원 탈퇴 API",
+            description = "회원의 계정을 탈퇴처리합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원 탈퇴 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다."),
+    })
+    @PostMapping("/withdraw")
+    public ResponseEntity<ApiResponse<Void>> withdraw(@AuthenticationPrincipal UserDetails userDetails,
+                                                             @RequestBody WithdrawalRequestDTO withdrawalRequestDTO){
+        memberService.withdraw(userDetails.getUsername(), withdrawalRequestDTO);
+        return ApiResponse.success_only(SuccessStatus.WITHDRAW_SUCCESS);
+    }
+
+    /*
+     *
+     * 마이페이지 관련 API
+     *
+     * */
     @Operation(
             summary = "기록 통계 조회 API (마이페이지 기록장)",
             description = "사용자의 기록 작성 통계를 조회합니다. userId 쿼리 파라미터가 없으면 본인 정보를 조회하고, 있으면 해당 사용자의 정보를 조회합니다. " +
@@ -130,7 +193,8 @@ public class MemberController {
 
     @Operation(
             summary = "카테고리별 기록 리스트 조회 API (마이페이지 기록장 상세)",
-            description = "특정 카테고리에 작성된 기록들을 조회합니다. userId 쿼리 파라미터가 없으면 본인, 있으면 해당 사용자의 기록을 조회합니다. " +
+            description = "특정 카테고리에 작성된 기록들을 조회합니다. categoryId에 0을 전달하면 모든 카테고리의 기록을 함께 조회합니다. " +
+                    "userId 쿼리 파라미터가 없으면 본인, 있으면 해당 사용자의 기록을 조회합니다. " +
                     "최신순, 오래된순, 평점 높은순, 평점 낮은순으로 정렬할 수 있습니다." +
                     "<br><br>[enum] 정렬 옵션 (sortBy):" +
                     "<br>- LATEST: 최신순 (기본값)" +
@@ -203,21 +267,6 @@ public class MemberController {
         QuestionListResponseDTO questionListResponseDTO =
                 questionService.getMyQuestionList(page, size, userDetails.getUsername(), userId);
         return ApiResponse.success(SuccessStatus.GET_MY_QUESTION_LIST_SUCCESS, questionListResponseDTO);
-    }
-
-    @Operation(
-            summary = "토큰 재발급 API",
-            description = "엑세스 토큰 만료 시, 유효한 리프레시 토큰을 통해 엑세스 토큰을 재발급 받습니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "토큰이 만료되었거나 유효하지 않은 토큰입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
-    })
-    @GetMapping("/reissue-token")
-    public ResponseEntity<ApiResponse<JwtTokenDTO>> reissueAccessToken(@RequestHeader(value = "Authorization-Refresh") String refreshToken){
-        JwtTokenDTO response = memberService.reissueToken(refreshToken);
-        return ApiResponse.success(SuccessStatus.REISSUE_TOKEN_SUCCESS, response);
     }
 
     /*

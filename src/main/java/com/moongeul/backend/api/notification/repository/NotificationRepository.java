@@ -28,4 +28,8 @@ public interface NotificationRepository extends JpaRepository<Notifications, Lon
     // receiverId와 actorId로 FOLLOW_PRIVATE 알림 가져오기
     Optional<Notifications> findByReceiverIdAndActorIdAndType(Long receiverId, Long actorId, NotificationType notificationType);
 
+    // 회원 탈퇴 시 해당 회원의 모든 알림 삭제
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Notifications n WHERE n.receiver.id = :memberId")
+    void deleteAllByReceiverId(@Param("memberId") Long memberId);
 }

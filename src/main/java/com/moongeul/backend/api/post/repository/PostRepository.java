@@ -8,6 +8,7 @@ import com.moongeul.backend.api.post.entity.PostVisibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -84,6 +85,22 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId ORDER BY p.rating ASC, p.createdAt DESC")
     Page<Post> findByCategoryIdOrderByRatingAsc(@Param("categoryId") Long categoryId, Pageable pageable);
 
+    // 사용자의 전체 기록 조회 (최신순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.createdAt DESC")
+    Page<Post> findByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자의 전체 기록 조회 (오래된순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.createdAt ASC")
+    Page<Post> findByMemberIdOrderByCreatedAtAsc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자의 전체 기록 조회 (평점 높은순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.rating DESC, p.createdAt DESC")
+    Page<Post> findByMemberIdOrderByRatingDesc(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 사용자의 전체 기록 조회 (평점 낮은순)
+    @Query("SELECT p FROM Post p WHERE p.member.id = :memberId ORDER BY p.rating ASC, p.createdAt DESC")
+    Page<Post> findByMemberIdOrderByRatingAsc(@Param("memberId") Long memberId, Pageable pageable);
+
     // 사용자가 공감한 기록 조회 (최신순)
     @Query(value = "SELECT DISTINCT l.post FROM Likes l " +
             "WHERE l.member.id = :memberId " +
@@ -126,4 +143,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Double> findRatingsByMember(@Param("member") Member member);
 
     Page<Post> findByMemberAndRatingBetween(Member member, Double startRating, Double endRating, Pageable pageable);
+
+    // 회원 탈퇴 시 작성한 모든 게시글 삭제
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Post p WHERE p.member.id = :memberId")
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }

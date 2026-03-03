@@ -2,6 +2,7 @@ package com.moongeul.backend.api.member.repository;
 
 import com.moongeul.backend.api.member.entity.Follow;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,4 +27,14 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     // 4. 내가 팔로우를 건 모든 기록 (상태 상관 x)
     // 팔로워 목록에서 '내가 그들에게 보낸 상태'를 확인하기 위해 필요
     List<Follow> findAllByFollowerId(Long followerId);
+
+    // 회원 탈퇴 시, 내가 팔로우한 기록 삭제 (내가 follower인 경우)
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Follow f WHERE f.follower.id = :memberId")
+    void deleteAllByFollowerId(@Param("memberId") Long memberId);
+
+    // 회원 탈퇴 시, 나를 팔로우한 기록 삭제 (내가 following인 경우)
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Follow f WHERE f.following.id = :memberId")
+    void deleteAllByFollowingId(@Param("memberId") Long memberId);
 }

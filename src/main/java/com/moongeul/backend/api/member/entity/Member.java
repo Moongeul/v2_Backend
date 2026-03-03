@@ -105,4 +105,17 @@ public class Member extends BaseTimeEntity {
     public void updatePushEnabled(boolean isPushEnabled) {
         this.isPushEnabled = isPushEnabled;
     }
+  
+    /**
+     * 회원 탈퇴 시 개인정보를 지우는 메서드
+     */
+    public void withdrawMember() {
+        this.socialId = null;        // 재가입 가능하도록 null 처리
+        this.refreshToken = null;
+        this.nickname = "(알 수 없음)";
+        this.profileImage = null;
+        this.name = null;            // 실명 정보 삭제
+        this.email = "withdrawn_" + this.id + "@moongeul.com"; // 이메일 중복 방지를 위해 식별 가능한 값으로 변경
+        this.role = Role.GUEST;      // 권한 축소
+    }
 }

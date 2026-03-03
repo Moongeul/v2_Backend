@@ -1,5 +1,7 @@
 package com.moongeul.backend.api.member.service;
 
+import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
+import com.moongeul.backend.api.bookshelf.repository.WishReadBookshelfRepository;
 import com.moongeul.backend.api.category.entity.Category;
 import com.moongeul.backend.api.category.repository.CategoryRepository;
 import com.moongeul.backend.api.member.dto.*;
@@ -7,16 +9,25 @@ import com.moongeul.backend.api.member.entity.*;
 import com.moongeul.backend.api.member.jwt.dto.JwtTokenDTO;
 import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
+import com.moongeul.backend.api.member.repository.WithdrawalRepository;
 import com.moongeul.backend.api.member.util.NicknameGenerator;
+import com.moongeul.backend.api.notification.repository.DeviceTokenRepository;
+import com.moongeul.backend.api.notification.repository.NotificationRepository;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.PostDTO;
+import com.moongeul.backend.api.post.entity.LikeType;
+import com.moongeul.backend.api.post.entity.Likes;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.Quote;
+import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.story.entity.Story;
 import com.moongeul.backend.api.story.repository.StoryRepository;
+import com.moongeul.backend.api.question.repository.AnswerRepository;
+import com.moongeul.backend.api.question.repository.QuestionRepository;
+import com.moongeul.backend.api.setting.repository.AgreeRepository;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.ForbiddenException;
@@ -34,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,6 +60,15 @@ public class MemberService {
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
     private final StoryRepository storyRepository;
+    private final LikeRepository likeRepository;
+    private final WithdrawalRepository withdrawalRepository;
+    private final NotificationRepository notificationRepository;
+    private final AnswerRepository answerRepository;
+    private final DoneReadBookshelfRepository doneReadBookshelfRepository;
+    private final WishReadBookshelfRepository wishReadBookshelfRepository;
+    private final QuestionRepository questionRepository;
+    private final DeviceTokenRepository deviceTokenRepository;
+    private final AgreeRepository agreeRepository;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
@@ -186,6 +207,82 @@ public class MemberService {
                 .build();
     }
 
+    /* 로그아웃 API */
+    @Transactional
+    public void logout(String email, String deviceToken) {
+        Member member = getMemberByEmail(email);
+
+        // 리프레시 토큰 null 처리
+        member.updateRefreshToken(null);
+
+        // 현재 기기의 디바이스 토큰만 삭제 (알림 차단)
+        if (deviceToken != null) {
+            deviceTokenRepository.deleteByToken(deviceToken);
+        }
+    }
+
+    /* 탈퇴하기 API - soft delete 처리 */
+    @Transactional
+    public void withdraw(String email, WithdrawalRequestDTO withdrawalRequestDTO) {
+
+        Member member = getMemberByEmail(email);
+        String profileImageUrl = member.getProfileImage();
+        String targetDomain = "https://api-bucket.rhkr8521.com";
+
+        /* 1. 벌크 삭제 쿼리 실행 (각 Repository에 작성된 @Modifying 쿼리 호출) - 호출 순서 중요! */
+        // [팔로우] 내가 팔로우한 & 나를 팔로우한 사람들 삭제
+        followRepository.deleteAllByFollowerId(member.getId());
+        followRepository.deleteAllByFollowingId(member.getId());
+
+        // [디바이스토큰]
+        deviceTokenRepository.deleteAllByMemberId(member.getId());
+
+        // [약관 동의]
+        agreeRepository.deleteAllByMemberId(member.getId());
+
+        // [알림] 내가 받은 알림만 삭제
+        notificationRepository.deleteAllByReceiverId(member.getId());
+
+        // [답변] 내가 쓴 답변 & 내 질문에 달린 답변 삭제
+        answerRepository.deleteAllByMemberId(member.getId());
+        answerRepository.deleteAllByQuestionMemberId(member.getId());
+
+        // [질문]
+        questionRepository.deleteAllByMemberId(member.getId());
+
+        // [책장]
+        doneReadBookshelfRepository.deleteAllByMemberId(member.getId());
+        wishReadBookshelfRepository.deleteAllByMemberId(member.getId());
+
+        // [게시글 & 인용구]
+        quoteRepository.deleteAllByMemberId(member.getId()); // Post 이전에 삭제
+        postRepository.deleteAllByMemberId(member.getId());
+
+        // [카테고리] Post가 모두 삭제된 후 삭제 가능
+        categoryRepository.deleteAllByMemberId(member.getId());
+
+        // 2. 탈퇴 이력 저장 (나중에 통계 및 재가입 방지 체크에 사용)
+        Withdrawal withdrawal = Withdrawal.builder()
+                .email(email)
+                .reason(withdrawalRequestDTO.getReason()) // 예: "기타"
+                .detailReason(withdrawalRequestDTO.getDetailReason()) // 예: "이유작성완료"
+                .withdrawalDate(LocalDateTime.now())
+                .build();
+        withdrawalRepository.save(withdrawal);
+
+        // 버킷 내 이미지 삭제
+        if (profileImageUrl != null && profileImageUrl.startsWith(targetDomain)) {
+            log.info("탈퇴 회원 프로필 버킷 이미지 삭제: {}", profileImageUrl);
+            fileUploadService.deleteFileByUrl(profileImageUrl);
+        }
+        // 공개 상태를 PRIVATE 으로 변경
+        member.updatePrivacy(PrivacyLevel.PRIVATE);
+        // 3. Member 정보 초기화
+        member.withdrawMember();
+
+        memberRepository.saveAndFlush(member);
+    }
+
     /* 기록 통계 조회 (마이페이지 기록장) */
     @Transactional(readOnly = true)
     public PostStatsResponseDTO getPostStats(String email, Long userId) {
@@ -322,33 +419,50 @@ public class MemberService {
 
         validatePrivacyAccess(currentMember, targetMember);
 
-        // 카테고리 존재 여부 확인
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Post> postPage;
 
-        // 카테고리 소유자 확인
-        if (!category.getMember().getId().equals(targetMember.getId())) {
-            throw new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage());
+        // categoryId=0 은 전체보기(모든 카테고리 포함)
+        if (Long.valueOf(0L).equals(categoryId)) {
+            postPage = switch (sortBy.toUpperCase()) {
+                case "LATEST" ->
+                        postRepository.findByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+                case "OLDEST" ->
+                        postRepository.findByMemberIdOrderByCreatedAtAsc(targetMember.getId(), pageable);
+                case "RATING_HIGH" ->
+                        postRepository.findByMemberIdOrderByRatingDesc(targetMember.getId(), pageable);
+                case "RATING_LOW" ->
+                        postRepository.findByMemberIdOrderByRatingAsc(targetMember.getId(), pageable);
+                default ->
+                        postRepository.findByMemberIdOrderByCreatedAtDesc(targetMember.getId(), pageable);
+            };
+        } else {
+            // 카테고리 존재 여부 확인
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+
+            // 카테고리 소유자 확인
+            if (!category.getMember().getId().equals(targetMember.getId())) {
+                throw new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage());
+            }
+
+            // 정렬 조건에 따라 조회
+            postPage = switch (sortBy.toUpperCase()) {
+                case "LATEST" ->  // 최신순
+                        postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
+                case "OLDEST" ->  // 오래된순
+                        postRepository.findByCategoryIdOrderByCreatedAtAsc(categoryId, pageable);
+                case "RATING_HIGH" ->  // 평점 높은순
+                        postRepository.findByCategoryIdOrderByRatingDesc(categoryId, pageable);
+                case "RATING_LOW" ->  // 평점 낮은순
+                        postRepository.findByCategoryIdOrderByRatingAsc(categoryId, pageable);
+                default ->  // 기본값: 최신순
+                        postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
+            };
         }
 
-        Pageable pageable = PageRequest.of(page - 1, size);
-
-        // 정렬 조건에 따라 조회
-        Page<Post> postPage = switch (sortBy.toUpperCase()) {
-            case "LATEST" ->  // 최신순
-                    postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
-            case "OLDEST" ->  // 오래된순
-                    postRepository.findByCategoryIdOrderByCreatedAtAsc(categoryId, pageable);
-            case "RATING_HIGH" ->  // 평점 높은순
-                    postRepository.findByCategoryIdOrderByRatingDesc(categoryId, pageable);
-            case "RATING_LOW" ->  // 평점 낮은순
-                    postRepository.findByCategoryIdOrderByRatingAsc(categoryId, pageable);
-            default ->  // 기본값: 최신순
-                    postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable);
-        };
-
         List<PostDTO> postList = postPage.getContent().stream()
-                .map(this::convertToPostDTO)
+                .map(post -> convertToPostDTO(post, currentMember))
                 .collect(Collectors.toList());
 
         log.info("카테고리별 기록 리스트 조회 완료 - 카테고리 ID: {}, 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
@@ -392,7 +506,7 @@ public class MemberService {
         };
 
         List<PostDTO> postList = postPage.getContent().stream()
-                .map(this::convertToPostDTO)
+                .map(post -> convertToPostDTO(post, currentMember))
                 .collect(Collectors.toList());
 
         log.info("공감한 기록 리스트 조회 완료 - 사용자 ID: {}, 정렬: {}, 페이지: {}, 결과 수: {}",
@@ -409,7 +523,7 @@ public class MemberService {
     }
 
     // Post를 PostDTO로 변환
-    private PostDTO convertToPostDTO(Post post) {
+    private PostDTO convertToPostDTO(Post post, Member currentMember) {
 
         Book book = post.getBook();
 
@@ -446,6 +560,8 @@ public class MemberService {
                 .helpfulCount(post.getHelpfulCount())
                 .build();
 
+        PostDTO.MyLikesStatus myLikesStatus = convertToMyLikesStatus(currentMember, post.getId());
+
         return PostDTO.builder()
                 .postId(post.getId())
                 .memberInfo(memberInfo)
@@ -457,6 +573,31 @@ public class MemberService {
                 .quotesCnt(quoteDTOList.size())
                 .quotes(quoteDTOList)
                 .likesCnt(likesCnt)
+                .myLikesStatus(myLikesStatus)
+                .build();
+    }
+
+    private PostDTO.MyLikesStatus convertToMyLikesStatus(Member currentMember, Long postId) {
+        if (currentMember == null) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        List<Likes> myLikes = likeRepository.findByPostIdAndMemberId(postId, currentMember.getId());
+
+        if (myLikes.isEmpty()) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        Set<LikeType> myLikesTypes = myLikes.stream()
+                .map(Likes::getLikeType)
+                .collect(Collectors.toSet());
+
+        return PostDTO.MyLikesStatus.builder()
+                .relatableCount(myLikesTypes.contains(LikeType.RELATABLE))
+                .sameTasteCount(myLikesTypes.contains(LikeType.SAME_TASTE))
+                .impressiveExpressionCount(myLikesTypes.contains(LikeType.IMPRESSIVE_EXPRESSION))
+                .wantToReadCount(myLikesTypes.contains(LikeType.WANT_TO_READ))
+                .helpfulCount(myLikesTypes.contains(LikeType.HELPFUL))
                 .build();
     }
 
