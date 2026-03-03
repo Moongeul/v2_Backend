@@ -17,8 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Tag(name = "Notification", description = "Notification(푸시알람) 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
@@ -81,12 +79,12 @@ public class NotificationController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다."),
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<List<NotificationsResponseDTO>>> getNotifications(
+    public ResponseEntity<ApiResponse<NotificationsResponseDTO>> getNotifications(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false, defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.(1부터 시작)") Integer page,
             @RequestParam(required = false, defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
 
-        List<NotificationsResponseDTO> response = notificationService.getNotifications(page, size, userDetails.getUsername());
+        NotificationsResponseDTO response = notificationService.getNotifications(page, size, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.GET_NOTIFICATIONS_SUCCESS, response);
     }
 }
