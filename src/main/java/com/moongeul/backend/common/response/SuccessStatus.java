@@ -90,6 +90,11 @@ public enum SuccessStatus {
 	MODIFY_QUESTION_SUCCESS(HttpStatus.OK, "질문 수정 성공"),
 	DELETE_QUESTION_SUCCESS(HttpStatus.OK, "질문 삭제 성공"),
 
+	/* STORY */
+	CREATE_STORY_SUCCESS(HttpStatus.OK, "스토리 제작 성공"),
+	GET_STORY_SUCCESS(HttpStatus.OK, "스토리 상세 조회 성공"),
+	GET_ALL_STORY_SUCCESS(HttpStatus.OK, "스토리 전체 조회 성공"),
+	DELETE_STORY_SUCCESS(HttpStatus.OK, "스토리 삭제 성공"),
 
 	/**
 	 * 201
