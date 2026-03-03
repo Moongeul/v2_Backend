@@ -9,9 +9,9 @@ import com.moongeul.backend.api.notification.repository.NotificationRepository;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,29 +27,35 @@ public class NotificationService {
 
     /* 알림 내역 전체 조회 */
     @Transactional
-    public List<NotificationsResponseDTO> getNotifications(Integer page, Integer size, String email){
+    public NotificationsResponseDTO getNotifications(Integer page, Integer size, String email) {
         Member member = getMemberByEmail(email);
 
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Slice<Notifications> notificationsSlice = notificationRepository.findByReceiverIdOrderByCreatedAtDesc(member.getId(), pageable);
+        Page<Notifications> notificationsPage = notificationRepository.findByReceiverIdOrderByCreatedAtDesc(member.getId(), pageable);
 
-        List<NotificationsResponseDTO> response = notificationsSlice.getContent().stream()
-                .map(notification -> NotificationsResponseDTO.builder()
+        List<NotificationsResponseDTO.NotificationInfo> infoList = notificationsPage.getContent().stream()
+                .map(notification -> NotificationsResponseDTO.NotificationInfo.builder()
                         .id(notification.getId())
                         .relatedId(notification.getRelatedId())
                         .notificationType(notification.getType())
-                        .profileImage(notification.getActor() != null ? notification.getActor().getProfileImage() : null) // profile 이미지 null -> 서버공지
+                        .profileImage(notification.getActor() != null ? notification.getActor().getProfileImage() : null)
                         .content(notification.getContent())
-                        .created_at(notification.getCreatedAt())
+                        .createdAt(notification.getCreatedAt())
                         .isRead(notification.isRead())
                         .build())
                 .collect(Collectors.toList());
 
-        // 해당 사용자의 알림 중 읽지 않은(isRead = false) 알림만 모두 true(읽음)로 변경
         notificationRepository.updateIsReadByReceiverId(member.getId());
 
-        return response;
+        return NotificationsResponseDTO.builder()
+                .total(notificationsPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(notificationsPage.getTotalPages())
+                .isLast(notificationsPage.isLast())
+                .data(infoList)
+                .build();
     }
 
     @Transactional

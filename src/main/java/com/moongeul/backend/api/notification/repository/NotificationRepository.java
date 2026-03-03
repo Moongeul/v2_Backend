@@ -2,8 +2,8 @@ package com.moongeul.backend.api.notification.repository;
 
 import com.moongeul.backend.api.notification.entity.NotificationType;
 import com.moongeul.backend.api.notification.entity.Notifications;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public interface NotificationRepository extends JpaRepository<Notifications, Long> {
 
-    Slice<Notifications> findByReceiverIdOrderByCreatedAtDesc(Long id, Pageable pageable);
+    Page<Notifications> findByReceiverIdOrderByCreatedAtDesc(Long id, Pageable pageable);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Notifications n SET n.isRead = true WHERE n.receiver.id = :receiverId AND n.isRead = false")
