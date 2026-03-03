@@ -3,7 +3,6 @@ package com.moongeul.backend.api.setting.service;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.entity.Role;
 import com.moongeul.backend.api.member.repository.MemberRepository;
-import com.moongeul.backend.api.setting.dto.NoticeAllRequestDTO;
 import com.moongeul.backend.api.setting.dto.NoticeAllResponseDTO;
 import com.moongeul.backend.api.setting.dto.NoticeDTO;
 import com.moongeul.backend.api.setting.dto.NoticeRequestDTO;
