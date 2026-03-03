@@ -95,6 +95,7 @@ public enum SuccessStatus {
 	GET_STORY_SUCCESS(HttpStatus.OK, "스토리 상세 조회 성공"),
 	GET_ALL_STORY_SUCCESS(HttpStatus.OK, "스토리 전체 조회 성공"),
 	DELETE_STORY_SUCCESS(HttpStatus.OK, "스토리 삭제 성공"),
+	GET_MY_STORY_SUCCESS(HttpStatus.OK, "스토리 보관함 조회 성공"),
 
 	/**
 	 * 201

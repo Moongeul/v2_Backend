@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -378,6 +379,23 @@ public class MemberController {
 
         memberService.updateProfileImage(userDetails.getUsername(), profileImage);
         return ApiResponse.success_only(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS);
+    }
+
+    @Operation(
+            summary = "스토리 보관함 조회 API",
+            description = "마이페이지 스토리 보관함을 내역을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "스토리 보관함 조회 성공"),
+    })
+    @GetMapping("/my-story")
+    public ResponseEntity<ApiResponse<MyStoryResponseDTO>> getMyStories(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false, defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.(1부터 시작)") Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
+
+        MyStoryResponseDTO myStoryResponseDTO = memberService.getMyStories(userDetails.getUsername(), page, size);
+        return ApiResponse.success(SuccessStatus.GET_MY_STORY_SUCCESS, myStoryResponseDTO);
     }
     
 }

@@ -15,6 +15,8 @@ import com.moongeul.backend.api.post.entity.Quote;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.story.entity.Story;
+import com.moongeul.backend.api.story.repository.StoryRepository;
 import com.moongeul.backend.common.config.jwt.JwtTokenProvider;
 import com.moongeul.backend.common.exception.BadRequestException;
 import com.moongeul.backend.common.exception.ForbiddenException;
@@ -45,6 +47,8 @@ public class MemberService {
     private final CategoryRepository categoryRepository;
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
+    private final StoryRepository storyRepository;
+
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
@@ -480,6 +484,32 @@ public class MemberService {
                 throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
             }
         }
+    }
+
+    /* 스토리 보관함 조회 API */
+    @Transactional(readOnly = true)
+    public MyStoryResponseDTO getMyStories(String email, Integer page, Integer size) {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        Page<Story> myStoryPage = storyRepository.findAllMyStories(email, pageable);
+
+        List<MyStoryResponseDTO.StoryInfo> storyInfoList = myStoryPage.getContent().stream()
+                .map(story -> MyStoryResponseDTO.StoryInfo.builder()
+                        .storyId(story.getId())
+                        .storyImage(story.getStoryImage())
+                        .created(story.getCreatedAt())
+                        .build())
+                .toList();
+
+        return MyStoryResponseDTO.builder()
+                .total(myStoryPage.getTotalElements())
+                .page(myStoryPage.getNumber() + 1)
+                .size(myStoryPage.getSize())
+                .totalPages(myStoryPage.getTotalPages())
+                .isLast(myStoryPage.isLast())
+                .data(storyInfoList)
+                .build();
     }
 
     // 회원 조회 메서드

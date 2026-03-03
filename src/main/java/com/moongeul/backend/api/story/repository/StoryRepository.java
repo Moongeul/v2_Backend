@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 public interface StoryRepository extends JpaRepository<Story, Long> {
 
-    // 1. 전체 공개 스토리 조회 (비로그인/로그인 공용) (24시간 이내 + 팔로잉 스토리 + 내 스토리 포함)
+    // 전체 공개 스토리 조회 (비로그인/로그인 공용) (24시간 이내 + 팔로잉 스토리 + 내 스토리 포함)
     @Query("SELECT DISTINCT s FROM Story s " +
             "JOIN FETCH s.member m " +
             "JOIN FETCH s.post p " +
@@ -28,7 +28,7 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
             Pageable pageable
     );
 
-    // 2. 팔로워 공개 스토리 조회 (24시간 이내 + 팔로잉 스토리 + 내 스토리)
+    // 팔로워 공개 스토리 조회 (24시간 이내 + 팔로잉 스토리 + 내 스토리)
     @Query("SELECT s FROM Story s " +
             "JOIN FETCH s.member " +
             "JOIN FETCH s.post p " +
@@ -41,4 +41,10 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
             @Param("timeLimit") LocalDateTime timeLimit,
             Pageable pageable
     );
+
+    // 내 스토리 조회
+    @Query("SELECT s FROM Story s " +
+            "WHERE s.member.email = :email " +
+            "ORDER BY s.createdAt DESC")
+    Page<Story> findAllMyStories(@Param("email") String email, Pageable pageable);
 }
