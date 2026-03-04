@@ -148,15 +148,11 @@ public class MemberService {
 
     // 신규 회원가입 처리 로직 (DB 저장)
     private Member signUp(String socialId, String email, String name, String picture, String socialType) {
-
-        // 랜덤 닉네임 생성
-        String nickname = nicknameGenerator.generateUniqueNickname();
-
         Member newUser = Member.builder()
                 .email(email)
                 .name(name)
                 .profileImage(picture)
-                .nickname(nickname)
+                .nickname(null)
                 .password("OAuth Password") // 임시 패스워드
                 .privacyLevel(PrivacyLevel.PUBLIC) // 기본값: 전체공개
                 .socialId(socialId)
@@ -350,13 +346,10 @@ public class MemberService {
     // 닉네임 재생성
     @Transactional
     public NicknameResponseDTO regenerateNickname(String email) {
-        Member member = getMemberByEmail(email);
+        getMemberByEmail(email);
 
         // 랜덤 닉네임 생성
         String newNickname = nicknameGenerator.generateUniqueNickname();
-
-        // 닉네임 업데이트
-        member.updateNickname(newNickname);
 
         return NicknameResponseDTO.builder()
                 .nickname(newNickname)
@@ -369,6 +362,12 @@ public class MemberService {
         Member member = getMemberByEmail(email);
 
         String nickname = nicknameRequestDTO.getNickname();
+
+        if (Objects.equals(member.getNickname(), nickname)) {
+            return NicknameResponseDTO.builder()
+                    .nickname(nickname)
+                    .build();
+        }
 
         // 닉네임 중복 체크
         if (memberRepository.findByNickname(nickname).isPresent()) {
