@@ -365,7 +365,7 @@ public class MemberController {
      * */
     @Operation(
             summary = "랜덤 닉네임 재생성 API",
-            description = "랜덤 닉네임을 다시 생성하여 등록하고 바뀐 닉네임을 반환합니다."
+            description = "랜덤 닉네임을 다시 생성하여 반환합니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "닉네임 재생성 성공"),
