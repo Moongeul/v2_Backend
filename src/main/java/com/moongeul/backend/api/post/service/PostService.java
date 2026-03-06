@@ -16,6 +16,7 @@ import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.post.util.WritingGuideGenerator;
+import com.moongeul.backend.common.annotation.Timer;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
 import com.moongeul.backend.common.response.ErrorStatus;
@@ -31,10 +32,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -116,6 +114,7 @@ public class PostService {
     }
 
     /* 기록(게시글) 전체 조회 */
+    @Timer
     @Transactional
     public PostAllResponseDTO getPostAll(PostAllRequestDTO postAllRequestDTO, String email){
 
@@ -137,16 +136,55 @@ public class PostService {
             postPage = postRepository.findAllByFollower(email, pageable);
         }
 
-        List<PostDTO> postDTOList = new ArrayList<>();
-        if (!postPage.isEmpty()) {
-            for(Post post : postPage.getContent()){
-                postDTOList.add(getPostDetail(post.getId(), email));
-            }
+        if (postPage.isEmpty()) {
+            return PostAllResponseDTO.builder().data(new ArrayList<>()).build();
         }
+
+        // Batch 준비: 현재 페이지의 게시글 ID 리스트 추출
+        List<Long> postIds = postPage.getContent().stream()
+                .map(Post::getId)
+                .toList();
+
+        // Batch 조회 & Map 매핑: 내가 누른 공감들 한꺼번에 가져오기
+        Map<Long, Set<LikeType>> myLikesMap;
+        if (!isAnonymous) {
+            List<Likes> allMyLikes = likeRepository.findAllByMemberEmailAndPostIdIn(email, postIds);
+            myLikesMap = allMyLikes.stream().collect(Collectors.groupingBy(
+                    like -> like.getPost().getId(),
+                    Collectors.mapping(Likes::getLikeType, Collectors.toSet())
+            ));
+        } else {
+            myLikesMap = new HashMap<>();
+        }
+
+        // Batch 조회 & Map 매핑: 인상 깊은 구절들 한꺼번에 가져오기
+        List<Quote> allQuotes = quoteRepository.findAllByPostIdIn(postIds);
+        Map<Long, List<Quote>> quotesMap = allQuotes.stream()
+                .collect(Collectors.groupingBy(quote -> quote.getPost().getId()));
+
+        // 메모리 매핑: 루프를 돌며 Map에서 데이터를 꺼내 DTO 조립 (getPostDetail 호출 안 함 X)
+        List<PostDTO> postDTOList = postPage.getContent().stream().map(post -> {
+
+            // 해당 게시글의 공감/구절 데이터를 Map에서 즉시 꺼냄 (DB 조회 0번)
+            Set<LikeType> myTypes = myLikesMap.getOrDefault(post.getId(), Collections.emptySet());
+            List<Quote> postQuotes = quotesMap.getOrDefault(post.getId(), Collections.emptyList());
+
+            // MyLikesStatus 객체 조립
+            PostDTO.MyLikesStatus myLikesStatus = PostDTO.MyLikesStatus.builder()
+                    .relatableCount(myTypes.contains(LikeType.RELATABLE))
+                    .sameTasteCount(myTypes.contains(LikeType.SAME_TASTE))
+                    .impressiveExpressionCount(myTypes.contains(LikeType.IMPRESSIVE_EXPRESSION))
+                    .wantToReadCount(myTypes.contains(LikeType.WANT_TO_READ))
+                    .helpfulCount(myTypes.contains(LikeType.HELPFUL))
+                    .build();
+
+            // 최종 PostDTO 조립 (기존 getPostDetail에 있던 변환 로직만 활용)
+            return convertToPostDTO(post, myLikesStatus, postQuotes);
+        }).toList();
 
         return PostAllResponseDTO.builder()
                 .total(postPage.getTotalElements())
-                .page(postPage.getNumber() + 1) // 페이지 1부터 시작(임의 지정)
+                .page(postPage.getNumber() + 1)
                 .size(postPage.getSize())
                 .totalPages(postPage.getTotalPages())
                 .isLast(postPage.isLast())
@@ -155,68 +193,60 @@ public class PostService {
     }
 
     /* 기록(게시글) 상세 조회 */
-    @Transactional
-    public PostDTO getPostDetail(Long postId, String email){
+    @Transactional(readOnly = true)
+    public PostDTO getPostDetail(Long postId, String email) {
 
         Post post = getPost(postId);
-        Book book = getBook(post.getBook().getIsbn());
+        List<Quote> quotes = quoteRepository.findByPostId(postId);
 
-        // 멤버 정보(필요 정보만) DTO
-        PostDTO.MemberInfo memberInfo = PostDTO.MemberInfo.builder()
-                .memberId(post.getMember().getId())
-                .nickname(post.getMember().getNickname())
-                .profileImage(post.getMember().getProfileImage())
-                .readingTasteType(post.getMember().getReadingTasteType())
-                .build();
-
-        // 책 정보(필요 정보만) DTO
-        PostDTO.BookInfo bookInfo = PostDTO.BookInfo.builder()
-                .isbn(book.getIsbn())
-                .bookImage(book.getBookImage())
-                .title(book.getTitle())
-                .author(book.getAuthor())
-                .publisher(book.getPublisher())
-                .pubdate(book.getPubdate())
-                .ratingAverage(book.getRatingAverage())
-                .build();
-
-        // 인상깊은구절 조회
-        List<Quote> quotes = quoteRepository.findByPostId(postId); // 리스트 반환이기에 `orElseThrow()` 사용 x
-        List<PostDTO.QuoteDTO> quoteDTOList = new ArrayList<>();
-        for(Quote quote : quotes){
-            PostDTO.QuoteDTO quoteDTO = PostDTO.QuoteDTO.builder()
-                    .quoteContent(quote.getQuoteContent())
-                    .pageNumber(quote.getPageNumber())
-                    .build();
-            quoteDTOList.add(quoteDTO);
-        }
-
-        // 공감 개수 DTO
-        PostDTO.LikesCnt likesCnt = PostDTO.LikesCnt.builder()
-                .relatableCount(post.getRelatableCount())
-                .sameTasteCount(post.getSameTasteCount())
-                .impressiveExpressionCount(post.getImpressiveExpressionCount())
-                .wantToReadCount(post.getWantToReadCount())
-                .helpfulCount(post.getHelpfulCount())
-                .build();
-
-        /* 내가 누른 공감 유형 정보 DTO */
         boolean isAnonymous = (email == null || "anonymousUser".equals(email));
         PostDTO.MyLikesStatus myLikesStatus = isAnonymous
                 ? PostDTO.MyLikesStatus.empty()
                 : convertToMyLikesStatus(email, postId);
 
+        return convertToPostDTO(post, myLikesStatus, quotes);
+    }
+
+    // 메서드: PostDTO 조립 전용 Helper 메서드
+    private PostDTO convertToPostDTO(Post post, PostDTO.MyLikesStatus myLikesStatus, List<Quote> quotes) {
+
+        List<PostDTO.QuoteDTO> quoteDTOList = quotes.stream()
+                .map(q -> PostDTO.QuoteDTO.builder()
+                        .quoteContent(q.getQuoteContent())
+                        .pageNumber(q.getPageNumber())
+                        .build())
+                .toList();
+
         return PostDTO.builder()
-                .postId(postId)
-                .memberInfo(memberInfo)
+                .postId(post.getId())
+                .memberInfo(PostDTO.MemberInfo.builder()
+                        .memberId(post.getMember().getId())
+                        .nickname(post.getMember().getNickname())
+                        .profileImage(post.getMember().getProfileImage())
+                        .readingTasteType(post.getMember().getReadingTasteType())
+                        .build())
+                .bookInfo(PostDTO.BookInfo.builder()
+                        .isbn(post.getBook().getIsbn())
+                        .bookImage(post.getBook().getBookImage())
+                        .title(post.getBook().getTitle())
+                        .author(post.getBook().getAuthor())
+                        .publisher(post.getBook().getPublisher())
+                        .pubdate(post.getBook().getPubdate())
+                        .ratingAverage(post.getBook().getRatingAverage())
+                        .build())
                 .created(post.getCreatedAt())
-                .bookInfo(bookInfo)
                 .rating(post.getRating())
                 .content(post.getContent())
                 .readDate(post.getReadDate())
                 .quotesCnt(quoteDTOList.size())
                 .quotes(quoteDTOList)
-                .likesCnt(likesCnt)
+                .likesCnt(PostDTO.LikesCnt.builder()
+                        .relatableCount(post.getRelatableCount())
+                        .sameTasteCount(post.getSameTasteCount())
+                        .impressiveExpressionCount(post.getImpressiveExpressionCount())
+                        .wantToReadCount(post.getWantToReadCount())
+                        .helpfulCount(post.getHelpfulCount())
+                        .build())
                 .myLikesStatus(myLikesStatus)
                 .build();
     }
@@ -335,6 +365,7 @@ public class PostService {
      */
 
     /* 공감 토글 */
+    @Timer
     @Transactional
     public void likePost(Long postId, String email, LikeDTO likeDTO){
 

@@ -9,5 +9,7 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
 
     List<Quote> findByPostId(Long postId);
 
+    List<Quote> findAllByPostIdIn(List<Long> postIds);
+
     void deleteAllByPostId(Long postId);
 }
