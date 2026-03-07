@@ -23,6 +23,7 @@ public class Post extends BaseTimeEntity {
     private LocalDate readDate; // 읽은날짜
     private Double rating; // 평점
     private Integer page; // 페이지 수
+    @Column(columnDefinition = "TEXT")
     private String content; // 감상평
 
     @Enumerated(EnumType.STRING)

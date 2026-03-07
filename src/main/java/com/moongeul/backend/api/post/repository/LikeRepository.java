@@ -11,6 +11,8 @@ public interface LikeRepository extends JpaRepository<Likes, Long> {
 
     List<Likes> findByPostIdAndMemberId(Long postId, Long memberId);
 
+    List<Likes> findAllByMemberEmailAndPostIdIn(String email, List<Long> postIds);
+
     Optional<Likes> findByPostIdAndMemberIdAndLikeType(Long postId, Long memberId, LikeType likeType);
 
     // 특정 게시글의 모든 공감 조회

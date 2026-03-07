@@ -12,6 +12,8 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
 
     List<Quote> findByPostId(Long postId);
 
+    List<Quote> findAllByPostIdIn(List<Long> postIds);
+
     void deleteAllByPostId(Long postId);
 
     // 회원 탈퇴 시, 해당 회원이 작성한 모든 게시글의 인용구 삭제
