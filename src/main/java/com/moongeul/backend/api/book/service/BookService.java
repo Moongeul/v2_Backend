@@ -87,6 +87,11 @@ public class BookService {
             isLast = bookResult.isLast && userResult.isLast;
         }
 
+        BookSearchResponseDTO.SearchResultData searchData = BookSearchResponseDTO.SearchResultData.builder()
+                .bookData(bookResult.data)
+                .userData(userResult.data)
+                .build();
+
         return BookSearchResponseDTO.builder()
                 .type(searchType)
                 .total(total)
@@ -94,8 +99,7 @@ public class BookService {
                 .size(bookSearchRequestDTO.getSize())
                 .totalPages(totalPages)
                 .isLast(isLast)
-                .bookData(bookResult.data)
-                .userData(userResult.data)
+                .data(searchData)
                 .build();
     }
 
