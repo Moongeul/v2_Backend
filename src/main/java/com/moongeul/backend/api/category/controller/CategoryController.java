@@ -61,13 +61,13 @@ public class CategoryController {
             description = "카테고리 id 값으로 카테고리명을 조회하는 API 입니다."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리 전체 조회 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "카테고리명은 필수입니다. (category)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리명 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 카테고리를 찾을 수 없습니다."),
     })
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponseDTO>> getCategoryTitle(@RequestParam Long id) {
 
         CategoryResponseDTO response = categoryService.getCategoryTitle(id);
-        return ApiResponse.success(SuccessStatus.GET_CATEGORY_SUCCESS, response);
+        return ApiResponse.success(SuccessStatus.GET_CATEGORY_TITLE_SUCCESS, response);
     }
 }

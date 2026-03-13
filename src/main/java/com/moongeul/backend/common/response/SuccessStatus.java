@@ -79,7 +79,7 @@ public enum SuccessStatus {
 
 	/* CATEGORY */
 	GET_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 전체 조회 성공"),
-	GET_CATEGORY_TITLE_SUCCESS(HttpStatus.OK, "카테고명 조회 성공"),
+	GET_CATEGORY_TITLE_SUCCESS(HttpStatus.OK, "카테고리명 조회 성공"),
 
 	/* ALARM */
 	REGISTER_DEVICE_TOKEN_SUCCESS(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
