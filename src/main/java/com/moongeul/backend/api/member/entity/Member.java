@@ -105,7 +105,12 @@ public class Member extends BaseTimeEntity {
     public void updatePushEnabled(boolean isPushEnabled) {
         this.isPushEnabled = isPushEnabled;
     }
-  
+
+    /**
+     * 푸시 알림 허용 업데이트
+     */
+    public void updateRole(Role role) { this.role = role; }
+
     /**
      * 회원 탈퇴 시 개인정보를 지우는 메서드
      */
