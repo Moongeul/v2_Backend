@@ -55,4 +55,19 @@ public class CategoryController {
         CategoryResponseDTO response = categoryService.createCategory(categoryCreateRequestDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_CATEGORY_SUCCESS, response);
     }
+
+    @Operation(
+            summary = "카테고리명 조회 API",
+            description = "카테고리 id 값으로 카테고리명을 조회하는 API 입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카테고리 전체 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "카테고리명은 필수입니다. (category)"),
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<CategoryResponseDTO>> getCategoryTitle(@RequestParam Long id) {
+
+        CategoryResponseDTO response = categoryService.getCategoryTitle(id);
+        return ApiResponse.success(SuccessStatus.GET_CATEGORY_SUCCESS, response);
+    }
 }

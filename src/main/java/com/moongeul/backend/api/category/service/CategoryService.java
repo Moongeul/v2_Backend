@@ -60,6 +60,19 @@ public class CategoryService {
                 .build();
     }
 
+    /* 카테고리명 조회 */
+    @Transactional
+    public CategoryResponseDTO getCategoryTitle(Long id){
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.CATEGORY_NOTFOUND_EXCEPTION.getMessage()));
+
+        return CategoryResponseDTO.builder()
+                .categoryId(category.getId())
+                .title(category.getTitle())
+                .build();
+    }
+
     // 사용자 정보 가져오기 메서드
     private Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)

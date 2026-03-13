@@ -79,11 +79,13 @@ public enum SuccessStatus {
 
 	/* CATEGORY */
 	GET_CATEGORY_SUCCESS(HttpStatus.OK, "카테고리 전체 조회 성공"),
+	GET_CATEGORY_TITLE_SUCCESS(HttpStatus.OK, "카테고명 조회 성공"),
 
 	/* ALARM */
 	REGISTER_DEVICE_TOKEN_SUCCESS(HttpStatus.OK, "사용자 기기 토큰 등록 성공"),
 	GET_NOTIFICATIONS_SUCCESS(HttpStatus.OK, "알림 내역 전체 조회 성공"),
 	GET_UNREAD_NOTIFICATIONS_SUCCESS(HttpStatus.OK, "미확인 알림 존재 여부 조회 성공"),
+	GET_NOTIFICATION_AGREE_STATUS_SUCCESS(HttpStatus.OK, "푸시 알림 동의 여부 조회 성공"),
 
 	/* QUESTION */
 	GET_QUESTION_LIST_SUCCESS(HttpStatus.OK, "질문 리스트 조회 성공"),
