@@ -71,6 +71,7 @@ public class NotificationService {
                 .build();
     }
 
+
     /*
      * 단순 데이터 불러오기용 코드 메서드 - 코드 깔끔하게 하기용
      */

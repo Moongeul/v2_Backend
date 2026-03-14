@@ -1,10 +1,10 @@
 package com.moongeul.backend.api.setting.controller;
 
-import com.moongeul.backend.api.post.entity.PostVisibility;
 import com.moongeul.backend.api.setting.dto.*;
 import com.moongeul.backend.api.setting.service.AgreeTermsSettingService;
 import com.moongeul.backend.api.setting.service.NoticeSettingService;
 import com.moongeul.backend.api.setting.service.PrivacySettingService;
+import com.moongeul.backend.api.setting.service.PushSettingService;
 import com.moongeul.backend.common.response.ApiResponse;
 import com.moongeul.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +27,7 @@ public class SettingController {
     private final PrivacySettingService privacySettingService;
     private final AgreeTermsSettingService agreeTermsSettingService;
     private final NoticeSettingService noticeSettingService;
+    private final PushSettingService pushSettingService;
 
     @Operation(
             summary = "계정 공개 범위 조회 API",
@@ -98,8 +99,23 @@ public class SettingController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody PushSettingRequestDTO pushSettingRequestDTO) {
 
-        agreeTermsSettingService.updatePushSetting(userDetails.getUsername(), pushSettingRequestDTO.isPushEnabled());
+        pushSettingService.updatePushSetting(userDetails.getUsername(), pushSettingRequestDTO.isPushEnabled());
         return ApiResponse.success_only(SuccessStatus.UPDATE_PUSH_SETTING_SUCCESS);
+    }
+
+    @Operation(
+            summary = "푸시 알림 동의 여부 조회 API",
+            description = "사용자의 푸시 알림 동의 여부(현 동의/비동의 상태)를 조회하는 API입니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "푸시 알림 동의 여부 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다."),
+    })
+    @GetMapping("/push")
+    public ResponseEntity<ApiResponse<PushStatusResponseDTO>> getPushStatus(@AuthenticationPrincipal UserDetails userDetails) {
+
+        PushStatusResponseDTO response = pushSettingService.getPushStatus(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.GET_NOTIFICATION_AGREE_STATUS_SUCCESS, response);
     }
 
     /*
