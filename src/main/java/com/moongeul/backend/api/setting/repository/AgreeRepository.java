@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AgreeRepository extends JpaRepository<Agree, Long> {
@@ -18,4 +19,6 @@ public interface AgreeRepository extends JpaRepository<Agree, Long> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Agree a WHERE a.member.id = :memberId")
     void deleteAllByMemberId(@Param("memberId") Long memberId);
+
+    List<Agree> findAllByMember(Member member);
 }

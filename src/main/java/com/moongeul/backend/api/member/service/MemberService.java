@@ -23,6 +23,8 @@ import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.setting.entity.Agree;
+import com.moongeul.backend.api.setting.entity.TermsType;
 import com.moongeul.backend.api.story.entity.Story;
 import com.moongeul.backend.api.story.repository.StoryRepository;
 import com.moongeul.backend.api.question.repository.AnswerRepository;
@@ -377,9 +379,33 @@ public class MemberService {
         // 닉네임 업데이트
         member.updateNickname(nickname);
 
+        // ROLE 승급 로직: GUEST->USER
+        // 조건: 약관 동의 + 닉네임 등록을 마쳤다면
+        if (member.getRole() == Role.GUEST && member.getNickname() != null && isAllRequiredTermsAgreed(member)) {
+            member.updateRole(Role.USER);
+        }
+
         return NicknameResponseDTO.builder()
                 .nickname(nickname)
                 .build();
+    }
+
+    // 메서드: 필수 약관 동의 여부 체크
+    private boolean isAllRequiredTermsAgreed(Member member) {
+        List<TermsType> requiredTypes = List.of(TermsType.SERVICE_TERMS_AGREE, TermsType.PRIVACY_POLICY_AGREE);
+        List<Agree> agreeList = agreeRepository.findAllByMember(member);
+
+        int agreedCount = 0; // 필수 약관들이 각각 동의되었는지 체크하기 위한 카운트
+
+        for (Agree agree : agreeList) {
+            TermsType currentType = agree.getTerms().getTermsType();
+
+            // 현재 약관이 필수 약관 리스트에 포함되어 있고, 동의(true) 상태인지 확인
+            if (requiredTypes.contains(currentType) && agree.isAgreed()) {
+                agreedCount++;
+            }
+        }
+        return agreedCount == requiredTypes.size();
     }
 
     // 닉네임 중복 체크
