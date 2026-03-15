@@ -17,8 +17,11 @@ import com.moongeul.backend.api.member.repository.FollowRepository;
 import com.moongeul.backend.api.member.repository.MemberRepository;
 import com.moongeul.backend.api.post.dto.CategoryPostListResponseDTO;
 import com.moongeul.backend.api.post.dto.PostDTO;
+import com.moongeul.backend.api.post.entity.LikeType;
+import com.moongeul.backend.api.post.entity.Likes;
 import com.moongeul.backend.api.post.entity.Post;
 import com.moongeul.backend.api.post.entity.Quote;
+import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.common.exception.BadRequestException;
@@ -41,6 +44,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -53,6 +57,7 @@ public class DoneReadBookshelfService {
     private final FollowRepository followRepository;
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
+    private final LikeRepository likeRepository;
     private static final String[] RATING_RANGES = {
             "1.0~1.4", "1.5~1.9", "2.0~2.4", "2.5~2.9",
             "3.0~3.4", "3.5~3.9", "4.0~4.4", "4.5~5.0"
@@ -195,20 +200,21 @@ public class DoneReadBookshelfService {
     // 읽은 책 별점 구간 상세 조회
     @Transactional(readOnly = true)
     public CategoryPostListResponseDTO getDoneReadRatingDetail(String email, Long userId, String range, String sortBy, Integer page, Integer size) {
-        Member member = getTargetMember(email, userId);
+        Member currentMember = getCurrentMember(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
         int rangeIndex = findRangeIndex(range);
         Pageable pageable = PageRequest.of(page - 1, size, resolveSort(sortBy));
 
         Page<Post> postPage = postRepository.findByMemberAndRatingBetween(
-                member,
+                targetMember,
                 RANGE_STARTS[rangeIndex],
                 RANGE_ENDS[rangeIndex],
                 pageable
         );
 
         List<PostDTO> postList = postPage.getContent().stream()
-                .map(this::convertToPostDTO)
+                .map(post -> convertToPostDTO(post, currentMember))
                 .collect(Collectors.toList());
 
         return CategoryPostListResponseDTO.builder()
@@ -236,7 +242,7 @@ public class DoneReadBookshelfService {
                 .build();
     }
 
-    private PostDTO convertToPostDTO(Post post) {
+    private PostDTO convertToPostDTO(Post post, Member currentMember) {
 
         Book book = post.getBook();
 
@@ -273,6 +279,8 @@ public class DoneReadBookshelfService {
                 .helpfulCount(post.getHelpfulCount())
                 .build();
 
+        PostDTO.MyLikesStatus myLikesStatus = convertToMyLikesStatus(currentMember, post.getId());
+
         return PostDTO.builder()
                 .postId(post.getId())
                 .memberInfo(memberInfo)
@@ -284,6 +292,31 @@ public class DoneReadBookshelfService {
                 .quotesCnt(quoteDTOList.size())
                 .quotes(quoteDTOList)
                 .likesCnt(likesCnt)
+                .myLikesStatus(myLikesStatus)
+                .build();
+    }
+
+    private PostDTO.MyLikesStatus convertToMyLikesStatus(Member currentMember, Long postId) {
+        if (currentMember == null) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        List<Likes> myLikes = likeRepository.findByPostIdAndMemberId(postId, currentMember.getId());
+
+        if (myLikes.isEmpty()) {
+            return PostDTO.MyLikesStatus.empty();
+        }
+
+        Set<LikeType> myLikesTypes = myLikes.stream()
+                .map(Likes::getLikeType)
+                .collect(Collectors.toSet());
+
+        return PostDTO.MyLikesStatus.builder()
+                .relatableCount(myLikesTypes.contains(LikeType.RELATABLE))
+                .sameTasteCount(myLikesTypes.contains(LikeType.SAME_TASTE))
+                .impressiveExpressionCount(myLikesTypes.contains(LikeType.IMPRESSIVE_EXPRESSION))
+                .wantToReadCount(myLikesTypes.contains(LikeType.WANT_TO_READ))
+                .helpfulCount(myLikesTypes.contains(LikeType.HELPFUL))
                 .build();
     }
 
@@ -317,9 +350,16 @@ public class DoneReadBookshelfService {
     }
 
     private Member getTargetMember(String email, Long userId) {
-        Member currentMember = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member currentMember = getCurrentMember(email);
+        return getTargetMember(currentMember, userId);
+    }
 
+    private Member getCurrentMember(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private Member getTargetMember(Member currentMember, Long userId) {
         Member targetMember = (userId == null)
                 ? currentMember
                 : memberRepository.findById(userId)
