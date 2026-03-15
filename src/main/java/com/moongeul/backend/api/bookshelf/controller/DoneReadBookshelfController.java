@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.bookshelf.controller;
 
+import com.moongeul.backend.api.bookshelf.dto.DoneReadBookPostListResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadCalendarResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadRatingSummaryResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadBookshelfResponseDTO;
@@ -48,6 +49,30 @@ public class DoneReadBookshelfController {
         DoneReadBookshelfResponseDTO doneReadBookshelfResponseDTO =
                 doneReadBookshelfService.getDoneReadBooks(userDetails.getUsername(), userId, page, size);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_BOOKS_SUCCESS, doneReadBookshelfResponseDTO);
+    }
+
+    @Operation(
+            summary = "읽은 책별 기록 리스트 조회 API",
+            description = "ISBN에 해당하는 도서에 대해 사용자가 작성한 기록 리스트를 최신순으로 조회합니다. " +
+                    "userId 쿼리파라미터가 없으면 본인, 있으면 해당 사용자의 기록을 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "읽은 책별 기록 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 사용자의 정보는 공개되지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 또는 도서를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{isbn}/posts")
+    public ResponseEntity<ApiResponse<DoneReadBookPostListResponseDTO>> getDoneReadBookPosts(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String isbn,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") Integer page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
+
+        DoneReadBookPostListResponseDTO doneReadBookPostListResponseDTO =
+                doneReadBookshelfService.getDoneReadBookPosts(userDetails.getUsername(), userId, isbn, page, size);
+        return ApiResponse.success(SuccessStatus.GET_DONE_READ_BOOK_POSTS_SUCCESS, doneReadBookPostListResponseDTO);
     }
 
     @Operation(

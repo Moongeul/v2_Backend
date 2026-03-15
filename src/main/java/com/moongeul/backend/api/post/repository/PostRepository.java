@@ -144,6 +144,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Page<Post> findByMemberAndRatingBetween(Member member, Double startRating, Double endRating, Pageable pageable);
 
+    @Query("SELECT p FROM Post p WHERE p.member = :member AND p.book.isbn = :isbn ORDER BY p.createdAt DESC")
+    Page<Post> findByMemberAndBookIsbnOrderByCreatedAtDesc(
+            @Param("member") Member member,
+            @Param("isbn") String isbn,
+            Pageable pageable);
+
     // 회원 탈퇴 시 작성한 모든 게시글 삭제
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.member.id = :memberId")

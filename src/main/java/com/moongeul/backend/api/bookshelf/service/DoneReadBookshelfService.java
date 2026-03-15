@@ -1,6 +1,8 @@
 package com.moongeul.backend.api.bookshelf.service;
 
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.book.repository.BookRepository;
+import com.moongeul.backend.api.bookshelf.dto.DoneReadBookPostListResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadCalendarDayDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadCalendarResponseDTO;
 import com.moongeul.backend.api.bookshelf.dto.DoneReadBookshelfItemDTO;
@@ -58,6 +60,7 @@ public class DoneReadBookshelfService {
     private final PostRepository postRepository;
     private final QuoteRepository quoteRepository;
     private final LikeRepository likeRepository;
+    private final BookRepository bookRepository;
     private static final String[] RATING_RANGES = {
             "1.0~1.4", "1.5~1.9", "2.0~2.4", "2.5~2.9",
             "3.0~3.4", "3.5~3.9", "4.0~4.4", "4.5~5.0"
@@ -194,6 +197,33 @@ public class DoneReadBookshelfService {
         return DoneReadRatingSummaryResponseDTO.builder()
                 .totalBooks(totalBooks)
                 .data(data)
+                .build();
+    }
+
+    // 읽은 책별 기록 리스트 조회
+    @Transactional(readOnly = true)
+    public DoneReadBookPostListResponseDTO getDoneReadBookPosts(String email, Long userId, String isbn, Integer page, Integer size) {
+        Member currentMember = getCurrentMember(email);
+        Member targetMember = getTargetMember(currentMember, userId);
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Post> postPage = postRepository.findByMemberAndBookIsbnOrderByCreatedAtDesc(targetMember, isbn, pageable);
+
+        List<PostDTO> postList = postPage.getContent().stream()
+                .map(post -> convertToPostDTO(post, currentMember))
+                .collect(Collectors.toList());
+
+        return DoneReadBookPostListResponseDTO.builder()
+                .title(book.getTitle())
+                .isbn(book.getIsbn())
+                .total(postPage.getTotalElements())
+                .page(page)
+                .size(size)
+                .totalPages(postPage.getTotalPages())
+                .isLast(postPage.isLast())
+                .data(postList)
                 .build();
     }
 
