@@ -225,7 +225,7 @@ public class DoneReadBookshelfService {
         Book book = doneReadBookshelf.getArticle().getBook();
         
         return DoneReadBookshelfItemDTO.builder()
-                .articleId(doneReadBookshelf.getArticle().getId())
+                .postId(doneReadBookshelf.getArticle().getId())
                 .isbn(book.getIsbn())
                 .title(book.getTitle())
                 .ratingAverage(book.getRatingAverage())

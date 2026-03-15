@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DoneReadBookshelfItemDTO {
-    private Long articleId; // 게시글 ID
+    private Long postId; // 게시글 ID
     private String isbn; // ISBN
     private String title; // 책 제목
     private Double ratingAverage; // 별점 평균
