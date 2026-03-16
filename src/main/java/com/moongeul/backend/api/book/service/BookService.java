@@ -347,12 +347,13 @@ public class BookService {
         List<String> normalizedIsbnList = normalizeIsbnList(requestDTO.getIsbnList());
         validateBestsellerIsbnList(normalizedIsbnList);
 
-        List<Book> books = bookRepository.findByIsbnIn(normalizedIsbnList);
-        Map<String, Book> bookMap = books.stream()
+        Map<String, Book> bookMap = bookRepository.findByIsbnIn(normalizedIsbnList).stream()
                 .collect(Collectors.toMap(Book::getIsbn, book -> book));
 
-        if (bookMap.size() != normalizedIsbnList.size()) {
-            throw new NotFoundException(ErrorStatus.BESTSELLER_BOOK_NOT_FOUND_EXCEPTION.getMessage());
+        for (String isbn : normalizedIsbnList) {
+            if (!bookMap.containsKey(isbn)) {
+                bookMap.put(isbn, fetchAndSaveBookByIsbn(isbn));
+            }
         }
 
         bestsellerBookRepository.deleteAllInBatch();
@@ -412,6 +413,40 @@ public class BookService {
         if (member.getRole() != Role.ADMIN) {
             throw new ForbiddenException(ErrorStatus.ADMIN_FORBIDDEN_EXCEPTION.getMessage());
         }
+    }
+
+    private Book fetchAndSaveBookByIsbn(String isbn) {
+        BookSearchRequestDTO requestDTO = BookSearchRequestDTO.builder()
+                .query(isbn)
+                .page(1)
+                .size(10)
+                .build();
+
+        NaverBookSearchResponseDTO responseDTO = callNaverBookAPI(requestDTO);
+        if (responseDTO == null || responseDTO.getItems() == null || responseDTO.getItems().isEmpty()) {
+            throw new NotFoundException(ErrorStatus.BESTSELLER_BOOK_NOT_FOUND_EXCEPTION.getMessage());
+        }
+
+        NaverBookItemDTO matchedItem = responseDTO.getItems().stream()
+                .filter(item -> containsIsbn(item.getIsbn(), isbn))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.BESTSELLER_BOOK_NOT_FOUND_EXCEPTION.getMessage()));
+
+        Book existingBook = bookRepository.findByIsbn(isbn).orElse(null);
+        if (existingBook != null) {
+            updateBookIfChanged(existingBook, matchedItem);
+            return existingBook;
+        }
+
+        return saveNewBook(matchedItem, isbn);
+    }
+
+    private boolean containsIsbn(String rawIsbn, String targetIsbn) {
+        if (!StringUtils.hasText(rawIsbn) || !StringUtils.hasText(targetIsbn)) {
+            return false;
+        }
+
+        return List.of(rawIsbn.trim().split("\\s+")).contains(targetIsbn);
     }
 
     private Member getMemberByEmail(String email) {
