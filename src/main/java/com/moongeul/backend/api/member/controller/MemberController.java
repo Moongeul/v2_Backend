@@ -308,6 +308,7 @@ public class MemberController {
     @Operation(
             summary = "팔로잉 사용자 목록 조회 API",
             description = "내가 팔로우한 사용자(팔로잉)의 목록을 조회합니다." +
+                    "<br>userId 쿼리파라미터가 없으면 본인, 있으면 해당 사용자의 정보를 조회합니다." +
                     "<br><br>[enum] myFollowStatus: 내가 해당 팔로워를 팔로우했는지 확인하는 필드:" +
                     "<br>- NONE: 팔로우 아님" +
                     "<br>- PENDING: 요청 대기중" +
@@ -319,14 +320,16 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/following")
-    public ResponseEntity<ApiResponse<List<FollowResponseDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails){
-        List<FollowResponseDTO> response = followService.getFollowing(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<List<FollowResponseDTO>>> getFollowings(@AuthenticationPrincipal UserDetails userDetails,
+                                                                              @RequestParam(required = false) Long userId){
+        List<FollowResponseDTO> response = followService.getFollowing(userDetails.getUsername(), userId);
         return ApiResponse.success(SuccessStatus.GET_FOLLOWING_SUCCESS, response);
     }
 
     @Operation(
             summary = "팔로워 사용자 목록 조회 API",
             description = "나를 팔로잉한 사용자(팔로워)의 목록을 조회합니다." +
+                    "<br>userId 쿼리파라미터가 없으면 본인, 있으면 해당 사용자의 정보를 조회합니다." +
                     "<br><br>[enum] myFollowStatus: 내가 해당 팔로워를 팔로우했는지 확인하는 필드:" +
                     "<br>- NONE: 팔로우 아님" +
                     "<br>- PENDING: 요청 대기중" +
@@ -337,8 +340,9 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자를 찾을 수 없습니다.")
     })
     @GetMapping("/follower")
-    public ResponseEntity<ApiResponse<List<FollowResponseDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails){
-        List<FollowResponseDTO> response = followService.getFollower(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<List<FollowResponseDTO>>> getFollowers(@AuthenticationPrincipal UserDetails userDetails,
+                                                                             @RequestParam(required = false) Long userId){
+        List<FollowResponseDTO> response = followService.getFollower(userDetails.getUsername(), userId);
         return ApiResponse.success(SuccessStatus.GET_FOLLOWER_SUCCESS, response);
     }
 
