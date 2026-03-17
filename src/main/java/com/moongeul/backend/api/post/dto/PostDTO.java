@@ -1,5 +1,6 @@
 package com.moongeul.backend.api.post.dto;
 
+import com.moongeul.backend.api.post.entity.PostVisibility;
 import com.moongeul.backend.api.readingTaste.entity.ReadingTasteType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,11 @@ public class PostDTO {
 
     private BookInfo bookInfo; // 책 정보
 
+    private PostVisibility postVisibility; // 공개여부
+    private Long categoryId; // 카테고리 id
+    
     private Double rating; // 별점
+    private Integer page; // 페이지 수
     private String content; // 감상평
     private LocalDate readDate; // 읽은날짜
 

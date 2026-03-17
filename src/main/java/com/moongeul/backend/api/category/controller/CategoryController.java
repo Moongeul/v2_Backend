@@ -65,7 +65,7 @@ public class CategoryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 카테고리를 찾을 수 없습니다."),
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CategoryResponseDTO>> getCategoryTitle(@RequestParam Long id) {
+    public ResponseEntity<ApiResponse<CategoryResponseDTO>> getCategoryTitle(@PathVariable Long id) {
 
         CategoryResponseDTO response = categoryService.getCategoryTitle(id);
         return ApiResponse.success(SuccessStatus.GET_CATEGORY_TITLE_SUCCESS, response);

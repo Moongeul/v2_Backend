@@ -95,7 +95,7 @@ public class MemberService {
 
         // 3. DB 처리 (회원가입 또는 로그인)
         Member member = memberRepository.findBySocialId(socialId)
-                .map(entity -> entity.update(name, picture)) // 이미 있으면 정보 업데이트
+                .map(entity -> entity.update(name)) // 이미 있으면 정보 업데이트
                 .orElseGet(() -> signUp(socialId, email, name, picture, socialType)); // 없으면 신규 회원가입
 
         // 4. 자체 JWT 토큰 생성 및 반환
@@ -129,7 +129,7 @@ public class MemberService {
 
         // 3. DB 처리 (회원가입 또는 로그인)
         Member member = memberRepository.findBySocialId(socialId)
-                .map(entity -> entity.update(name, picture)) // 이미 있으면 정보 업데이트
+                .map(entity -> entity.update(name)) // 이미 있으면 정보 업데이트
                 .orElseGet(() -> signUp(socialId, email, name, picture, socialType)); // 없으면 신규 회원가입
 
         // 4. 자체 JWT 토큰 생성 및 반환

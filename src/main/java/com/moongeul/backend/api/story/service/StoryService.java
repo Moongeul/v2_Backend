@@ -84,8 +84,8 @@ public class StoryService {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Story> storyPage;
 
-        // 현재 시간 기준 24시간 전 계산
-        LocalDateTime timeLimit = LocalDateTime.now().minusHours(24);
+        // 현재 시간 기준 24시간 전 계산 -> 한 달 임시 수정
+        LocalDateTime timeLimit = LocalDateTime.now().minusMonths(1);
 
         boolean isAnonymous = (email == null || "anonymousUser".equals(email));
 
