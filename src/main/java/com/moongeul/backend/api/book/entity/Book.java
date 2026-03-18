@@ -39,5 +39,9 @@ public class Book extends BaseTimeEntity {
         this.description = description;
         this.pubdate = pubdate;
     }
-}
 
+    public void updateRatingStats(Double ratingAverage, Integer ratingCount) {
+        this.ratingAverage = ratingAverage;
+        this.ratingCount = ratingCount;
+    }
+}

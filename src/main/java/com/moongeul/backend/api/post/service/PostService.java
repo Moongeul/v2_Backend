@@ -103,6 +103,8 @@ public class PostService {
             doneReadBookshelfRepository.save(doneReadBookshelf);
         }
 
+        updateBookRatingStats(book);
+
         return PostIdResponseDTO.builder()
                 .postId(savedPost.getId())
                 .build();
@@ -284,8 +286,8 @@ public class PostService {
     public PostIdResponseDTO updatePost(Long postId, String email, PostRequestDTO postRequestDTO){
 
         Post post = getPost(postId);
+        Book targetBook = post.getBook();
         Category category = getCategory(postRequestDTO.getCategoryId());
-        Book book = getBook(post.getBook().getIsbn());
 
         // 예외처리: 수정하는 사람과 게시글 주인이 같은지 확인 (본인의 게시글인지)
         if (!post.getMember().getEmail().equals(email)) {
@@ -320,8 +322,10 @@ public class PostService {
                 postRequestDTO.getContent(),
                 postRequestDTO.getPostVisibility(),
                 category,
-                book
+                targetBook
         );
+
+        updateBookRatingStats(targetBook);
 
         return PostIdResponseDTO.builder()
                 .postId(post.getId())
@@ -333,6 +337,7 @@ public class PostService {
     public void deletePost(Long postId, String email){
 
         Post post = getPost(postId);
+        Book book = post.getBook();
 
         // 예외처리: 수정하는 사람과 게시글 주인이 같은지 확인 (본인의 게시글인지)
         if (!post.getMember().getEmail().equals(email)) {
@@ -344,6 +349,8 @@ public class PostService {
 
         // 게시글 삭제
         postRepository.delete(post);
+
+        updateBookRatingStats(book);
     }
     
     
@@ -413,6 +420,15 @@ public class PostService {
             case WANT_TO_READ: post.decrementWantToReadCount(); break;
             case HELPFUL: post.decrementHelpfulCount(); break;
         }
+    }
+
+    // 책 평점 수정 메서드
+    private void updateBookRatingStats(Book book) {
+        long ratingCount = postRepository.countByBookAndRatingIsNotNull(book);
+        Double ratingAverage = postRepository.findAverageRatingByBook(book);
+
+        double finalAverage = (ratingAverage == null) ? 0.0 : Math.round(ratingAverage * 10) / 10.0;
+        book.updateRatingStats(finalAverage, (int) ratingCount);
     }
 
     /*
