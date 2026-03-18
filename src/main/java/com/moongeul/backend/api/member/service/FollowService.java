@@ -14,6 +14,7 @@ import com.moongeul.backend.api.notification.entity.Notifications;
 import com.moongeul.backend.api.notification.repository.NotificationRepository;
 import com.moongeul.backend.api.notification.service.NotificationTriggerService;
 import com.moongeul.backend.common.exception.BadRequestException;
+import com.moongeul.backend.common.exception.ForbiddenException;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
@@ -89,10 +90,11 @@ public class FollowService {
 
     // 팔로잉 사용자 목록 조회
     @Transactional(readOnly = true) // 생성, 수정, 삭제가 없는 메서드
-    public List<FollowResponseDTO> getFollowing(String email){
-        Member me = getMemberByEmail(email);
+    public List<FollowResponseDTO> getFollowing(String email, Long userId){
+        Member currentMember = getMemberByEmail(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
-        return followRepository.findByFollowings(me.getId())
+        return followRepository.findByFollowings(targetMember.getId())
                 .stream()
                 .map(follow -> {
                     Member following = follow.getFollowing();
@@ -109,15 +111,16 @@ public class FollowService {
 
     // 팔로워 사용자 목록 조회
     @Transactional(readOnly = true) // 생성, 수정, 삭제가 없는 메서드
-    public List<FollowResponseDTO> getFollower(String email){
-        Member me = getMemberByEmail(email);
+    public List<FollowResponseDTO> getFollower(String email, Long userId){
+        Member currentMember = getMemberByEmail(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
         // 나를 팔로우하는 사람들(Follower) 목록 조회 (상태: ACCEPTED만)
-        List<Follow> followers = followRepository.findByFollowers(me.getId());
+        List<Follow> followers = followRepository.findByFollowers(targetMember.getId());
 
         // 내가 누구를 팔로우하고 있는지(PENDING, ACCEPTED) 전체 목록을 Map으로 만듦
         // Map은 서비스 로직 안에서만 '검색용'으로 쓰임
-        Map<Long, FollowStatus> myFollowStatusMap = followRepository.findAllByFollowerId(me.getId())
+        Map<Long, FollowStatus> myFollowStatusMap = followRepository.findAllByFollowerId(targetMember.getId())
                 .stream()
                 .collect(Collectors.toMap(
                         follow -> follow.getFollowing().getId(), // Key: 상대방 ID
@@ -176,5 +179,41 @@ public class FollowService {
     private Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private Member getTargetMember(Member currentMember, Long userId) {
+        Member targetMember = (userId == null)
+                ? currentMember
+                : memberRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+
+        validatePrivacyAccess(currentMember, targetMember);
+        return targetMember;
+    }
+
+    private void validatePrivacyAccess(Member currentMember, Member targetMember) {
+        if (currentMember.getId().equals(targetMember.getId())) {
+            return;
+        }
+
+        PrivacyLevel privacyLevel = targetMember.getPrivacyLevel();
+
+        if (privacyLevel == null || privacyLevel == PrivacyLevel.PUBLIC) {
+            return;
+        }
+
+        if (privacyLevel == PrivacyLevel.PRIVATE) {
+            throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+        }
+
+        if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
+                    .map(Follow::getFollowStatus)
+                    .orElse(FollowStatus.NONE);
+
+            if (status != FollowStatus.ACCEPTED) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+        }
     }
 }

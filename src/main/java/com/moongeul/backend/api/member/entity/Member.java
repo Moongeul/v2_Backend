@@ -58,9 +58,8 @@ public class Member extends BaseTimeEntity {
     /**
      * OAuth2 로그인 시 이름, 사진이 변경될 경우 Entity를 업데이트하는 메서드
      */
-    public Member update(String name, String picture) {
+    public Member update(String name) {
         this.name = name;
-        this.profileImage = picture;
         return this;
     }
 
