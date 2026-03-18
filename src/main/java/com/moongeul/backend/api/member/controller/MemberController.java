@@ -106,7 +106,7 @@ public class MemberController {
     public ResponseEntity<ApiResponse<UserInfoDTO>> getUserInfo(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) Long userId){
-        UserInfoDTO response = memberService.getUserInfo(userDetails.getUsername(), userId);
+        UserInfoDTO response = memberService.getUserInfo(resolveUsername(userDetails), userId);
         return ApiResponse.success(SuccessStatus.GET_USERINFO_SUCCESS, response);
     }
 
@@ -187,7 +187,7 @@ public class MemberController {
     public ResponseEntity<ApiResponse<PostStatsResponseDTO>> getPostStats(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) Long userId){
-        PostStatsResponseDTO response = memberService.getPostStats(userDetails.getUsername(), userId);
+        PostStatsResponseDTO response = memberService.getPostStats(resolveUsername(userDetails), userId);
         return ApiResponse.success(SuccessStatus.GET_POST_STATS_SUCCESS, response);
     }
 
@@ -217,7 +217,7 @@ public class MemberController {
             @RequestParam(defaultValue = "10") Integer size) {
 
         CategoryPostListResponseDTO categoryPostListResponseDTO =
-                memberService.getCategoryPostList(userDetails.getUsername(), userId, categoryId, sortBy, page, size);
+                memberService.getCategoryPostList(resolveUsername(userDetails), userId, categoryId, sortBy, page, size);
         return ApiResponse.success(SuccessStatus.GET_CATEGORY_POST_LIST_SUCCESS, categoryPostListResponseDTO);
     }
 
@@ -245,7 +245,7 @@ public class MemberController {
             @RequestParam(defaultValue = "10") Integer size) {
 
         CategoryPostListResponseDTO likedPostListResponseDTO =
-                memberService.getLikedPostList(userDetails.getUsername(), userId, sortBy, page, size);
+                memberService.getLikedPostList(resolveUsername(userDetails), userId, sortBy, page, size);
         return ApiResponse.success(SuccessStatus.GET_LIKED_POST_LIST_SUCCESS, likedPostListResponseDTO);
     }
     
@@ -265,8 +265,12 @@ public class MemberController {
             @RequestParam(defaultValue = "10") Integer size) {
 
         QuestionListResponseDTO questionListResponseDTO =
-                questionService.getMyQuestionList(page, size, userDetails.getUsername(), userId);
+                questionService.getMyQuestionList(page, size, resolveUsername(userDetails), userId);
         return ApiResponse.success(SuccessStatus.GET_MY_QUESTION_LIST_SUCCESS, questionListResponseDTO);
+    }
+
+    private String resolveUsername(UserDetails userDetails) {
+        return (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
     }
 
     /*

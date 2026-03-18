@@ -47,7 +47,7 @@ public class DoneReadBookshelfController {
             @RequestParam(required = false, defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
         
         DoneReadBookshelfResponseDTO doneReadBookshelfResponseDTO =
-                doneReadBookshelfService.getDoneReadBooks(userDetails.getUsername(), userId, page, size);
+                doneReadBookshelfService.getDoneReadBooks(resolveUsername(userDetails), userId, page, size);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_BOOKS_SUCCESS, doneReadBookshelfResponseDTO);
     }
 
@@ -71,7 +71,7 @@ public class DoneReadBookshelfController {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
 
         DoneReadBookPostListResponseDTO doneReadBookPostListResponseDTO =
-                doneReadBookshelfService.getDoneReadBookPosts(userDetails.getUsername(), userId, isbn, page, size);
+                doneReadBookshelfService.getDoneReadBookPosts(resolveUsername(userDetails), userId, isbn, page, size);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_BOOK_POSTS_SUCCESS, doneReadBookPostListResponseDTO);
     }
 
@@ -94,7 +94,7 @@ public class DoneReadBookshelfController {
             @RequestParam @Min(value = 1, message = "월은 1 이상이어야 합니다.") @Max(value = 12, message = "월은 12 이하여야 합니다.") Integer month) {
 
         DoneReadCalendarResponseDTO doneReadCalendar = doneReadBookshelfService.getDoneReadCalendar(
-                userDetails.getUsername(), userId, year, month);
+                resolveUsername(userDetails), userId, year, month);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_CALENDAR_SUCCESS, doneReadCalendar);
     }
 
@@ -113,7 +113,7 @@ public class DoneReadBookshelfController {
             @RequestParam(required = false) Long userId) {
 
         DoneReadRatingSummaryResponseDTO doneReadRatingSummaryResponseDTO =
-                doneReadBookshelfService.getDoneReadRatingSummary(userDetails.getUsername(), userId);
+                doneReadBookshelfService.getDoneReadRatingSummary(resolveUsername(userDetails), userId);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_RATING_SUMMARY_SUCCESS, doneReadRatingSummaryResponseDTO);
     }
 
@@ -144,7 +144,11 @@ public class DoneReadBookshelfController {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "한 페이지당 개수는 1 이상이어야 합니다.") Integer size) {
 
         CategoryPostListResponseDTO categoryPostListResponseDTO =
-                doneReadBookshelfService.getDoneReadRatingDetail(userDetails.getUsername(), userId, range, sortBy, page, size);
+                doneReadBookshelfService.getDoneReadRatingDetail(resolveUsername(userDetails), userId, range, sortBy, page, size);
         return ApiResponse.success(SuccessStatus.GET_DONE_READ_RATING_DETAIL_SUCCESS, categoryPostListResponseDTO);
+    }
+
+    private String resolveUsername(UserDetails userDetails) {
+        return (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
     }
 }

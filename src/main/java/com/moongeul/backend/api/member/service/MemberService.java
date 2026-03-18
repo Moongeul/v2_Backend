@@ -169,13 +169,10 @@ public class MemberService {
     @Transactional(readOnly = true)
     public UserInfoDTO getUserInfo(String email, Long userId){
 
-        Member currentMember = getMemberByEmail(email);
+        Member currentMember = getCurrentMemberOrNull(email);
 
         // userId가 null이면 본인 정보 조회, 있으면 타 사용자 조회
-        Member member = (userId == null)
-                ? currentMember
-                : memberRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member member = getTargetMember(currentMember, userId);
 
         // 팔로워 수 계산 (나를 팔로우하는 사람들 중 승인된 경우)
         int followerCount = followRepository.findByFollowers(member.getId()).size();
@@ -185,7 +182,7 @@ public class MemberService {
 
         // 내가 해당 사용자를 팔로우했는지 여부
         FollowStatus myFollowStatus = FollowStatus.NONE;
-        if (!currentMember.getId().equals(member.getId())) {
+        if (currentMember != null && !currentMember.getId().equals(member.getId())) {
             myFollowStatus = followRepository.findByFollowingIdAndFollowerId(member.getId(), currentMember.getId())
                     .map(Follow::getFollowStatus)
                     .orElse(FollowStatus.NONE);
@@ -285,11 +282,8 @@ public class MemberService {
     @Transactional(readOnly = true)
     public PostStatsResponseDTO getPostStats(String email, Long userId) {
 
-        Member currentMember = getMemberByEmail(email);
-        Member targetMember = (userId == null)
-                ? currentMember
-                : memberRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member currentMember = getCurrentMemberOrNull(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
         validatePrivacyAccess(currentMember, targetMember);
 
@@ -436,11 +430,8 @@ public class MemberService {
     @Transactional(readOnly = true)
     public CategoryPostListResponseDTO getCategoryPostList(String email, Long userId, Long categoryId, String sortBy, Integer page, Integer size) {
 
-        Member currentMember = getMemberByEmail(email);
-        Member targetMember = (userId == null)
-                ? currentMember
-                : memberRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member currentMember = getCurrentMemberOrNull(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
         validatePrivacyAccess(currentMember, targetMember);
 
@@ -507,11 +498,8 @@ public class MemberService {
     @Transactional(readOnly = true)
     public CategoryPostListResponseDTO getLikedPostList(String email, Long userId, String sortBy, Integer page, Integer size) {
 
-        Member currentMember = getMemberByEmail(email);
-        Member targetMember = (userId == null)
-                ? currentMember
-                : memberRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member currentMember = getCurrentMemberOrNull(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
         validatePrivacyAccess(currentMember, targetMember);
 
@@ -627,7 +615,7 @@ public class MemberService {
     }
 
     private void validatePrivacyAccess(Member currentMember, Member targetMember) {
-        if (currentMember.getId().equals(targetMember.getId())) {
+        if (currentMember != null && currentMember.getId().equals(targetMember.getId())) {
             return;
         }
 
@@ -642,6 +630,10 @@ public class MemberService {
         }
 
         if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            if (currentMember == null) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+
             FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
                     .map(Follow::getFollowStatus)
                     .orElse(FollowStatus.NONE);
@@ -650,6 +642,27 @@ public class MemberService {
                 throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
             }
         }
+    }
+
+    private Member getCurrentMemberOrNull(String email) {
+        if (email == null || "anonymousUser".equals(email)) {
+            return null;
+        }
+
+        return getMemberByEmail(email);
+    }
+
+    private Member getTargetMember(Member currentMember, Long userId) {
+        if (userId != null) {
+            return memberRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        }
+
+        if (currentMember != null) {
+            return currentMember;
+        }
+
+        throw new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage());
     }
 
     /* 스토리 보관함 조회 API */
