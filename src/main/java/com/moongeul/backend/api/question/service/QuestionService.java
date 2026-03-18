@@ -85,13 +85,8 @@ public class QuestionService {
     // 마이페이지 질문 리스트 조회
     public QuestionListResponseDTO getMyQuestionList(Integer page, Integer size, String email, Long userId) {
 
-        Member currentMember = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
-
-        Member targetMember = (userId == null)
-                ? currentMember
-                : memberRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member currentMember = getCurrentMemberOrNull(email);
+        Member targetMember = getTargetMember(currentMember, userId);
 
         validatePrivacyAccess(currentMember, targetMember);
 
@@ -113,7 +108,7 @@ public class QuestionService {
     }
 
     private void validatePrivacyAccess(Member currentMember, Member targetMember) {
-        if (currentMember.getId().equals(targetMember.getId())) {
+        if (currentMember != null && currentMember.getId().equals(targetMember.getId())) {
             return;
         }
 
@@ -128,6 +123,10 @@ public class QuestionService {
         }
 
         if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            if (currentMember == null) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+
             FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
                     .map(Follow::getFollowStatus)
                     .orElse(FollowStatus.NONE);
@@ -236,5 +235,27 @@ public class QuestionService {
                 .participantCount(participantSet.size())
                 .participantProfileImages(participantProfileImages)
                 .build();
+    }
+
+    private Member getCurrentMemberOrNull(String email) {
+        if (email == null || "anonymousUser".equals(email)) {
+            return null;
+        }
+
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+    }
+
+    private Member getTargetMember(Member currentMember, Long userId) {
+        if (userId != null) {
+            return memberRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        }
+
+        if (currentMember != null) {
+            return currentMember;
+        }
+
+        throw new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage());
     }
 }

@@ -203,7 +203,7 @@ public class DoneReadBookshelfService {
     // 읽은 책별 기록 리스트 조회
     @Transactional(readOnly = true)
     public DoneReadBookPostListResponseDTO getDoneReadBookPosts(String email, Long userId, String isbn, Integer page, Integer size) {
-        Member currentMember = getCurrentMember(email);
+        Member currentMember = getCurrentMemberOrNull(email);
         Member targetMember = getTargetMember(currentMember, userId);
         Book book = bookRepository.findByIsbn(isbn)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
@@ -230,7 +230,7 @@ public class DoneReadBookshelfService {
     // 읽은 책 별점 구간 상세 조회
     @Transactional(readOnly = true)
     public CategoryPostListResponseDTO getDoneReadRatingDetail(String email, Long userId, String range, String sortBy, Integer page, Integer size) {
-        Member currentMember = getCurrentMember(email);
+        Member currentMember = getCurrentMemberOrNull(email);
         Member targetMember = getTargetMember(currentMember, userId);
 
         int rangeIndex = findRangeIndex(range);
@@ -380,27 +380,36 @@ public class DoneReadBookshelfService {
     }
 
     private Member getTargetMember(String email, Long userId) {
-        Member currentMember = getCurrentMember(email);
+        Member currentMember = getCurrentMemberOrNull(email);
         return getTargetMember(currentMember, userId);
     }
 
-    private Member getCurrentMember(String email) {
+    private Member getCurrentMemberOrNull(String email) {
+        if (email == null || "anonymousUser".equals(email)) {
+            return null;
+        }
+
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
     }
 
     private Member getTargetMember(Member currentMember, Long userId) {
-        Member targetMember = (userId == null)
-                ? currentMember
-                : memberRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        Member targetMember;
+        if (userId != null) {
+            targetMember = memberRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage()));
+        } else if (currentMember != null) {
+            targetMember = currentMember;
+        } else {
+            throw new NotFoundException(ErrorStatus.USER_NOTFOUND_EXCEPTION.getMessage());
+        }
 
         validatePrivacyAccess(currentMember, targetMember);
         return targetMember;
     }
 
     private void validatePrivacyAccess(Member currentMember, Member targetMember) {
-        if (currentMember.getId().equals(targetMember.getId())) {
+        if (currentMember != null && currentMember.getId().equals(targetMember.getId())) {
             return;
         }
 
@@ -415,6 +424,10 @@ public class DoneReadBookshelfService {
         }
 
         if (privacyLevel == PrivacyLevel.FOLLOWER_ONLY) {
+            if (currentMember == null) {
+                throw new ForbiddenException(ErrorStatus.PRIVACY_FORBIDDEN_EXCEPTION.getMessage());
+            }
+
             FollowStatus status = followRepository.findByFollowingIdAndFollowerId(targetMember.getId(), currentMember.getId())
                     .map(Follow::getFollowStatus)
                     .orElse(FollowStatus.NONE);

@@ -142,6 +142,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p.rating FROM Post p WHERE p.member = :member AND p.rating IS NOT NULL")
     List<Double> findRatingsByMember(@Param("member") Member member);
 
+    @Query("SELECT COALESCE(AVG(p.rating), 0.0) FROM Post p WHERE p.book = :book AND p.rating IS NOT NULL")
+    Double findAverageRatingByBook(@Param("book") Book book);
+
+    long countByBookAndRatingIsNotNull(Book book);
+
     Page<Post> findByMemberAndRatingBetween(Member member, Double startRating, Double endRating, Pageable pageable);
 
     @Query("SELECT p FROM Post p WHERE p.member = :member AND p.book.isbn = :isbn ORDER BY p.createdAt DESC")
