@@ -56,7 +56,10 @@ public class QuestionController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
 
-        QuestionListResponseDTO questionListResponseDTO = questionService.getQuestionList(page, size, userDetails.getUsername());
+        // 비회원인 경우 "anonymousUser", 회원인 경우 email
+        String username = (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
+
+        QuestionListResponseDTO questionListResponseDTO = questionService.getQuestionList(page, size, username);
         return ApiResponse.success(SuccessStatus.GET_QUESTION_LIST_SUCCESS, questionListResponseDTO);
     }
 

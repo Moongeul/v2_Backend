@@ -214,8 +214,12 @@ public class QuestionService {
                 .map(Member::getProfileImage)
                 .collect(Collectors.toList());
 
-        // 내가 작성한 질문인지 확인
-        boolean isMyArticle = question.getMember().getEmail().equals(email);
+
+        boolean isMyArticle = false;
+        if(!(email == null || "anonymousUser".equals(email))){
+            // 내가 작성한 질문인지 확인
+            isMyArticle = question.getMember().getEmail().equals(email);
+        }
 
         return QuestionDTO.builder()
                 .questionId(question.getId())
