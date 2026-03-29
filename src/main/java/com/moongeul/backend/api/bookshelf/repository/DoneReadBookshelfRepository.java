@@ -3,6 +3,7 @@ package com.moongeul.backend.api.bookshelf.repository;
 import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
 import com.moongeul.backend.api.member.entity.Member;
+import com.moongeul.backend.api.post.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,7 @@ public interface DoneReadBookshelfRepository extends JpaRepository<DoneReadBooks
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM DoneReadBookshelf d WHERE d.member.id = :memberId")
     void deleteAllByMemberId(@Param("memberId") Long memberId);
+
+    // 연동된 게시글 삭제 시 책장의 책도 삭제
+    void deleteByArticle(Post article);
 }

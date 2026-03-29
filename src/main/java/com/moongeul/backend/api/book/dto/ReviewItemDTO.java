@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ReviewItemDTO {
     private Long postId; // 게시글 ID
+    private Long memberId; // 사용자 ID
     private String nickname; // 사용자 닉네임
     private ReadingTasteType readingTasteType; // 독서 취향
     private String profileImage; // 사용자 프로필 이미지

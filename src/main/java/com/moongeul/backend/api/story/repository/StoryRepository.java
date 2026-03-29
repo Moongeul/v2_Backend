@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface StoryRepository extends JpaRepository<Story, Long> {
 
@@ -47,4 +48,7 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
             "WHERE s.member.email = :email " +
             "ORDER BY s.createdAt DESC")
     Page<Story> findAllMyStories(@Param("email") String email, Pageable pageable);
+
+    // postId로 스토리 조회
+    Optional<Story> findByPostId(Long postId);
 }

@@ -77,6 +77,7 @@ public class ReviewService {
 
         return ReviewItemDTO.builder()
                 .postId(post.getId())
+                .memberId(post.getMember().getId())
                 .nickname(post.getMember().getNickname())
                 .readingTasteType(post.getMember().getReadingTasteType())
                 .profileImage(post.getMember().getProfileImage())

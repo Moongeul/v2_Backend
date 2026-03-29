@@ -16,6 +16,8 @@ import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.post.util.WritingGuideGenerator;
+import com.moongeul.backend.api.story.entity.Story;
+import com.moongeul.backend.api.story.repository.StoryRepository;
 import com.moongeul.backend.common.annotation.Timer;
 import com.moongeul.backend.common.exception.NotFoundException;
 import com.moongeul.backend.common.exception.UnauthorizedException;
@@ -47,8 +49,9 @@ public class PostService {
     private final CategoryRepository categoryRepository;
     private final QuoteRepository quoteRepository;
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
-    private final BookshelfCalculator bookshelfCalculator;
+    private final StoryRepository storyRepository;
 
+    private final BookshelfCalculator bookshelfCalculator;
     private final NotificationTriggerService notificationTriggerService;
     private final WritingGuideGenerator writingGuideGenerator;
     
@@ -338,6 +341,8 @@ public class PostService {
 
         Post post = getPost(postId);
         Book book = post.getBook();
+        Story story = storyRepository.findByPostId(postId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.STORY_NOTFOUND_EXCEPTION.getMessage()));
 
         // 예외처리: 수정하는 사람과 게시글 주인이 같은지 확인 (본인의 게시글인지)
         if (!post.getMember().getEmail().equals(email)) {
@@ -346,6 +351,12 @@ public class PostService {
 
         // 인상깊은구절 일괄 삭제
         quoteRepository.deleteAllByPostId(postId);
+
+        // 연동된 Story 삭제
+        storyRepository.delete(story);
+
+        // 읽은 책장 데이터 삭제
+        doneReadBookshelfRepository.deleteByArticle(post);
 
         // 게시글 삭제
         postRepository.delete(post);
