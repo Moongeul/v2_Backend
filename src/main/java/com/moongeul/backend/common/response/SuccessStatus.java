@@ -51,6 +51,7 @@ public enum SuccessStatus {
 	GET_BOOK_DETAIL_SUCCESS(HttpStatus.OK, "도서 상세 조회 성공"),
 	REGISTER_BESTSELLER_BOOK_SUCCESS(HttpStatus.OK, "베스트셀러 도서 등록 성공"),
 	GET_BESTSELLER_BOOK_SUCCESS(HttpStatus.OK, "베스트셀러 도서 조회 성공"),
+	GET_BESTSELLER_BOOK_DETAIL_SUCCESS(HttpStatus.OK, "베스트셀러 도서 상세 조회 성공"),
 	
 	/* BOOK REVIEW */
 	GET_BOOK_REVIEWS_SUCCESS(HttpStatus.OK, "책 리뷰 조회 성공"),

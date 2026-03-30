@@ -3,6 +3,7 @@ package com.moongeul.backend.api.book.service;
 import com.moongeul.backend.api.book.dto.*;
 import com.moongeul.backend.api.book.entity.BestsellerBook;
 import com.moongeul.backend.api.book.entity.Book;
+import com.moongeul.backend.api.bookshelf.repository.WishReadBookshelfRepository;
 import com.moongeul.backend.api.book.repository.BestsellerBookRepository;
 import com.moongeul.backend.api.book.repository.BookRepository;
 import com.moongeul.backend.api.member.entity.Member;
@@ -45,6 +46,7 @@ public class BookService {
     private final WebClient webClient;
     private final BookRepository bookRepository;
     private final BestsellerBookRepository bestsellerBookRepository;
+    private final WishReadBookshelfRepository wishReadBookshelfRepository;
     private final MemberRepository memberRepository;
 
     @Value("${naver.book.client-id}")
@@ -55,14 +57,15 @@ public class BookService {
 
     // 도서/사용자 통합 검색
     @Transactional
-    public BookSearchResponseDTO searchBooks(BookSearchRequestDTO bookSearchRequestDTO) {
+    public BookSearchResponseDTO searchBooks(BookSearchRequestDTO bookSearchRequestDTO, String email) {
         String searchType = resolveSearchType(bookSearchRequestDTO.getType());
+        Member currentMember = getCurrentMemberOrNull(email);
 
         SearchPageResult<BookDTO> bookResult = SearchPageResult.empty();
         SearchPageResult<BookSearchUserDTO> userResult = SearchPageResult.empty();
 
         if ("book".equals(searchType) || "all".equals(searchType)) {
-            bookResult = searchBookData(bookSearchRequestDTO);
+            bookResult = searchBookData(bookSearchRequestDTO, currentMember);
         }
 
         if ("user".equals(searchType) || "all".equals(searchType)) {
@@ -103,7 +106,7 @@ public class BookService {
                 .build();
     }
 
-    private SearchPageResult<BookDTO> searchBookData(BookSearchRequestDTO bookSearchRequestDTO) {
+    private SearchPageResult<BookDTO> searchBookData(BookSearchRequestDTO bookSearchRequestDTO, Member currentMember) {
         NaverBookSearchResponseDTO naverBookSearchResponseDTO = callNaverBookAPI(bookSearchRequestDTO);
 
         if (naverBookSearchResponseDTO.getItems() == null || naverBookSearchResponseDTO.getItems().isEmpty()) {
@@ -126,6 +129,7 @@ public class BookService {
         List<Book> existingBooks = bookRepository.findByIsbnIn(isbns);
         Map<String, Book> existingBookMap = existingBooks.stream()
                 .collect(Collectors.toMap(Book::getIsbn, book -> book));
+        Set<String> wishReadIsbns = resolveWishReadIsbns(currentMember, isbns);
 
         // 책 정보 저장/업데이트
         List<BookDTO> bookDTOs = new ArrayList<>();
@@ -143,7 +147,7 @@ public class BookService {
                 book = saveNewBook(naverItem, isbn);
             }
 
-            bookDTOs.add(convertToDTO(book));
+            bookDTOs.add(convertToDTO(book, wishReadIsbns.contains(book.getIsbn())));
         }
 
         int total = naverBookSearchResponseDTO.getTotal() != null ? naverBookSearchResponseDTO.getTotal() : 0;
@@ -296,7 +300,7 @@ public class BookService {
         return bookRepository.save(newBook);
     }
 
-    private BookDTO convertToDTO(Book book) {
+    private BookDTO convertToDTO(Book book, boolean isWishRead) {
         return BookDTO.builder()
                 .isbn(book.getIsbn())
                 .title(book.getTitle())
@@ -307,6 +311,7 @@ public class BookService {
                 .pubdate(book.getPubdate())
                 .ratingAverage(book.getRatingAverage())
                 .ratingCount(book.getRatingCount())
+                .isWishRead(isWishRead)
                 .build();
     }
 
@@ -331,11 +336,12 @@ public class BookService {
 
     // 책 상세 정보 조회
     @Transactional(readOnly = true)
-    public BookDTO getBookDetail(String isbn) {
+    public BookDTO getBookDetail(String isbn, String email) {
         Book book = bookRepository.findByIsbn(isbn)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.BOOK_NOTFOUND_EXCEPTION.getMessage()));
-        
-        return convertToDTO(book);
+
+        Member currentMember = getCurrentMemberOrNull(email);
+        return convertToDTO(book, isWishReadBook(currentMember, book));
     }
 
     // 베스트셀러 ISBN 등록 (관리자 전용)
@@ -387,6 +393,26 @@ public class BookService {
                 .build();
     }
 
+    // 베스트셀러 상세조회
+    @Transactional(readOnly = true)
+    public BestsellerBookDetailListResponseDTO getBestsellerBookDetails() {
+        List<BestsellerBookDetailItemDTO> bookList = bestsellerBookRepository.findAllByOrderBySortOrderAsc().stream()
+                .map(bestsellerBook -> BestsellerBookDetailItemDTO.builder()
+                        .isbn(bestsellerBook.getBook().getIsbn())
+                        .title(bestsellerBook.getBook().getTitle())
+                        .bookImage(bestsellerBook.getBook().getBookImage())
+                        .author(bestsellerBook.getBook().getAuthor())
+                        .publisher(bestsellerBook.getBook().getPublisher())
+                        .pubdate(bestsellerBook.getBook().getPubdate())
+                        .ratingAverage(bestsellerBook.getBook().getRatingAverage())
+                        .build())
+                .toList();
+
+        return BestsellerBookDetailListResponseDTO.builder()
+                .data(bookList)
+                .build();
+    }
+
     private List<String> normalizeIsbnList(List<String> isbnList) {
         List<String> normalizedList = new ArrayList<>();
         for (String isbn : isbnList) {
@@ -413,6 +439,26 @@ public class BookService {
         if (member.getRole() != Role.ADMIN) {
             throw new ForbiddenException(ErrorStatus.ADMIN_FORBIDDEN_EXCEPTION.getMessage());
         }
+    }
+
+    private Set<String> resolveWishReadIsbns(Member currentMember, List<String> isbns) {
+        if (currentMember == null || isbns.isEmpty()) {
+            return Set.of();
+        }
+
+        return new LinkedHashSet<>(wishReadBookshelfRepository.findBookIsbnsByMemberAndBookIsbnIn(currentMember, isbns));
+    }
+
+    private boolean isWishReadBook(Member currentMember, Book book) {
+        return currentMember != null && wishReadBookshelfRepository.existsByMemberAndBook(currentMember, book);
+    }
+
+    private Member getCurrentMemberOrNull(String email) {
+        if (!StringUtils.hasText(email) || "anonymousUser".equals(email)) {
+            return null;
+        }
+
+        return getMemberByEmail(email);
     }
 
     private Book fetchAndSaveBookByIsbn(String isbn) {

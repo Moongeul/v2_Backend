@@ -3,6 +3,7 @@ package com.moongeul.backend.api.book.controller;
 import com.moongeul.backend.api.book.dto.BookDTO;
 import com.moongeul.backend.api.book.dto.BookSearchRequestDTO;
 import com.moongeul.backend.api.book.dto.BookSearchResponseDTO;
+import com.moongeul.backend.api.book.dto.BestsellerBookDetailListResponseDTO;
 import com.moongeul.backend.api.book.dto.BestsellerBookListResponseDTO;
 import com.moongeul.backend.api.book.dto.BestsellerRegisterRequestDTO;
 import com.moongeul.backend.api.book.service.BookService;
@@ -45,6 +46,7 @@ public class BookController {
     })
     @GetMapping("/user/search")
     public ResponseEntity<ApiResponse<BookSearchResponseDTO>> searchBooks(
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam @NotBlank(message = "검색어는 필수입니다.") String query,
             @RequestParam(required = false, defaultValue = "all") String type,
             @RequestParam(required = false, defaultValue = "1") @Min(value = 1, message = "페이지는 1 이상이어야 합니다.") Integer page,
@@ -57,7 +59,7 @@ public class BookController {
                 .size(size)
                 .build();
         
-        BookSearchResponseDTO bookSearchResponseDTO = bookService.searchBooks(bookSearchRequestDTO);
+        BookSearchResponseDTO bookSearchResponseDTO = bookService.searchBooks(bookSearchRequestDTO, resolveUsername(userDetails));
         return ApiResponse.success(SuccessStatus.SEARCH_BOOK_SUCCESS, bookSearchResponseDTO);
     }
 
@@ -71,9 +73,10 @@ public class BookController {
     })
     @GetMapping("/{isbn}")
     public ResponseEntity<ApiResponse<BookDTO>> getBookDetail(
+            @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable @NotBlank(message = "ISBN은 필수입니다.") String isbn) {
         
-        BookDTO bookDTO = bookService.getBookDetail(isbn);
+        BookDTO bookDTO = bookService.getBookDetail(isbn, resolveUsername(userDetails));
         return ApiResponse.success(SuccessStatus.GET_BOOK_DETAIL_SUCCESS, bookDTO);
     }
 
@@ -108,5 +111,23 @@ public class BookController {
 
         BestsellerBookListResponseDTO bestsellerBookListResponseDTO = bookService.getBestsellerBooks();
         return ApiResponse.success(SuccessStatus.GET_BESTSELLER_BOOK_SUCCESS, bestsellerBookListResponseDTO);
+    }
+
+    @Operation(
+            summary = "베스트셀러 도서 상세 조회 API",
+            description = "현재 등록된 베스트셀러 도서들의 상세 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "베스트셀러 도서 상세 조회 성공")
+    })
+    @GetMapping("/bestseller/detail")
+    public ResponseEntity<ApiResponse<BestsellerBookDetailListResponseDTO>> getBestsellerBookDetails() {
+
+        BestsellerBookDetailListResponseDTO responseDTO = bookService.getBestsellerBookDetails();
+        return ApiResponse.success(SuccessStatus.GET_BESTSELLER_BOOK_DETAIL_SUCCESS, responseDTO);
+    }
+
+    private String resolveUsername(UserDetails userDetails) {
+        return (userDetails != null) ? userDetails.getUsername() : "anonymousUser";
     }
 }
