@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v2/member/google/login", "/api/v2/member/kakao/login", "/api/v2/member/reissue-token").permitAll()
                         .requestMatchers("/api/v2/reading-taste", "/api/v2/reading-taste/total-count").permitAll()
                         .requestMatchers("/api/v2/book/bestseller").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v2/book/bestseller/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/post/**", "/api/v2/story/**", "/api/v2/question/list").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/bookshelf/done-read", "/api/v2/bookshelf/done-read/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/member/user-info", "/api/v2/member/post-stats", "/api/v2/member/post-stats/**", "/api/v2/member/liked-posts", "/api/v2/member/question-list").permitAll()

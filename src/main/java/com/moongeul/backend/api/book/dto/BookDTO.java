@@ -19,5 +19,5 @@ public class BookDTO {
     private String pubdate; // 출판연도
     private Double ratingAverage; // 별점 평균
     private Integer ratingCount; // 별점 개수
+    private Boolean isWishRead; // 읽고 싶은 책장 포함 여부
 }
-
