@@ -159,4 +159,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Post p WHERE p.member.id = :memberId")
     void deleteAllByMemberId(@Param("memberId") Long memberId);
+
+    // 해당 사용자와 책으로 작성된 게시글 중 삭제될 게시글을 제외하고 생성일자 역순으로 첫번째 데이터 가져오기
+    // findFirst: 하나만 가져올 건데(LIMIT 1)
+    // ByMemberAndBook: 조건은 해당 멤버와 책으로 하고
+    // AndIdNot: 지금 삭제할 게시글ID는 제외하고 찾고(AND id <> ?)
+    // OrderByCreatedAtDesc: 가장 최근에 쓴 순대로 정렬해서 가져와
+    Optional<Post> findFirstByMemberAndBookAndIdNotOrderByCreatedAtDesc(Member member, Book book, Long postId);
 }

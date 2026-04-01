@@ -47,5 +47,13 @@ public class DoneReadBookshelf extends BaseTimeEntity {
         this.height = height;
         this.postCount = this.postCount + 1;
     }
+
+    // 게시글 삭제 시 이전 기록으로 갱신 (게시글 개수 감소 및 데이터 재설정)
+    public void updateWithPreviousPost(Post previousPost, Float weight, Float height) {
+        this.article = previousPost;
+        this.weight = weight;
+        this.height = height;
+        this.postCount = Math.max(0, this.postCount - 1); // 개수 감소 (음수 방지)
+    }
 }
 
