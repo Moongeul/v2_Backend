@@ -16,7 +16,6 @@ import com.moongeul.backend.api.post.repository.LikeRepository;
 import com.moongeul.backend.api.post.repository.PostRepository;
 import com.moongeul.backend.api.post.repository.QuoteRepository;
 import com.moongeul.backend.api.post.util.WritingGuideGenerator;
-import com.moongeul.backend.api.story.entity.Story;
 import com.moongeul.backend.api.story.repository.StoryRepository;
 import com.moongeul.backend.common.annotation.Timer;
 import com.moongeul.backend.common.exception.NotFoundException;
@@ -341,8 +340,6 @@ public class PostService {
 
         Post post = getPost(postId);
         Book book = post.getBook();
-        Story story = storyRepository.findByPostId(postId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.STORY_NOTFOUND_EXCEPTION.getMessage()));
 
         // 예외처리: 수정하는 사람과 게시글 주인이 같은지 확인 (본인의 게시글인지)
         if (!post.getMember().getEmail().equals(email)) {
@@ -352,18 +349,43 @@ public class PostService {
         // 인상깊은구절 일괄 삭제
         quoteRepository.deleteAllByPostId(postId);
 
-        // 연동된 Story 삭제
-        storyRepository.delete(story);
+        // 3. 연동된 Story 삭제 (있을 때만 삭제하도록 수정)
+        storyRepository.findByPostId(postId).ifPresent(storyRepository::delete);
 
-        // 읽은 책장 데이터 삭제
-        doneReadBookshelfRepository.deleteByArticle(post);
+        // 읽은 책장 데이터 갱신 로직
+        updateBookshelfAfterDeletion(post.getMember(), book, post);
 
         // 게시글 삭제
         postRepository.delete(post);
 
         updateBookRatingStats(book);
     }
-    
+
+    // 게시글 삭제 시 읽은 책장의 참조 게시글(article_id)을 이전 기록으로 갱신하는 메서드
+    private void updateBookshelfAfterDeletion(Member member, Book book, Post deletedPost) {
+        doneReadBookshelfRepository.findByMemberAndBook(member, book).ifPresent(bookshelf -> {
+            // 만약 삭제하려는 게시글이 현재 책장에서 참조하고 있는 게시글(최신글)이라면
+            if (bookshelf.getArticle().equals(deletedPost)) {
+                // 해당 책과 사용자의 게시글 중, 삭제될 게시글을 제외하고 가장 최근 게시글을 찾음
+                Optional<Post> previousPostOpt = postRepository.findFirstByMemberAndBookAndIdNotOrderByCreatedAtDesc(
+                        member, book, deletedPost.getId());
+
+                if (previousPostOpt.isPresent()) {
+                    // 이전 기록이 있다면 그것으로 갱신
+                    Post previousPost = previousPostOpt.get();
+
+                    Float weight = bookshelfCalculator.calculateWeight(previousPost.getPage());
+                    Float height = bookshelfCalculator.calculateHeight(previousPost.getRating());
+
+                    bookshelf.updateWithPreviousPost(previousPost, weight, height);
+
+                } else {
+                    // 더 이상 남은 기록이 없다면 책장 데이터 자체를 삭제 (선택 사항)
+                    doneReadBookshelfRepository.delete(bookshelf);
+                }
+            }
+        });
+    }
     
     // 새로운 인상깊은구절 저장
     private void saveQuotes(PostRequestDTO postRequestDTO, Post post){
