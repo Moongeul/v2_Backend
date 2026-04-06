@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v2/book/bestseller").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/book/bestseller/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/post/**", "/api/v2/story/**", "/api/v2/question/list").permitAll() // 홈: 게시글, 스토리, 질문 페이지
-                        .requestMatchers(HttpMethod.GET, "/api/v2/book/user/search", "/api/v2/book/{isbn}").permitAll() // 도서 검색 + 책 상세 페이지
+                        .requestMatchers(HttpMethod.GET, "/api/v2/book/user/search", "/api/v2/book/{isbn}", "/api/v2/book/review/{isbn}").permitAll() // 도서 검색 + 책 상세 페이지 + 리뷰
                         .requestMatchers(HttpMethod.GET, "/api/v2/bookshelf/done-read", "/api/v2/bookshelf/done-read/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v2/member/user-info", "/api/v2/member/post-stats", "/api/v2/member/post-stats/**", "/api/v2/member/liked-posts", "/api/v2/member/question-list").permitAll()
                         .anyRequest().authenticated()
