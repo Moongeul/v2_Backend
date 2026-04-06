@@ -42,12 +42,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.book = :book ORDER BY p.createdAt DESC")
     Page<Post> findByBookOrderByCreatedAtDesc(@Param("book") Book book, Pageable pageable);
 
-    // 전체 공개 기록 기준으로 가장 많이 기록된 책 ISBN 조회
-    @Query("SELECT p.book.isbn FROM Post p " +
-            "WHERE p.postVisibility = 'PUBLIC' " +
-            "GROUP BY p.book.isbn " +
-            "ORDER BY COUNT(p) DESC, MAX(p.createdAt) DESC")
-    List<String> findMostRecordedPublicBookIsbn(Pageable pageable);
+    // 전체 공개 기록 기준으로 가장 많이 기록된(동률 시 최신순) 책 ISBN 하나 조회
+    @Query(value = "SELECT p.book_isbn " +
+            "FROM post p " +
+            "WHERE p.post_visibility = 'PUBLIC' " +
+            "GROUP BY p.book_isbn " +
+            "ORDER BY COUNT(p.id) DESC, MAX(p.created_at) DESC " +
+            "LIMIT 1", nativeQuery = true)
+    Optional<String> findMostRecordedBookIsbn();
 
     // 특정 ISBN의 전체 공개 게시글 중 가장 최근 기록 조회
     Optional<Post> findFirstByBookIsbnAndPostVisibilityOrderByCreatedAtDesc(

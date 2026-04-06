@@ -29,7 +29,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
@@ -471,14 +470,11 @@ public class PostService {
     // 가장 많이 기록된 책 조회
     @Transactional(readOnly = true)
     public MostRecordedBookResponseDTO getMostRecordedBook() {
-        List<String> mostRecordedBookIsbnList = postRepository.findMostRecordedPublicBookIsbn(PageRequest.of(0, 1));
+        // 가장 많이 기록된(동률 시 최신순) 책의 ISBN을 하나 가져옴
+        String mostRecordedBookIsbn = postRepository.findMostRecordedBookIsbn()
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.MOST_RECORDED_BOOK_NOT_FOUND_EXCEPTION.getMessage()));
 
-        if (mostRecordedBookIsbnList.isEmpty()) {
-            throw new NotFoundException(ErrorStatus.MOST_RECORDED_BOOK_NOT_FOUND_EXCEPTION.getMessage());
-        }
-
-        String mostRecordedBookIsbn = mostRecordedBookIsbnList.get(0);
-
+        // 해당 ISBN을 가진 PUBLIC 포스트 중 가장 최신 포스트를 조회
         Post post = postRepository.findFirstByBookIsbnAndPostVisibilityOrderByCreatedAtDesc(
                         mostRecordedBookIsbn,
                         PostVisibility.PUBLIC
@@ -499,7 +495,7 @@ public class PostService {
                 .build();
     }
     
-    // 주간 추천 기록 조회
+    // 월간 추천 기록 조회 (주간 -> 월간 임시 변경)
     @Transactional(readOnly = true)
     public WeeklyRecommendationResponseDTO getWeeklyRecommendation(String email) {
         Member member = getMemberByEmail(email);
@@ -509,16 +505,17 @@ public class PostService {
             throw new NotFoundException(ErrorStatus.USER_READING_TASTE_NOT_FOUND_EXCEPTION.getMessage());
         }
 
-        // 이번 주 월요일 00:00:00부터 오늘까지 계산
+        // 이번 달 1일 00:00:00 계산
         LocalDate today = LocalDate.now();
-        LocalDate thisWeekMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDateTime weekStart = thisWeekMonday.atStartOfDay();
+        // 해당 월의 1일로 설정
+        LocalDate firstDayOfMonth = today.with(TemporalAdjusters.firstDayOfMonth());
+        LocalDateTime monthStart = firstDayOfMonth.atStartOfDay();
 
         // 같은 취향 사용자들의 기록 중 이번 주(월요일~오늘) 가장 공감을 많이 받은 기록 조회
         // 전체 기록을 조회한 후 정렬하여 가장 공감을 많이 받은 기록 선택
         List<Post> recommendedPosts = postRepository.findWeeklyRecommendationByReadingTasteType(
                 member.getReadingTasteType(),
-                weekStart
+                monthStart
         );
 
         // 추천 기록이 없으면 예외 처리
