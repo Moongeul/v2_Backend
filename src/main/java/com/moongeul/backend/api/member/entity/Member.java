@@ -44,6 +44,9 @@ public class Member extends BaseTimeEntity {
 
     private String refreshToken; // Refresh Token
 
+    @Column(length = 2000)
+    private String socialRefreshToken; // OAuth Refresh Token
+
     @Builder.Default
     @Column(nullable = false)
     private boolean isPushEnabled = true; // 푸시알림 허용, 기본값: ON
@@ -68,6 +71,13 @@ public class Member extends BaseTimeEntity {
      */
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    /**
+     * 소셜 리프레시 토큰 업데이트
+     */
+    public void updateSocialRefreshToken(String socialRefreshToken) {
+        this.socialRefreshToken = socialRefreshToken;
     }
 
     /**
@@ -116,6 +126,7 @@ public class Member extends BaseTimeEntity {
     public void withdrawMember() {
         this.socialId = null;        // 재가입 가능하도록 null 처리
         this.refreshToken = null;
+        this.socialRefreshToken = null;
         this.nickname = "(알 수 없음)";
         this.profileImage = null;
         this.name = null;            // 실명 정보 삭제

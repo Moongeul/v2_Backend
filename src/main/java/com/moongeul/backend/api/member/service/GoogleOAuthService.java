@@ -3,6 +3,8 @@ package com.moongeul.backend.api.member.service;
 import com.moongeul.backend.api.member.dto.GoogleInfoResponseDTO;
 import com.moongeul.backend.api.member.dto.AccessTokenResponseDTO;
 import com.moongeul.backend.common.config.webclient.WebClientErrorHandler;
+import com.moongeul.backend.common.exception.BadRequestException;
+import com.moongeul.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -25,6 +28,7 @@ public class GoogleOAuthService {
 
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+    private static final String GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 
     private final WebClient webClient;
 
@@ -86,5 +90,24 @@ public class GoogleOAuthService {
                 .onStatus(HttpStatusCode::isError, res -> WebClientErrorHandler.handleApiError(res, "getGoogleUserInfo"))
                 .bodyToMono(GoogleInfoResponseDTO.class)
                 .block(); // 동기 방식으로 결과 대기
+    }
+
+    // Google 연동 해제 로직
+    public void revokeGoogleToken(String googleRefreshToken) {
+        if (!StringUtils.hasText(googleRefreshToken)) {
+            throw new BadRequestException(ErrorStatus.INVALID_TOKEN_REQUEST.getMessage());
+        }
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("token", googleRefreshToken);
+
+        webClient.post()
+                .uri(GOOGLE_REVOKE_URL)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(params))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, res -> WebClientErrorHandler.handleApiError(res, "revokeGoogleToken"))
+                .bodyToMono(String.class)
+                .block();
     }
 }

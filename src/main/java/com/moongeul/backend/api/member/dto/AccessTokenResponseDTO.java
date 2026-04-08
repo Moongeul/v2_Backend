@@ -11,4 +11,10 @@ public class AccessTokenResponseDTO {
     // JSON의 access_token 필드를 이 변수에 매핑
     @JsonProperty("access_token")
     private String accessToken;
+
+    @JsonProperty("refresh_token")
+    private String refreshToken;
+
+    @JsonProperty("id_token")
+    private String idToken;
 }
