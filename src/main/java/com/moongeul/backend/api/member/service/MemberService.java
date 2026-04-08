@@ -75,6 +75,7 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleOAuthService googleOAuthService;
     private final KakaoOAuthService kakaoOAuthService;
+    private final AppleOAuthService appleOAuthService;
     private final NicknameGenerator nicknameGenerator;
     private final FileUploadService fileUploadService;
 
@@ -97,6 +98,10 @@ public class MemberService {
         Member member = memberRepository.findBySocialId(socialId)
                 .map(entity -> entity.update(name)) // 이미 있으면 정보 업데이트
                 .orElseGet(() -> signUp(socialId, email, name, picture, socialType)); // 없으면 신규 회원가입
+
+        if (StringUtils.hasText(tokenDTO.getRefreshToken())) {
+            member.updateSocialRefreshToken(tokenDTO.getRefreshToken());
+        }
 
         // 4. 자체 JWT 토큰 생성 및 반환
         JwtTokenDTO jwtToken = jwtTokenProvider.generateToken(member);
@@ -137,6 +142,44 @@ public class MemberService {
         member.updateRefreshToken(jwtToken.getRefreshToken()); // 생성된 refreshToken DB 저장
 
         // 5. 취향테스트 수행 여부
+        boolean isReadingTaste = (member.getReadingTasteType() != null);
+
+        return LoginResponseDTO.builder()
+                .memberId(member.getId())
+                .role(member.getAuthorityKey())
+                .accessToken(jwtToken.getAccessToken())
+                .refreshToken(jwtToken.getRefreshToken())
+                .isReadingTaste(isReadingTaste)
+                .build();
+    }
+
+    @Transactional
+    public LoginResponseDTO loginWithApple(String code, String type){
+
+        AccessTokenResponseDTO tokenDTO = appleOAuthService.getAppleToken(code, type);
+        AppleInfoResponseDTO userInfo = appleOAuthService.getAppleUserInfo(tokenDTO.getIdToken());
+
+        String socialId = userInfo.getId();
+        String email = StringUtils.hasText(userInfo.getEmail()) ? userInfo.getEmail() : UUID.randomUUID() + "@socialUser.com";
+        String name = StringUtils.hasText(userInfo.getName()) ? userInfo.getName() : socialId;
+        String socialType = "apple";
+
+        Member member = memberRepository.findBySocialId(socialId)
+                .map(entity -> {
+                    if (StringUtils.hasText(name)) {
+                        entity.update(name);
+                    }
+                    return entity;
+                })
+                .orElseGet(() -> signUp(socialId, email, name, null, socialType));
+
+        if (StringUtils.hasText(tokenDTO.getRefreshToken())) {
+            member.updateSocialRefreshToken(tokenDTO.getRefreshToken());
+        }
+
+        JwtTokenDTO jwtToken = jwtTokenProvider.generateToken(member);
+        member.updateRefreshToken(jwtToken.getRefreshToken());
+
         boolean isReadingTaste = (member.getReadingTasteType() != null);
 
         return LoginResponseDTO.builder()
@@ -224,6 +267,8 @@ public class MemberService {
         String profileImageUrl = member.getProfileImage();
         String targetDomain = "https://api-bucket.rhkr8521.com";
 
+        revokeSocialConnection(member);
+
         /* 1. 벌크 삭제 쿼리 실행 (각 Repository에 작성된 @Modifying 쿼리 호출) - 호출 순서 중요! */
         // [팔로우] 내가 팔로우한 & 나를 팔로우한 사람들 삭제
         followRepository.deleteAllByFollowerId(member.getId());
@@ -276,6 +321,34 @@ public class MemberService {
         member.withdrawMember();
 
         memberRepository.saveAndFlush(member);
+    }
+
+    private void revokeSocialConnection(Member member) {
+        if (!StringUtils.hasText(member.getSocialType())) {
+            return;
+        }
+
+        String socialType = member.getSocialType().toLowerCase(Locale.ROOT);
+        String socialRefreshToken = member.getSocialRefreshToken();
+
+        switch (socialType) {
+            case "google" -> {
+                if (!StringUtils.hasText(socialRefreshToken)) {
+                    log.warn("구글 연동 해제 스킵 - 소셜 리프레시 토큰 없음. memberId={}", member.getId());
+                    return;
+                }
+                googleOAuthService.revokeGoogleToken(socialRefreshToken);
+            }
+            case "apple" -> {
+                if (!StringUtils.hasText(socialRefreshToken)) {
+                    log.warn("애플 연동 해제 스킵 - 소셜 리프레시 토큰 없음. memberId={}", member.getId());
+                    return;
+                }
+                appleOAuthService.revokeAppleToken(socialRefreshToken);
+            }
+            default -> {
+            }
+        }
     }
 
     /* 기록 통계 조회 (마이페이지 기록장) */

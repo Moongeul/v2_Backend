@@ -78,6 +78,25 @@ public class MemberController {
     }
 
     @Operation(
+            summary = "애플 로그인 API",
+            description = "애플 인가코드을 통해 사용자의 정보를 등록 및 토큰 + 역할을 발급합니다." +
+                    "<br>- type: 환경에 따라 local 또는 deploy를 보내주세요" +
+                    "<br>- [enum]ROLE -> 처음사용자 : GUEST, 일반사용자 : USER, 관리자 : ADMIN"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인가코드가 입력되지 않았습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 인가코드 입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "로그인 서버 오류 발생")
+    })
+    @PostMapping("/apple/login")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> loginWithApple(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+
+        LoginResponseDTO response = memberService.loginWithApple(loginRequestDTO.getCode(), loginRequestDTO.getType());
+        return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, response);
+    }
+
+    @Operation(
             summary = "사용자 정보 조회 API",
             description = "토큰을 통해 인증된 사용자의 정보를 반환합니다. userId 쿼리 파라미터가 없으면 본인 정보를 조회하고, 있으면 해당 사용자의 정보를 조회합니다." +
                     "<br><br>[enum]독서 취향 유형 ->" +
