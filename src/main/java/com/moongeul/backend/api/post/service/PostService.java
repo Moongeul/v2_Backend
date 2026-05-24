@@ -4,6 +4,7 @@ import com.moongeul.backend.api.book.entity.Book;
 import com.moongeul.backend.api.book.repository.BookRepository;
 import com.moongeul.backend.api.bookshelf.entity.DoneReadBookshelf;
 import com.moongeul.backend.api.bookshelf.repository.DoneReadBookshelfRepository;
+import com.moongeul.backend.api.bookshelf.repository.WishReadBookshelfRepository;
 import com.moongeul.backend.api.bookshelf.util.BookshelfCalculator;
 import com.moongeul.backend.api.member.entity.Member;
 import com.moongeul.backend.api.member.repository.MemberRepository;
@@ -47,6 +48,7 @@ public class PostService {
     private final CategoryRepository categoryRepository;
     private final QuoteRepository quoteRepository;
     private final DoneReadBookshelfRepository doneReadBookshelfRepository;
+    private final WishReadBookshelfRepository wishReadBookshelfRepository;
     private final StoryRepository storyRepository;
 
     private final BookshelfCalculator bookshelfCalculator;
@@ -88,6 +90,10 @@ public class PostService {
         // 기존 읽은 책이 있는지 확인
         DoneReadBookshelf doneReadBookshelf = doneReadBookshelfRepository.findByMemberAndBook(member, book)
                 .orElse(null);
+
+        // 읽을 책 책장에 있으면 제거 (읽은 책으로 이동)
+        wishReadBookshelfRepository.findByMemberAndBook(member, book)
+                .ifPresent(wishReadBookshelfRepository::delete);
 
         if (doneReadBookshelf != null) {
             // 기존 책장이 있으면 업데이트 (가장 최근 게시글로 변경, 게시글 개수 증가)
