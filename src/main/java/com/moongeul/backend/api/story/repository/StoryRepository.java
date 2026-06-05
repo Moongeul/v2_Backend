@@ -4,6 +4,7 @@ import com.moongeul.backend.api.story.entity.Story;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -51,4 +52,9 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
 
     // postId로 스토리 조회
     Optional<Story> findByPostId(Long postId);
+
+    // 회원 탈퇴 시 작성한 모든 스토리 삭제
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Story s WHERE s.member.id = :memberId")
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }

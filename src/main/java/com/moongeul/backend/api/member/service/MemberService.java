@@ -294,8 +294,15 @@ public class MemberService {
         doneReadBookshelfRepository.deleteAllByMemberId(member.getId());
         wishReadBookshelfRepository.deleteAllByMemberId(member.getId());
 
+        // [스토리] 삭제
+        storyRepository.deleteAllByMemberId(member.getId());
+
+        // [좋아요] 삭제
+        likeRepository.deleteAllByMemberId(member.getId()); // 내가 누른 좋아요
+        likeRepository.deleteByPostMemberId(member.getId()); // 내가 쓴 글에 눌린 좋아요
+
         // [게시글 & 인용구]
-        quoteRepository.deleteAllByMemberId(member.getId()); // Post 이전에 삭제
+        quoteRepository.deleteAllByMemberId(member.getId()); // Post 이전에 삭제(quote)
         postRepository.deleteAllByMemberId(member.getId());
 
         // [카테고리] Post가 모두 삭제된 후 삭제 가능
