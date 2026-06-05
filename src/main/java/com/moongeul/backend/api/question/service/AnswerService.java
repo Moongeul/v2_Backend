@@ -151,6 +151,7 @@ public class AnswerService {
                 .createdAt(answer.getCreatedAt())
                 .myAnswer(isMyAnswer)
                 .memberInfo(AnswerDTO.MemberInfo.builder()
+                        .memberId(member.getId())
                         .profileImage(member.getProfileImage())
                         .nickname(member.getNickname())
                         .readingTasteType(member.getReadingTasteType())

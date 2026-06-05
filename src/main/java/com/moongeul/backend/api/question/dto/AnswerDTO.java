@@ -26,6 +26,7 @@ public class AnswerDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MemberInfo {
+        private Long memberId;
         private String profileImage; // 프로필 이미지
         private String nickname; // 닉네임
         private ReadingTasteType readingTasteType; // 독서 취향 유형
